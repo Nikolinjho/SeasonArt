@@ -62,6 +62,7 @@ final class WinterSceneController {
         guard canCreate else { return false }
         let token = UUID()
         sculptingID = token
+        simulation.cursorInteracts = false
         let panel = SnowSculptingWindow(screenFrame: screenFrame)
         panel.showsInScreenshots = showsInScreenshots
         panel.began = { [weak self] point in
@@ -90,6 +91,7 @@ final class WinterSceneController {
     func cancelSculpting() {
         guard isSculpting else { return }
         sculptingID = nil
+        simulation.cursorInteracts = true
         sculptingGesture = nil
         let panel = sculptingWindow
         sculptingWindow = nil

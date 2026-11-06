@@ -127,6 +127,30 @@ final class WinterSceneControllerTests: XCTestCase {
         XCTAssertTrue(controller.isSculpting, "Старый callback не закрывает новый режим")
     }
 
+    func testSculptingProtectsThinSnowFromRegularCursorCarving() throws {
+        let (controller, simulation, _) = snowyController()
+        defer { controller.close() }
+        let layer = try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 160, y: 61))).layer
+        layer.replace(heights: layer.heights.map { min($0, 0.5) })
+        layer.refreshTop()
+        XCTAssertTrue(controller.startSculpting())
+        _ = simulation.step(dt: 1 / 60, cursor: SIMD2(160, 61))
+        XCTAssertNotNil(simulation.sculptingSource(at: CGPoint(x: 160, y: 61)),
+                        "Обычная расчистка курсором не уничтожает сугроб перед нажатием в режиме лепки")
+        let panel = try XCTUnwrap(controller.sculptingWindow)
+        panel.began?(CGPoint(x: -440, y: 161))
+        panel.moved?(CGPoint(x: -200, y: 161))
+        _ = simulation.step(dt: 1 / 60, cursor: SIMD2(400, 61))
+        panel.ended?(CGPoint(x: -200, y: 161))
+        XCTAssertEqual(controller.scene.objects.count, 1, "Движение мышью до отпускания не расчищает собранные участки")
+        XCTAssertEqual(controller.scene.objects.first?.sizes, [.medium])
+        XCTAssertNotNil(simulation.sculptingSource(at: CGPoint(x: 450, y: 61)))
+        _ = simulation.step(dt: 1 / 60, cursor: SIMD2(450, 61))
+        _ = simulation.step(dt: 1 / 60, cursor: SIMD2(454, 61))
+        XCTAssertNil(simulation.sculptingSource(at: CGPoint(x: 454, y: 61)),
+                     "После завершения обычная расчистка курсором снова работает")
+    }
+
     func testChangedTrackedSupportCancelsBeforeSimulationReceivesUpdate() throws {
         let (controller, _, _) = snowyController()
         defer { controller.close() }

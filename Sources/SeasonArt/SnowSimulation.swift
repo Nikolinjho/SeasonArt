@@ -608,6 +608,16 @@ final class SnowSimulation {
         updateTarget()
     }
 
+    /// Лепка временно забирает жест у обычной расчистки курсором.
+    var cursorInteracts = true {
+        didSet {
+            guard cursorInteracts != oldValue else { return }
+            releaseHeldSnow()
+            cursor = nil
+            cursorVelocity = .zero
+        }
+    }
+
     /// Видимый снег одной опоры в локальных координатах экрана.
     func sculptingSource(at point: CGPoint) -> SculptingSource? {
         guard mode == .snow, point.x.isFinite, point.y.isFinite else { return nil }
@@ -758,7 +768,8 @@ final class SnowSimulation {
         slideWind = abs(slideWind) < 1 ? 0 : slideWind * exp(-dt / slideCalm)
         expireParking()
         for ledge in ledgeList { carry(ledge, dt: dt) }
-        trackCursor(point, dt: dt)
+        releaseHeldSnow()
+        if cursorInteracts { trackCursor(point, dt: dt) }
         for ledge in ledgeList where !ledge.carried { confine(ledge) }
         blow(dt: dt)
         skim(dt: dt)
@@ -1598,10 +1609,12 @@ final class SnowSimulation {
 
     // MARK: - Cursor
 
-    private func trackCursor(_ point: SIMD2<Float>, dt: Float) {
+    private func releaseHeldSnow() {
         for layer in heldLayers { layer.releaseSupport() }
         heldLayers.removeAll(keepingCapacity: true)
+    }
 
+    private func trackCursor(_ point: SIMD2<Float>, dt: Float) {
         let center = point + cursorOffset
         guard let previous = cursor else {
             cursor = center
