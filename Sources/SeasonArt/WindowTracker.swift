@@ -46,9 +46,15 @@ struct WindowSurface: Equatable {
 /// Polls the on-screen window list: a few times a second when nothing moves, every frame while something does.
 final class WindowTracker {
     private let windowListProvider: (() -> CFArray?)?
+    private let fullScreenSpaceProvider: () -> Set<UInt64>?
+    private let windowSpacesProvider: (CGWindowID) -> Set<UInt64>?
 
-    init(windowListProvider: (() -> CFArray?)? = nil) {
+    init(windowListProvider: (() -> CFArray?)? = nil,
+         fullScreenSpaceProvider: @escaping () -> Set<UInt64>? = { Spaces.fullScreen() },
+         windowSpacesProvider: @escaping (CGWindowID) -> Set<UInt64>? = { Spaces.of($0) }) {
         self.windowListProvider = windowListProvider
+        self.fullScreenSpaceProvider = fullScreenSpaceProvider
+        self.windowSpacesProvider = windowSpacesProvider
     }
 
     /// The display tracked, in the window list's global coordinates: origin at the top left of the primary display.
@@ -388,9 +394,10 @@ final class WindowTracker {
             guard entry.layer == 0, let id = entry.id, let bounds = entry.bounds, fillsScreen(bounds) else { return nil }
             return (id, bounds)
         }
-        guard !candidates.isEmpty, let fullScreen = Spaces.fullScreen(), !fullScreen.isEmpty else { return 0 }
+        guard !candidates.isEmpty, let fullScreen = fullScreenSpaceProvider(), !fullScreen.isEmpty else { return 0 }
         return candidates.reduce(0) { share, candidate in
-            guard let spaces = Spaces.of(candidate.id), !spaces.isDisjoint(with: fullScreen) else { return share }
+            guard let spaces = windowSpacesProvider(candidate.id), !spaces.isEmpty,
+                  spaces.isSubset(of: fullScreen) else { return share }
             return max(share, candidate.bounds.intersection(screen).width / screen.width)
         }
     }
@@ -400,17 +407,18 @@ final class WindowTracker {
     /// it as they slide in, whichever is more; nil with neither in sight. A desktop may have no windows, and an app's
     /// window may stay put in the list as its Space slides.
     func desktopShare(now: CFTimeInterval) -> CGFloat? {
-        guard let fullScreen = Spaces.fullScreen() else { return nil }
+        guard let fullScreen = fullScreenSpaceProvider() else { return nil }
         var apps: [UInt64: CGFloat] = [:]
         var desktops: [UInt64: CGFloat] = [:]
         let area = screen.width * (screen.height - menuBarHeight) * 0.9
-        for entry in Self.windowList(now: now) {
+        let list = windowListProvider.map { ListedWindow.all(in: $0()) } ?? Self.windowList(now: now)
+        for entry in list {
             guard entry.layer == 0, entry.pid != ownPID, let id = entry.id, let listed = entry.bounds else { continue }
             let large = listed.width * listed.height >= area
             let inView = listed.intersects(screen)
-            guard large || inView, let spaces = Spaces.of(id), let space = spaces.first else { continue }
+            guard large || inView, let spaces = windowSpacesProvider(id), let space = spaces.first else { continue }
             if !spaces.isDisjoint(with: fullScreen) {
-                guard large else { continue }
+                guard spaces.isSubset(of: fullScreen), large else { continue }
                 apps[space] = max(apps[space] ?? 0, listed.intersection(screen).width / screen.width)
             } else if inView {
                 // The list shows the window sliding in with its Space; its frame on the Space stays put.
@@ -431,8 +439,13 @@ final class WindowTracker {
             guard entry.layer == 0, let bounds = entry.bounds, bounds.intersects(band), fillsScreen(bounds) else { return nil }
             return entry.id
         }
-        guard !candidates.isEmpty, let fullScreen = Spaces.fullScreen(), !fullScreen.isEmpty else { return false }
-        return candidates.contains { Spaces.of($0).map { !$0.isDisjoint(with: fullScreen) } ?? false }
+        guard !candidates.isEmpty, let fullScreen = fullScreenSpaceProvider(), !fullScreen.isEmpty else { return false }
+        // Полноэкранное приложение принадлежит только полноэкранным Spaces.
+        // Служебный холст на всех Spaces не скрывает Dock обычного рабочего стола.
+        return candidates.contains { id in
+            guard let spaces = windowSpacesProvider(id), !spaces.isEmpty else { return false }
+            return spaces.isSubset(of: fullScreen)
+        }
     }
 
     private static var shared: (time: CFTimeInterval, list: [ListedWindow])?

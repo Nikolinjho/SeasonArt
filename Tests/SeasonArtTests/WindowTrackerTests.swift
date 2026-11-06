@@ -76,4 +76,42 @@ final class WindowTrackerTests: XCTestCase {
         ]).first { $0.id == frontID })
         XCTAssertFalse(surface.blockers.isEmpty, "Обычное окно Oasis сохраняет перекрытие")
     }
+    func testWindowOnAllSpacesDoesNotHideDockAsFullscreenApp() {
+        let list = [entry(frontID, screen)]
+        let tracker = WindowTracker(windowListProvider: { list as CFArray },
+                                    fullScreenSpaceProvider: { [22] },
+                                    windowSpacesProvider: { _ in [1, 22] })
+        tracker.screen = screen
+        tracker.primaryHeight = screen.height
+        tracker.menuBarHeight = 33
+        _ = tracker.poll(now: 100, eager: true)
+        XCTAssertFalse(tracker.fullScreenInView,
+                       "Окно на обычном и полноэкранном Spaces не является полноэкранным приложением")
+        XCTAssertEqual(tracker.fullScreenShare, 0, "Общий холст не запускает затухание обычного рабочего стола")
+        XCTAssertNil(tracker.desktopShare(now: 100), "Общий холст не подменяет сведения о переходе между Spaces")
+    }
+
+    func testWindowBelongingOnlyToFullscreenSpaceStillHidesDock() {
+        let list = [entry(frontID, screen)]
+        let tracker = WindowTracker(windowListProvider: { list as CFArray },
+                                    fullScreenSpaceProvider: { [22] },
+                                    windowSpacesProvider: { _ in [22] })
+        tracker.screen = screen
+        tracker.primaryHeight = screen.height
+        _ = tracker.poll(now: 100, eager: true)
+        XCTAssertTrue(tracker.fullScreenInView, "Настоящее полноэкранное окно сохраняет скрытие Dock")
+        XCTAssertEqual(tracker.fullScreenShare, 1)
+    }
+
+    func testUnknownWindowSpacesDoNotCreateFullscreenState() {
+        let list = [entry(frontID, screen)]
+        let tracker = WindowTracker(windowListProvider: { list as CFArray },
+                                    fullScreenSpaceProvider: { [22] },
+                                    windowSpacesProvider: { _ in [] })
+        tracker.screen = screen
+        tracker.primaryHeight = screen.height
+        _ = tracker.poll(now: 100, eager: true)
+        XCTAssertFalse(tracker.fullScreenInView)
+    }
+
 }
