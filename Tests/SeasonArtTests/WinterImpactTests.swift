@@ -210,7 +210,7 @@ final class WinterImpactTests: XCTestCase {
             let id = try XCTUnwrap(scene.create(size, at: CGPoint(x: 400, y: 400)))
             scene.beginDragging(id, at: CGPoint(x: 400, y: 400))
             scene.drag(id, to: CGPoint(x: 240, y: y), dt: 1)
-            scene.endDragging(id)
+            scene.endDragging(id, idleTime: 0.2)
         }
         XCTAssertTrue(scene.objects[0].isSnowman)
         scene.beginDragging(base, at: scene.objects[0].center)

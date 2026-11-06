@@ -65,7 +65,7 @@ final class WinterSceneController {
             cancelSculpting()
             return
         }
-        guard mouseButtons == 0 else {
+        guard mouseButtons == 0, !scene.objects.contains(where: \.isDragged) else {
             let stillWaitsForExit = waitsForExit && simulation.sculptingSource(at: local(point)) != nil
             cancelSculpting()
             waitsForExit = stillWaitsForExit
@@ -213,6 +213,9 @@ final class WinterSceneController {
         defer { syncing = false }
         let visible = isEnabled && isActive && !isSuppressed
         if !visible || !canCreate { cancelSculpting() }
+        if !visible {
+            for object in scene.objects where object.isDragged { scene.cancelDragging(object.id) }
+        }
         let ids = Set(scene.objects.map(\.id))
         for id in Array(windows.keys) where !ids.contains(id) { windows.removeValue(forKey: id)?.close() }
         for object in scene.objects {
@@ -233,11 +236,15 @@ final class WinterSceneController {
                     scene.drag(id, to: local(point), dt: dt)
                     refresh()
                 }
-                window.dragEnded = { [weak self] in
+                window.dragEnded = { [weak self] idleTime in
                     guard let self else { return }
-                    scene.endDragging(id)
+                    scene.endDragging(id, idleTime: idleTime)
                     refresh()
                     changed()
+                }
+                window.dragCancelled = { [weak self] in
+                    self?.scene.cancelDragging(id)
+                    self?.refresh()
                 }
                 windows[id] = window
             }

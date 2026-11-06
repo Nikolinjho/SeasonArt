@@ -32,6 +32,8 @@ struct WinterObject: Identifiable {
     var parked: Bool
     var isDragged: Bool
 
+    var rotation: CGFloat = 0
+
     /// Локальные границы шаров: стык перекрывает 15% диаметра меньшего из соседей.
     var ballFrames: [CGRect] {
         let widest = radii.max() ?? 0
@@ -101,13 +103,24 @@ struct WinterImpact {
     let velocity: CGVector
 }
 
+private enum WinterMotion {
+    static let history: TimeInterval = 0.12
+    static let maximumSpeed: CGFloat = 900
+    static let placementSpeed: CGFloat = 85
+    static let gravity: CGFloat = 1200
+    static let friction: CGFloat = 2.8
+    static let sleepSpeed: CGFloat = 2
+    static let bounceThreshold: CGFloat = 220
+    static let restitution: CGFloat = 0.17
+}
+
 final class WinterScene {
     private(set) var objects: [WinterObject] = []
     /// Абсолютная высота снега. nil использует геометрию опоры или землю.
     var surfaceHeight: (_ id: CGWindowID?, _ x: CGFloat) -> CGFloat? = { _, _ in nil }
     var didLand: (WinterImpact) -> Void = { _ in }
     var isMoving: Bool {
-        objects.contains { !$0.parked && ($0.isDragged || !resting.contains($0.id)) }
+        objects.contains { !$0.parked && ($0.isDragged || !resting.contains($0.id) || $0.velocity.dx != 0) }
     }
 
     private var width: CGFloat
@@ -116,8 +129,10 @@ final class WinterScene {
     private var visibleSupports: Set<CGWindowID> = []
     private var resting: Set<UUID> = []
     private var pushed: Set<UUID> = []
+    private var bouncing: Set<UUID> = []
     private var dragOffset: CGPoint = .zero
     private var captured: UUID?
+    private var dragHistory: [(duration: TimeInterval, velocity: CGVector)] = []
 
     init(width: CGFloat, height: CGFloat) {
         self.width = max(0, width)
@@ -142,36 +157,81 @@ final class WinterScene {
 
     func beginDragging(_ id: UUID, at point: CGPoint) {
         guard captured != id, objects.contains(where: { $0.id == id && !$0.parked }) else { return }
-        if let captured { endDragging(captured) }
+        if let captured { cancelDragging(captured) }
         guard let index = objects.firstIndex(where: { $0.id == id }) else { return }
         captured = id
+        dragHistory.removeAll()
         dragOffset = CGPoint(x: objects[index].center.x - point.x, y: objects[index].center.y - point.y)
         objects[index].isDragged = true
         objects[index].support = nil
         objects[index].velocity = .zero
         resting.remove(id)
         pushed.remove(id)
+        bouncing.remove(id)
     }
 
     func drag(_ id: UUID, to point: CGPoint, dt: TimeInterval) {
         guard captured == id, let index = objects.firstIndex(where: { $0.id == id }) else { return }
+        guard point.x.isFinite, point.y.isFinite else { return }
         let previous = objects[index].center
         objects[index].center = CGPoint(x: point.x + dragOffset.x, y: point.y + dragOffset.y)
         clamp(&objects[index])
-        guard dt.isFinite, dt > 0 else { objects[index].velocity = .zero; return }
-        var velocity = CGVector(dx: (objects[index].center.x - previous.x) / dt,
-                                dy: (objects[index].center.y - previous.y) / dt)
-        let speed = hypot(velocity.dx, velocity.dy)
-        if speed > 900 { velocity.dx *= 900 / speed; velocity.dy *= 900 / speed }
-        objects[index].velocity = velocity
+        let dx = objects[index].center.x - previous.x
+        let dy = objects[index].center.y - previous.y
+        // Разрыв потока событий не превращаем в бросок через весь экран.
+        guard dt.isFinite, dt > 0, hypot(dx, dy) <= WinterMotion.maximumSpeed * CGFloat(dt) * 3 else {
+            dragHistory.removeAll()
+            objects[index].velocity = .zero
+            return
+        }
+        appendDragSample(duration: dt, velocity: CGVector(dx: dx / dt, dy: dy / dt))
+        objects[index].velocity = releaseVelocity
     }
 
-    func endDragging(_ id: UUID) {
+    private func appendDragSample(duration: TimeInterval, velocity: CGVector) {
+        dragHistory.append((min(duration, WinterMotion.history), velocity))
+        var excess = dragHistory.reduce(0) { $0 + $1.duration } - WinterMotion.history
+        while excess > 0.0000001, !dragHistory.isEmpty {
+            let removed = min(excess, dragHistory[0].duration)
+            dragHistory[0].duration -= removed
+            excess -= removed
+            if dragHistory[0].duration <= 0.0000001 { dragHistory.removeFirst() }
+        }
+    }
+
+    private var releaseVelocity: CGVector {
+        let duration = dragHistory.reduce(0) { $0 + $1.duration }
+        guard duration > 0 else { return .zero }
+        var result = dragHistory.reduce(CGVector.zero) { sum, sample in
+            CGVector(dx: sum.dx + sample.velocity.dx * sample.duration / duration,
+                     dy: sum.dy + sample.velocity.dy * sample.duration / duration)
+        }
+        let speed = hypot(result.dx, result.dy)
+        if speed > WinterMotion.maximumSpeed {
+            result.dx *= WinterMotion.maximumSpeed / speed
+            result.dy *= WinterMotion.maximumSpeed / speed
+        }
+        return result
+    }
+
+    func cancelDragging(_ id: UUID) {
         guard captured == id, let index = objects.firstIndex(where: { $0.id == id }) else { return }
         captured = nil
+        dragHistory.removeAll()
+        objects[index].isDragged = false
+        objects[index].velocity = .zero
+    }
+
+    func endDragging(_ id: UUID, idleTime: TimeInterval = 0) {
+        guard captured == id, let index = objects.firstIndex(where: { $0.id == id }) else { return }
+        if idleTime.isFinite, idleTime > 0 { appendDragSample(duration: idleTime, velocity: .zero) }
+        objects[index].velocity = releaseVelocity
+        captured = nil
+        dragHistory.removeAll()
         objects[index].isDragged = false
         let held = objects[index]
-        guard held.radii.count == 1, let radius = held.radii.first else { return }
+        guard held.radii.count == 1, let radius = held.radii.first,
+              hypot(held.velocity.dx, held.velocity.dy) <= WinterMotion.placementSpeed else { return }
         let candidates = objects.indices.filter { candidate in
             let base = objects[candidate]
             let canStack = (1...2).contains(base.radii.count)
@@ -210,17 +270,31 @@ final class WinterScene {
                 objects[index].center.y += next.frame.maxY - previous.frame.maxY
             }
             objects[index].parked = false
-            fit(&objects[index], on: next)
+            fit(&objects[index], on: next, clampToSupport: objects[index].velocity.dx == 0)
         }
         surfaces = visible.merging(surfaces.filter { update.elsewhere.contains($0.key) || update.parked.contains($0.key) }) { current, _ in current }
     }
 
     func step(dt: TimeInterval) {
         guard dt.isFinite, dt > 0 else { return }
-        let elapsed = CGFloat(min(dt, 1.0 / 30))
+        let duration = min(dt, 1.0 / 30)
+        let steps = max(1, Int(ceil(duration * 120)))
+        for _ in 0..<steps { integrate(elapsed: CGFloat(duration / Double(steps))) }
+    }
+
+    private func integrate(elapsed: CGFloat) {
         for index in objects.indices {
             guard !objects[index].isDragged, !objects[index].parked else { continue }
             if resting.contains(objects[index].id) {
+                let previousX = objects[index].center.x
+                let decay = exp(-WinterMotion.friction * elapsed)
+                objects[index].center.x += objects[index].velocity.dx * (1 - decay) / WinterMotion.friction
+                objects[index].velocity.dx *= decay
+                if abs(objects[index].velocity.dx) < WinterMotion.sleepSpeed { objects[index].velocity.dx = 0 }
+                if !pushed.contains(objects[index].id) { clampX(&objects[index]) }
+                if objects[index].radii.count == 1 {
+                    objects[index].rotation -= (objects[index].center.x - previousX) / objects[index].radii[0]
+                }
                 if let support = objects[index].support, let surface = surfaces[support] {
                     fit(&objects[index], on: surface)
                 } else {
@@ -229,9 +303,9 @@ final class WinterScene {
                 if resting.contains(objects[index].id) { continue }
             }
             let beforeBottom = objects[index].frame.minY
-            objects[index].velocity.dy -= 1200 * elapsed
             objects[index].center.x += objects[index].velocity.dx * elapsed
-            objects[index].center.y += objects[index].velocity.dy * elapsed
+            objects[index].center.y += objects[index].velocity.dy * elapsed - WinterMotion.gravity * elapsed * elapsed / 2
+            objects[index].velocity.dy -= WinterMotion.gravity * elapsed
             if !pushed.contains(objects[index].id) { clampX(&objects[index]) }
             guard objects[index].velocity.dy <= 0 else { continue }
             let x = objects[index].center.x
@@ -255,6 +329,7 @@ final class WinterScene {
         objects.removeAll { removed.contains($0.id) }
         resting.subtract(removed)
         pushed.subtract(removed)
+        bouncing.subtract(removed)
     }
 
     func resize(width: CGFloat, height: CGFloat) {
@@ -263,7 +338,7 @@ final class WinterScene {
         for index in objects.indices where !objects[index].parked {
             clamp(&objects[index])
             if let support = objects[index].support, let surface = surfaces[support] {
-                fit(&objects[index], on: surface)
+                fit(&objects[index], on: surface, clampToSupport: true)
             }
         }
     }
@@ -272,8 +347,10 @@ final class WinterScene {
         objects.removeAll()
         resting.removeAll()
         pushed.removeAll()
+        bouncing.removeAll()
         captured = nil
         dragOffset = .zero
+        dragHistory.removeAll()
     }
 
     func shoveObjects(in rect: CGRect, by dx: CGFloat) {
@@ -287,6 +364,7 @@ final class WinterScene {
         let removed = objects.filter { pushed.contains($0.id) && ($0.frame.maxX < 0 || $0.frame.minX > width) }.map(\.id)
         objects.removeAll { removed.contains($0.id) }
         pushed.subtract(removed)
+        bouncing.subtract(removed)
         resting.subtract(removed)
     }
 
@@ -300,21 +378,33 @@ final class WinterScene {
     }
 
     private func land(_ object: inout WinterObject, on support: CGWindowID?, at y: CGFloat) {
-        didLand(WinterImpact(support: support, x: object.center.x, radius: object.radii[0],
+        if !bouncing.contains(object.id) {
+            didLand(WinterImpact(support: support, x: object.center.x, radius: object.radii[0],
                              mass: object.radii.reduce(0) { $0 + pow($1 / WinterBallSize.small.radius, 3) },
                              velocity: object.velocity))
+        }
         object.center.y = (surfaceHeight(support, object.center.x) ?? y) + object.radii[0]
         object.support = support
-        object.velocity = .zero
-        resting.insert(object.id)
+        let rebound = -object.velocity.dy * WinterMotion.restitution
+        if object.velocity.dy < -WinterMotion.bounceThreshold {
+            bouncing.insert(object.id)
+            object.velocity.dy = rebound
+            object.support = nil
+            resting.remove(object.id)
+        } else {
+            bouncing.remove(object.id)
+            object.velocity.dy = 0
+            if abs(object.velocity.dx) < WinterMotion.sleepSpeed { object.velocity.dx = 0 }
+            resting.insert(object.id)
+        }
     }
 
-    private func fit(_ object: inout WinterObject, on surface: WindowSurface) {
+    private func fit(_ object: inout WinterObject, on surface: WindowSurface, clampToSupport: Bool = false) {
         let radius = object.frame.width / 2
         let low = max(radius, surface.frame.minX + radius)
         let high = min(width - radius, surface.frame.maxX - radius)
         guard low <= high else { detach(&object); return }
-        object.center.x = min(max(object.center.x, low), high)
+        if clampToSupport { object.center.x = min(max(object.center.x, low), high) }
         guard let y = supportHeight(surface, at: object.center.x), y >= 0,
               y + object.frame.height <= height else { detach(&object); return }
         object.center.y = y + object.radii[0]

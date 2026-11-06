@@ -3,7 +3,8 @@ import AppKit
 final class WinterObjectWindow: NSPanel {
     var dragBegan: ((CGPoint) -> Void)?
     var dragged: ((CGPoint, TimeInterval) -> Void)?
-    var dragEnded: (() -> Void)?
+    var dragEnded: ((TimeInterval) -> Void)?
+    var dragCancelled: (() -> Void)?
     var showsInScreenshots = false {
         didSet { sharingType = showsInScreenshots ? .readOnly : .none }
     }
@@ -40,12 +41,12 @@ final class WinterObjectWindow: NSPanel {
     }
 
     override func orderOut(_ sender: Any?) {
-        (contentView as? WinterObjectView)?.endDrag()
+        (contentView as? WinterObjectView)?.cancelDrag()
         super.orderOut(sender)
     }
 
     override func close() {
-        (contentView as? WinterObjectView)?.endDrag()
+        (contentView as? WinterObjectView)?.cancelDrag()
         super.close()
     }
 

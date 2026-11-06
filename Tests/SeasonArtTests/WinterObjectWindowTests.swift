@@ -73,7 +73,7 @@ final class WinterObjectWindowTests: XCTestCase {
         var ended = false
         window.dragBegan = { began = $0 }
         window.dragged = { moved = $0; elapsed = $1 }
-        window.dragEnded = { ended = true }
+        window.dragEnded = { _ in ended = true }
         func event(_ type: NSEvent.EventType) throws -> NSEvent {
             try XCTUnwrap(NSEvent.mouseEvent(with: type, location: location, modifierFlags: [],
                 timestamp: 7, windowNumber: window.windowNumber, context: nil,
@@ -108,4 +108,44 @@ final class WinterObjectWindowTests: XCTestCase {
         window.showsInScreenshots = false
         XCTAssertEqual(window.sharingType, .none)
     }
+    func testСкрытиеИЗакрытиеОтменяютЖестБезБроска() throws {
+        for close in [false, true] {
+            let window = WinterObjectWindow(object: object(), screenFrame: screen)
+            let view = try XCTUnwrap(window.contentView)
+            var ended = false
+            var cancelled = false
+            window.dragEnded = { _ in ended = true }
+            window.dragCancelled = { cancelled = true }
+            let event = try XCTUnwrap(NSEvent.mouseEvent(with: .leftMouseDown, location: .zero,
+                modifierFlags: [], timestamp: 1, windowNumber: window.windowNumber, context: nil,
+                eventNumber: 1, clickCount: 1, pressure: 1))
+            view.mouseDown(with: event)
+            if close { window.close() } else { window.orderOut(nil) }
+            XCTAssertTrue(cancelled)
+            XCTAssertFalse(ended)
+            window.close()
+        }
+    }
+
+    func testОтпусканиеПередаётРеальнуюПаузуИВращениеПерерисовываетШар() throws {
+        var model = object()
+        let window = WinterObjectWindow(object: model, screenFrame: screen)
+        defer { window.close() }
+        let view = try XCTUnwrap(window.contentView as? WinterObjectView)
+        var idle: TimeInterval?
+        window.dragEnded = { idle = $0 }
+        func event(_ type: NSEvent.EventType, _ time: TimeInterval) throws -> NSEvent {
+            try XCTUnwrap(NSEvent.mouseEvent(with: type, location: .zero, modifierFlags: [], timestamp: time,
+                windowNumber: window.windowNumber, context: nil, eventNumber: 1, clickCount: 1, pressure: 1))
+        }
+        view.mouseDown(with: try event(.leftMouseDown, 1))
+        view.mouseDragged(with: try event(.leftMouseDragged, 1.1))
+        view.mouseUp(with: try event(.leftMouseUp, 1.35))
+        XCTAssertEqual(try XCTUnwrap(idle), 0.25, accuracy: 0.0001)
+        view.needsDisplay = false
+        model.rotation = 0.5
+        view.display(object: model)
+        XCTAssertTrue(view.needsDisplay)
+    }
+
 }

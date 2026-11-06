@@ -120,7 +120,7 @@ final class WinterSceneTests: XCTestCase {
             let id = try XCTUnwrap(scene.create(size, at: CGPoint(x: 400, y: 400)))
             scene.beginDragging(id, at: CGPoint(x: 400, y: 400))
             scene.drag(id, to: CGPoint(x: 200, y: y), dt: 0.1)
-            scene.endDragging(id)
+            scene.endDragging(id, idleTime: 0.2)
         }
         XCTAssertEqual(scene.objects.count, 1, "Сборка удаляет отдельные шары")
         XCTAssertEqual(scene.objects[0].id, base)
@@ -207,7 +207,7 @@ final class WinterSceneTests: XCTestCase {
                 let top = try XCTUnwrap(scene.objects.first).frame.maxY
                 let id = try XCTUnwrap(scene.create(radius: radius, at: CGPoint(x: 200, y: top + radius)))
                 scene.beginDragging(id, at: CGPoint(x: 200, y: top + radius))
-                scene.endDragging(id)
+                scene.endDragging(id, idleTime: 0.2)
                 XCTAssertEqual(scene.objects.count, 1)
                 XCTAssertEqual(scene.objects[0].isSnowman, scene.objects[0].radii.count == 3)
             }

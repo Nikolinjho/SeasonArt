@@ -333,4 +333,30 @@ final class WinterSceneControllerTests: XCTestCase {
         XCTAssertFalse(controller.isSculpting)
         XCTAssertEqual(controller.scene.objects.count, 12)
     }
+    func testПеретаскиваниеБезАппаратнойКнопкиОтменяетАвтолёпку() throws {
+        let (controller, simulation, _) = snowyController()
+        defer { controller.close() }
+        let id = try XCTUnwrap(controller.create(.small, at: CGPoint(x: 100, y: 150)))
+        frame(controller, simulation, x: 160)
+        frame(controller, simulation, x: 220)
+        XCTAssertTrue(controller.isSculpting)
+        controller.scene.beginDragging(id, at: CGPoint(x: 100, y: 150))
+        frame(controller, simulation, x: 240, buttons: 0)
+        XCTAssertFalse(controller.isSculpting)
+        frame(controller, simulation, x: 300, buttons: 0)
+        XCTAssertFalse(controller.isSculpting)
+        XCTAssertEqual(controller.scene.objects.count, 1)
+    }
+
+    func testСкрытиеКонтроллераОтменяетПеретаскиваниеБезОкна() throws {
+        let (controller, _, _) = snowyController()
+        defer { controller.close() }
+        let id = try XCTUnwrap(controller.create(.small, at: CGPoint(x: 100, y: 150)))
+        controller.scene.beginDragging(id, at: CGPoint(x: 100, y: 150))
+        controller.scene.drag(id, to: CGPoint(x: 130, y: 150), dt: 0.1)
+        controller.isSuppressed = true
+        XCTAssertFalse(controller.scene.objects[0].isDragged)
+        XCTAssertEqual(controller.scene.objects[0].velocity, .zero)
+    }
+
 }

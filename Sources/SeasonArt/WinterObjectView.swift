@@ -13,7 +13,7 @@ final class WinterObjectView: NSView {
     required init?(coder: NSCoder) { nil }
 
     func display(object: WinterObject) {
-        let changed = self.object.radii != object.radii
+        let changed = self.object.radii != object.radii || self.object.rotation != object.rotation
         self.object = object
         if changed { needsDisplay = true }
     }
@@ -32,12 +32,16 @@ final class WinterObjectView: NSView {
         panel.dragged?(panel.convertPoint(toScreen: event.locationInWindow), max(1.0 / 240, event.timestamp - previous))
     }
 
-    override func mouseUp(with event: NSEvent) { endDrag() }
+    override func mouseUp(with event: NSEvent) {
+        guard let previous = lastDragTimestamp else { return }
+        lastDragTimestamp = nil
+        (window as? WinterObjectWindow)?.dragEnded?(max(0, event.timestamp - previous))
+    }
 
-    func endDrag() {
+    func cancelDrag() {
         guard lastDragTimestamp != nil else { return }
         lastDragTimestamp = nil
-        (window as? WinterObjectWindow)?.dragEnded?()
+        (window as? WinterObjectWindow)?.dragCancelled?()
     }
 
     override func draw(_ dirtyRect: NSRect) {
@@ -49,6 +53,19 @@ final class WinterObjectView: NSView {
             NSColor(calibratedWhite: 0.55, alpha: 0.4).setStroke()
             ball.lineWidth = 0.8
             ball.stroke()
+        }
+        if object.radii.count == 1, let rect = frames.first {
+            // Свет остаётся неподвижным, вращаются только маленькие снежные пятнышки.
+            NSGraphicsContext.saveGraphicsState()
+            NSBezierPath(ovalIn: rect.insetBy(dx: 1, dy: 1)).addClip()
+            let radius = object.radii[0]
+            NSColor(calibratedRed: 0.50, green: 0.66, blue: 0.74, alpha: 0.22).setFill()
+            for (x, y, size): (CGFloat, CGFloat, CGFloat) in [(-0.35, 0.2, 0.10), (0.28, -0.32, 0.13), (0.4, 0.35, 0.07)] {
+                let px = (x * cos(object.rotation) - y * sin(object.rotation)) * radius + rect.midX
+                let py = (x * sin(object.rotation) + y * cos(object.rotation)) * radius + rect.midY
+                NSBezierPath(ovalIn: CGRect(x: px, y: py, width: radius * size, height: radius * size)).fill()
+            }
+            NSGraphicsContext.restoreGraphicsState()
         }
         guard let decoration = object.decoration else { return }
         NSColor(calibratedWhite: 0.14, alpha: 1).setFill()
