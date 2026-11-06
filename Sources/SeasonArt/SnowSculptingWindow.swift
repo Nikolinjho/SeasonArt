@@ -131,6 +131,9 @@ private final class SnowSculptingView: NSView {
     }
 
     override func draw(_ dirtyRect: NSRect) {
+        // WindowServer пропускает мышь через полностью прозрачные пиксели.
+        NSColor(calibratedWhite: 0, alpha: 0.02).setFill()
+        bounds.fill()
         let text = "Проведи мышью по сугробу. Отпусти, чтобы создать шар. Esc – отмена"
         let attributes: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 14, weight: .medium),
                                                        .foregroundColor: NSColor.white]
