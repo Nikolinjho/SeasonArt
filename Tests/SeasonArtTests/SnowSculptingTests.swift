@@ -58,6 +58,14 @@ final class SnowSculptingTests: XCTestCase {
         XCTAssertEqual(gesture.collectedArea, 0, "Воздух и некорректные координаты не дают снег")
     }
 
+    func testHugeFiniteEndpointsDoNotInterpolateThroughPile() {
+        let source = SculptingSource(layer: layer())
+        var gesture = SnowSculptingGesture(source: source, at: CGPoint(x: 1e100, y: 1))
+        gesture.include(CGPoint(x: -1e100, y: 1))
+        XCTAssertEqual(gesture.collectedArea, 0, "Непредставимые события мыши не пересекают сугроб")
+        XCTAssertNil(gesture.size)
+    }
+
     func testThinSnowAndHiddenColumnsRestrictCollection() {
         let thin = layer(height: 0.5, columns: 100)
         thin.updateVisibility(screenWidth: 200, blockers: [SIMD4(0, 0, 100, 20)])
@@ -114,6 +122,20 @@ final class SnowSculptingTests: XCTestCase {
         XCTAssertEqual((before.reduce(0, +) - after.reduce(0, +)) * 2, 220, accuracy: 0.1)
         XCTAssertEqual(simulation.winterSurfaceY(at: 380, on: 42), distant, "Дальний участок не меняется")
         XCTAssertTrue(zip(before, after).allSatisfy { $0 - $1 <= 2.001 && $1 >= 0 }, "Высота каждой колонки уменьшается не больше чем на два пункта")
+    }
+
+    func testReducedLiveSnowCreatesSmallerBallWithActualArea() throws {
+        let simulation = simulation()
+        let draft = try gesture(simulation)
+        XCTAssertEqual(draft.size, .large)
+        _ = simulation.plowDock(id: 42, fromX: 150, toX: 210)
+        let before = values(simulation)
+        let result = try XCTUnwrap(simulation.commitSculpting(draft))
+        XCTAssertEqual(result.size, .medium, "После уменьшения запаса создаётся шар по реальному количеству снега")
+        XCTAssertGreaterThanOrEqual(result.collectedArea, SnowSculptingGesture.mediumArea)
+        XCTAssertLessThan(result.collectedArea, SnowSculptingGesture.largeArea)
+        let after = values(simulation)
+        XCTAssertEqual(CGFloat((before.reduce(0, +) - after.reduce(0, +)) * 2), result.collectedArea, accuracy: 0.1)
     }
 
     func testInsufficientLiveSnowIsAtomic() throws {

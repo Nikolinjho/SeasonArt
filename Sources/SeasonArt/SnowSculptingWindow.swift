@@ -126,8 +126,8 @@ private final class SnowSculptingView: NSView {
         if event.keyCode == 53 { panel?.cancelOperation(nil) }
     }
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
-        if event.keyCode == 53 { panel?.cancelOperation(nil) }
-        return true
+        if event.keyCode == 53 { panel?.cancelOperation(nil); return true }
+        return super.performKeyEquivalent(with: event)
     }
 
     override func draw(_ dirtyRect: NSRect) {

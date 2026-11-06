@@ -84,7 +84,11 @@ struct SnowSculptingGesture {
     }
 
     mutating func include(_ point: CGPoint) {
-        guard point.x.isFinite, point.y.isFinite else { previous = nil; return }
+        // События AppKit лежат в пределах экранов. Отсекаем нереальные координаты до интерполяции.
+        guard point.x.isFinite, point.y.isFinite, abs(point.x) <= 1_000_000, abs(point.y) <= 1_000_000 else {
+            previous = nil
+            return
+        }
         lastPoint = point
         defer { previous = point }
         if let previous, previous.x != point.x {

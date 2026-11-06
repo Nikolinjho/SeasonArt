@@ -22,6 +22,24 @@ final class SnowSculptingWindowTests: XCTestCase {
         XCTAssertFalse(panel.isVisible)
     }
 
+    func testOnlyEscapeConsumesKeyboardEquivalent() throws {
+        _ = NSApplication.shared
+        let panel = SnowSculptingWindow(screenFrame: CGRect(x: 0, y: 0, width: 800, height: 600))
+        defer { panel.close() }
+        let view = try XCTUnwrap(panel.contentView)
+        let command = try XCTUnwrap(NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: .command,
+            timestamp: 1, windowNumber: panel.windowNumber, context: nil, characters: "q",
+            charactersIgnoringModifiers: "q", isARepeat: false, keyCode: 12))
+        XCTAssertFalse(view.performKeyEquivalent(with: command), "Необработанная команда остаётся цепочке responder приложения")
+        var cancelled = 0
+        panel.cancelled = { cancelled += 1 }
+        let escape = try XCTUnwrap(NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [],
+            timestamp: 2, windowNumber: panel.windowNumber, context: nil, characters: "\u{1b}",
+            charactersIgnoringModifiers: "\u{1b}", isARepeat: false, keyCode: 53))
+        XCTAssertTrue(view.performKeyEquivalent(with: escape))
+        XCTAssertEqual(cancelled, 1, "Esc отменяет ровно один жест")
+    }
+
     func testMouseCallbacksUseGlobalCoordinatesAndIgnoreClosedPanel() throws {
         _ = NSApplication.shared
         let panel = SnowSculptingWindow(screenFrame: CGRect(x: -800, y: 100, width: 800, height: 600))
