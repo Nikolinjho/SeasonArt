@@ -301,7 +301,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func toggleBehindWindows() {
         behindWindows.toggle()
         Preferences.behindWindows = behindWindows
-        for snow in screens { snow.window.behindWindows = behindWindows }
+        for snow in screens { snow.behindWindows = behindWindows }
     }
 
     @objc private func toggleFullScreen() {

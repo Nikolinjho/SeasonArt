@@ -590,6 +590,8 @@ final class SnowSimulation {
     private var pumpkinsMoved = false
     /// The app windows on the screen, left, bottom, right, top: a pumpkin hides from any that covers it.
     var windowFrames: [SIMD4<Float>] = []
+    /// Окна скрывают нижний сугроб только при размещении эффекта за окнами.
+    var groundBehindWindows = false
 
     init(width: Float, height: Float, snowfall: Snowfall) {
         self.width = width
@@ -677,7 +679,7 @@ final class SnowSimulation {
     private func sculptingBlockers(of layer: SnowLayer) -> [SIMD4<Float>] {
         var blockers = layer.occluders
         if layer === ground {
-            blockers += windowFrames
+            if groundBehindWindows { blockers += windowFrames }
             blockers += ledgeList.filter(\.isDock).map {
                 SIMD4($0.origin.x, $0.origin.y - $0.face, $0.origin.x + $0.width, $0.origin.y)
             }

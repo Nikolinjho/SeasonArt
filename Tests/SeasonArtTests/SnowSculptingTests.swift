@@ -182,8 +182,28 @@ final class SnowSculptingTests: XCTestCase {
         XCTAssertNil(SnowSculptingGesture.radius(for: .infinity))
     }
 
+    func testGroundBesideDockCanBeSculptedAboveWindows() throws {
+        let simulation = SnowSimulation(width: 600, height: 400, snowfall: .off)
+        simulation.thaws = false
+        simulation.updateWindows([surface(x: 100)], interval: 1 / 60)
+        simulation.scatter((0..<4_000).map { i in
+            let x: Float = (i % 2 == 0 ? 20 : 540) + Float(i % 30)
+            return ScatterPiece(position: SIMD2(x, 130), velocity: SIMD2(0, -200), color: SIMD3(repeating: 1))
+        })
+        for _ in 0..<240 { _ = simulation.step(dt: 1 / 60, cursor: SIMD2(-1_000, -1_000)) }
+        simulation.windowFrames = [SIMD4(0, 0, 600, 350)]
+        for x: CGFloat in [20, 540] {
+            let start = CGPoint(x: x, y: 1)
+            let source = try XCTUnwrap(simulation.sculptingSource(at: start), "Видимый снег сбоку Dock доступен поверх окна")
+            var draft = SnowSculptingGesture(source: source, at: start)
+            draft.include(CGPoint(x: x + 28, y: 1))
+            XCTAssertNotNil(simulation.commitSculpting(draft), "Проход по снегу создаёт шар с обеих сторон Dock")
+        }
+    }
+
     func testGroundHiddenByWindowOrDockCannotBeSculpted() throws {
         let simulation = SnowSimulation(width: 600, height: 400, snowfall: .off)
+        simulation.groundBehindWindows = true
         simulation.thaws = false
         simulation.scatter((0..<4_000).map { i in
             ScatterPiece(position: SIMD2(100 + Float(i % 180) * 2, 130),
@@ -199,6 +219,7 @@ final class SnowSculptingTests: XCTestCase {
         XCTAssertNil(simulation.commitSculpting(draft), "Новое перекрытие отменяет подтверждение")
         XCTAssertEqual(values(simulation), before)
         simulation.windowFrames = []
+        simulation.groundBehindWindows = false
         simulation.updateWindows([surface()], interval: 1 / 60)
         XCTAssertNil(simulation.sculptingSource(at: start), "Снег под телом Dock скрыт")
     }

@@ -8,6 +8,13 @@ final class ScreenSnow {
     let dock: DockOverlay
     let simulation: SnowSimulation
     let winter: WinterSceneController
+    var behindWindows: Bool {
+        get { window.behindWindows }
+        set {
+            window.behindWindows = newValue
+            simulation.groundBehindWindows = newValue
+        }
+    }
     private let view: MTKView
     private let renderer: Renderer
     private let tracker = WindowTracker()
@@ -113,13 +120,13 @@ final class ScreenSnow {
         winter.showsInScreenshots = Preferences.showInScreenshots
         self.renderer = renderer
         window = OverlayWindow(screen: screen)
-        window.behindWindows = Preferences.behindWindows
         window.showsInScreenshots = Preferences.showInScreenshots
         overFullScreen = Preferences.showOverFullScreen
         dock = DockOverlay(screen: screen, device: device)
         dock.window.showsInScreenshots = Preferences.showInScreenshots
         renderer.dockOverlay = dock
         view = Self.makeView(device: device, size: screen.frame.size)
+        behindWindows = Preferences.behindWindows
 
         renderer.cursorLocation = { [unowned window] in
             let mouse = NSEvent.mouseLocation
