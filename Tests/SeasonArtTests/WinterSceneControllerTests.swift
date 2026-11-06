@@ -181,4 +181,55 @@ final class WinterSceneControllerTests: XCTestCase {
         XCTAssertTrue(controller.scene.objects.isEmpty)
         XCTAssertEqual(source.layer.heights, before, "Отмена и короткий жест не меняют сугроб")
     }
+
+    func testCancelledDraftPreservesSnowAndRejectsDelayedRelease() throws {
+        for reason in ["escape", "resignKey", "suppression", "mode", "close"] {
+            let (controller, simulation, _) = snowyController()
+            defer { controller.close() }
+            let source = try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 160, y: 61)))
+            let before = source.layer.heights
+            XCTAssertTrue(controller.startSculpting())
+            let panel = try XCTUnwrap(controller.sculptingWindow)
+            let release = try XCTUnwrap(panel.ended)
+            panel.began?(CGPoint(x: -440, y: 161))
+            panel.moved?(CGPoint(x: -300, y: 161))
+            switch reason {
+            case "escape": panel.cancelOperation(nil)
+            case "resignKey": panel.resignKey()
+            case "suppression": controller.isSuppressed = true
+            case "mode": controller.isEnabled = false
+            default: controller.close()
+            }
+            release(CGPoint(x: -300, y: 161))
+            XCTAssertFalse(controller.isSculpting, "Отмена завершает жест: \(reason)")
+            XCTAssertNil(controller.sculptingWindow)
+            XCTAssertTrue(controller.scene.objects.isEmpty, "Позднее отпускание не подтверждает отменённый жест: \(reason)")
+            XCTAssertEqual(source.layer.heights, before, "Отмена сохраняет снег: \(reason)")
+            XCTAssertTrue(simulation.cursorInteracts, "Отмена возвращает обычную расчистку: \(reason)")
+            XCTAssertFalse(controller.isRunning, "Пустая сцена освобождает таймер: \(reason)")
+            XCTAssertNil(panel.began)
+            XCTAssertNil(panel.moved)
+            XCTAssertNil(panel.ended)
+            XCTAssertNil(panel.cancelled)
+        }
+    }
+
+    func testClosingArmedControllerPreventsReopeningAndLateInput() throws {
+        let (controller, simulation, _) = snowyController()
+        XCTAssertTrue(controller.startSculpting())
+        let panel = try XCTUnwrap(controller.sculptingWindow)
+        let begin = try XCTUnwrap(panel.began)
+        let move = try XCTUnwrap(panel.moved)
+        let release = try XCTUnwrap(panel.ended)
+        controller.close()
+        controller.close()
+        begin(CGPoint(x: -440, y: 161))
+        move(CGPoint(x: -300, y: 161))
+        release(CGPoint(x: -300, y: 161))
+        XCTAssertFalse(controller.startSculpting(), "Закрытая сцена не возобновляет захват")
+        XCTAssertTrue(controller.scene.objects.isEmpty, "События после закрытия не создают игрушки")
+        XCTAssertNil(controller.sculptingWindow)
+        XCTAssertFalse(controller.isRunning)
+        XCTAssertTrue(simulation.cursorInteracts)
+    }
 }
