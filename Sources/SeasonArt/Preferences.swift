@@ -5,11 +5,11 @@ enum Snowfall: Int, CaseIterable {
 
     var title: String {
         switch self {
-        case .off: "Off"
-        case .light: "Light"
-        case .steady: "Steady"
-        case .heavy: "Heavy"
-        case .variable: "Variable"
+        case .off: "Выключено"
+        case .light: "Слабая"
+        case .steady: "Умеренная"
+        case .heavy: "Сильная"
+        case .variable: "Переменная"
         }
     }
 
@@ -25,7 +25,12 @@ enum Snowfall: Int, CaseIterable {
 }
 
 enum Preferences {
-    private static let defaults = UserDefaults.standard
+    private static var defaults = UserDefaults.standard
+
+    // Приложение использует свой стандартный домен, тесты передают отдельный профиль.
+    static func configure(defaults: UserDefaults) {
+        self.defaults = defaults
+    }
     private static let snowfallKey = "snowfall"
     private static let behindWindowsKey = "behindWindows"
     private static let showOverFullScreenKey = "showOverFullScreen"

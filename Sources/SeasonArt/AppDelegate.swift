@@ -18,7 +18,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var meltItem: NSMenuItem!
     private var snowOnWindowsItem: NSMenuItem!
     private var clearItem: NSMenuItem!
-    private var halloweenItem: NSMenuItem!
     private var snowItem: NSMenuItem!
     private var autumnItem: NSMenuItem!
     private var rainItem: NSMenuItem!
@@ -37,7 +36,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var sessionInactive = false
     private var welcome: WelcomeController?
     private let power = PowerMonitor()
-    private var halloweenTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Preferences.registerDefaults()
@@ -61,7 +59,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem = makeStatusItem()
         updateStatusIcon()
         refreshHalloween()
-        halloweenTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in self?.refreshHalloween() }
         observeSystem()
         Marquee.enabled = Preferences.deepInteraction
         screenshots.stepAside = { [weak self] aside in self?.screens.forEach { $0.stepAside(aside) } }
@@ -133,7 +130,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.delegate = self
         menu.autoenablesItems = false
 
-        menu.addItem(.sectionHeader(title: "Intensity"))
+        menu.addItem(.sectionHeader(title: "Интенсивность"))
         snowfallSlider.changed = { [unowned self] in select($0) }
         let sliderItem = NSMenuItem()
         sliderItem.view = snowfallSlider
@@ -141,30 +138,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.separator())
         let modes = NSMenu()
         modes.autoenablesItems = false
-        snowItem = add("Snow", #selector(chooseMode), to: modes)
-        autumnItem = add("Autumn Leaves", #selector(chooseMode), to: modes)
-        rainItem = add("Rain", #selector(chooseMode), to: modes)
-        blossomItem = add("Cherry Blossom", #selector(chooseMode), to: modes)
-        modes.addItem(.separator())
-        halloweenItem = add("Halloween", #selector(toggleHalloween), to: modes)
-        menu.addItem(withTitle: "Mode", action: nil, keyEquivalent: "").submenu = modes
+        snowItem = add("Снег", #selector(chooseMode), to: modes)
+        autumnItem = add("Осенние листья", #selector(chooseMode), to: modes)
+        rainItem = add("Дождь", #selector(chooseMode), to: modes)
+        blossomItem = add("Цветение", #selector(chooseMode), to: modes)
+        menu.addItem(withTitle: "Режим", action: nil, keyEquivalent: "").submenu = modes
         let performance = NSMenu()
         performance.autoenablesItems = false
-        defaultPerformanceItem = add("Default", #selector(choosePerformance), to: performance)
-        maxPerformanceItem = add("Max", #selector(choosePerformance), to: performance)
-        menu.addItem(withTitle: "Performance", action: nil, keyEquivalent: "").submenu = performance
-        accumulateItem = add("Accumulate", #selector(toggleAccumulate), to: menu)
-        meltItem = add("Melt Snow", #selector(toggleMeltSnow), to: menu)
-        snowOnWindowsItem = add("Snow on Windows", #selector(toggleSnowOnWindows), to: menu)
-        deepInteractionItem = add("Deep Interaction", #selector(toggleDeepInteraction), to: menu)
-        clearItem = add("Clear Snow", #selector(clearSnow), to: menu)
+        defaultPerformanceItem = add("Обычная", #selector(choosePerformance), to: performance)
+        maxPerformanceItem = add("Максимальная", #selector(choosePerformance), to: performance)
+        menu.addItem(withTitle: "Производительность", action: nil, keyEquivalent: "").submenu = performance
+        accumulateItem = add("Накапливать", #selector(toggleAccumulate), to: menu)
+        meltItem = add("Таяние снега", #selector(toggleMeltSnow), to: menu)
+        snowOnWindowsItem = add("Снег на окнах", #selector(toggleSnowOnWindows), to: menu)
+        deepInteractionItem = add("Взаимодействие с выделением", #selector(toggleDeepInteraction), to: menu)
+        clearItem = add("Убрать снег", #selector(clearSnow), to: menu)
         menu.addItem(.separator())
-        behindWindowsItem = add("Behind Windows", #selector(toggleBehindWindows), to: menu)
-        fullScreenItem = add("Show over Full Screen", #selector(toggleFullScreen), to: menu)
-        screenshotsItem = add("Show in Screenshots", #selector(toggleScreenshots), to: menu)
+        behindWindowsItem = add("За окнами", #selector(toggleBehindWindows), to: menu)
+        fullScreenItem = add("Поверх полноэкранных приложений", #selector(toggleFullScreen), to: menu)
+        screenshotsItem = add("Показывать на снимках экрана", #selector(toggleScreenshots), to: menu)
         menu.addItem(.separator())
-        loginItem = add("Open at Login", #selector(toggleOpenAtLogin), to: menu)
-        menu.addItem(withTitle: "Quit SeasonArt", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        loginItem = add("Запускать при входе", #selector(toggleOpenAtLogin), to: menu)
+        add("О SeasonArt", #selector(showAbout), to: menu)
+        menu.addItem(withTitle: "Выйти из SeasonArt", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
 
         item.menu = menu
         return item
@@ -188,21 +184,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         autumnItem.state = autumn ? .on : .off
         rainItem.state = rain ? .on : .off
         blossomItem.state = blossom ? .on : .off
-        // Rain neither heaps up nor lies about to clear away.
+        // Дождь не накапливается, поэтому таяние и очистка ему не нужны.
         accumulateItem.isHidden = rain
         meltItem.isHidden = rain
         clearItem.isHidden = rain
-        meltItem.title = autumn ? "Wither Leaves" : blossom ? "Wilt Petals" : "Melt Snow"
-        snowOnWindowsItem.title = autumn ? "Leaves on Windows" : blossom ? "Petals on Windows" : rain ? "Rain on Windows" : "Snow on Windows"
-        clearItem.title = autumn ? "Clear Leaves" : blossom ? "Clear Petals" : "Clear Snow"
+        meltItem.title = autumn ? "Увядание листьев" : blossom ? "Увядание лепестков" : "Таяние снега"
+        snowOnWindowsItem.title = autumn ? "Листья на окнах" : blossom ? "Лепестки на окнах" : rain ? "Дождь на окнах" : "Снег на окнах"
+        clearItem.title = autumn ? "Убрать листья" : blossom ? "Убрать лепестки" : "Убрать снег"
         meltItem.state = thaws ? .on : .off
         meltItem.isEnabled = accumulates
         snowOnWindowsItem.state = snowOnWindows ? .on : .off
         deepInteractionItem.state = Preferences.deepInteraction ? .on : .off
         deepInteractionItem.isEnabled = snowOnWindows
         clearItem.isEnabled = screens.contains { $0.simulation.hasSnow || $0.simulation.spriteCount > 0 }
-        halloweenItem.state = Halloween.isWanted ? .on : .off
-        halloweenItem.isEnabled = mode == .snow
         defaultPerformanceItem.state = Preferences.maxPerformance ? .off : .on
         maxPerformanceItem.state = Preferences.maxPerformance ? .on : .off
         behindWindowsItem.state = behindWindows ? .on : .off
@@ -276,7 +270,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 try service.register()
             }
         } catch {
-            NSLog("SeasonArt: login item change failed: \(error)")
+            NSApp.activate()
+            Self.loginErrorAlert(error).runModal()
         }
     }
 
@@ -296,9 +291,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         for snow in screens { snow.maxFrameRate = Preferences.maxPerformance }
     }
 
-    @objc private func toggleHalloween() {
-        Halloween.toggle()
-        refreshHalloween()
+    static func loginErrorAlert(_ error: Error) -> NSAlert {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Не удалось изменить автозапуск"
+        alert.informativeText = error.localizedDescription
+        alert.addButton(withTitle: "Понятно")
+        return alert
+    }
+
+    @objc private func showAbout() {
+        let alert = NSAlert()
+        alert.messageText = "SeasonArt"
+        alert.informativeText = "Локальная версия для Никиты. Основано на Snowhush, автор Mykhailo Bezruchko.\n\nЛицензия PolyForm Noncommercial 1.0.0 и сведения об изменениях включены в приложение."
+        alert.addButton(withTitle: "Закрыть")
+        alert.addButton(withTitle: "Лицензия и авторство")
+        NSApp.activate()
+        if alert.runModal() == .alertSecondButtonReturn,
+           let resources = Bundle.main.resourceURL {
+            NSWorkspace.shared.open(resources.appendingPathComponent("THIRD_PARTY.md"))
+            NSWorkspace.shared.open(resources.appendingPathComponent("LICENSE"))
+        }
     }
 
     private func updateStatusIcon() {
@@ -322,10 +335,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func refreshHalloween() {
-        guard Halloween.isOn != halloween else { return }
-        halloween.toggle()
+        // Дополнительный сезонный режим отключён независимо от даты и старых настроек.
+        halloween = false
+        for snow in screens { snow.halloween = false }
         updateStatusIcon()
-        for snow in screens { snow.halloween = halloween }
     }
 
     // MARK: - System

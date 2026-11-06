@@ -9,5 +9,6 @@ let package = Package(
     ],
     targets: [
         .executableTarget(name: "SeasonArt", path: "Sources/SeasonArt"),
+        .testTarget(name: "SeasonArtTests", dependencies: ["SeasonArt"]),
     ]
 )
