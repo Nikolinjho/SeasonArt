@@ -1,0 +1,1044 @@
+{
+  "sha": "c9efc55beaf0837a8806f06615085365a3257b6d",
+  "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/c9efc55beaf0837a8806f06615085365a3257b6d",
+  "tree": [
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "336e300906ae0de43f5b05755e5fd832325371d3",
+      "size": 176,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/336e300906ae0de43f5b05755e5fd832325371d3"
+    },
+    {
+      "path": "Assets",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "739cc04d2cc9e4842f17603b47a6254ab2352671",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/739cc04d2cc9e4842f17603b47a6254ab2352671"
+    },
+    {
+      "path": "Assets/circle.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3383a218caa6310f93bf704104a41f01aaa95691",
+      "size": 5191,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/3383a218caa6310f93bf704104a41f01aaa95691"
+    },
+    {
+      "path": "Assets/confetti.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8ca42c00e29e95c8f6805d6ac5f02c4f1c320b77",
+      "size": 4017,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/8ca42c00e29e95c8f6805d6ac5f02c4f1c320b77"
+    },
+    {
+      "path": "Assets/sparkle.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2fab4f4d945fac9a85053034869eed1b22b65937",
+      "size": 3740,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/2fab4f4d945fac9a85053034869eed1b22b65937"
+    },
+    {
+      "path": "CODE_OF_CONDUCT.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "45d257b29a9b5e5d21f8ac259dda346cd538cb49",
+      "size": 5489,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/45d257b29a9b5e5d21f8ac259dda346cd538cb49"
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a042dfe8c4c56c5e1fe3951dae1aa2f304488a19",
+      "size": 1069,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/a042dfe8c4c56c5e1fe3951dae1aa2f304488a19"
+    },
+    {
+      "path": "Package.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "875647b272e2096fb94328db37701b55597c43f0",
+      "size": 875,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/875647b272e2096fb94328db37701b55597c43f0"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6128213fddebc3b87f95c4dcd252111b1d7da876",
+      "size": 18233,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/6128213fddebc3b87f95c4dcd252111b1d7da876"
+    },
+    {
+      "path": "Sandbox",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "f8cfffad135cdda36cddc28a3040b1eb153c7725",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/f8cfffad135cdda36cddc28a3040b1eb153c7725"
+    },
+    {
+      "path": "Sandbox/Sandbox.xcodeproj",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "cea72636c64c751423342f196806b91f7392346b",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/cea72636c64c751423342f196806b91f7392346b"
+    },
+    {
+      "path": "Sandbox/Sandbox.xcodeproj/project.pbxproj",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7b52d95b9763bf720889813a77938bdde75402a7",
+      "size": 20427,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/7b52d95b9763bf720889813a77938bdde75402a7"
+    },
+    {
+      "path": "Sandbox/Sandbox.xcodeproj/project.xcworkspace",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "0094c9846cdbe0e73a44bebdf09a408adff74ba7",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/0094c9846cdbe0e73a44bebdf09a408adff74ba7"
+    },
+    {
+      "path": "Sandbox/Sandbox.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "919434a6254f0e9651f402737811be6634a03e9c",
+      "size": 135,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/919434a6254f0e9651f402737811be6634a03e9c"
+    },
+    {
+      "path": "Sandbox/Sandbox.xcodeproj/project.xcworkspace/xcshareddata",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c43cc9b8ba4e4ae5c6df5ed5e3f199668b7fead0",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/c43cc9b8ba4e4ae5c6df5ed5e3f199668b7fead0"
+    },
+    {
+      "path": "Sandbox/Sandbox.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "18d981003d68d0546c4804ac2ff47dd97c6e7921",
+      "size": 238,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/18d981003d68d0546c4804ac2ff47dd97c6e7921"
+    },
+    {
+      "path": "Sandbox/Sandbox",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "104ffb4e7aca7002c72393215d1413274534c0da",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/104ffb4e7aca7002c72393215d1413274534c0da"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "f1f2e7ea72edf026b376764bcbcf07da2760db05",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/f1f2e7ea72edf026b376764bcbcf07da2760db05"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AccentColor.colorset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "986bd324c26d854187559f27f8194c8afd1795ac",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/986bd324c26d854187559f27f8194c8afd1795ac"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AccentColor.colorset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eb8789700816459c1e1480e0b34781d9fb78a1ca",
+      "size": 123,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/eb8789700816459c1e1480e0b34781d9fb78a1ca"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.appiconset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "2d9c90b20a7f1d1a4d442d73a6648ce382385bd8",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/2d9c90b20a7f1d1a4d442d73a6648ce382385bd8"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cae37998259e0522549ca880943dd0f9f98bc655",
+      "size": 1529,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/cae37998259e0522549ca880943dd0f9f98bc655"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.appiconset/Icon-1024.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6b68fa48f3511a9bebc868c41271f7a6e10fdb2f",
+      "size": 982055,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/6b68fa48f3511a9bebc868c41271f7a6e10fdb2f"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.appiconset/Icon-128.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "510c52b5795d0a768ffe1443b52fd4e97acc9394",
+      "size": 23430,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/510c52b5795d0a768ffe1443b52fd4e97acc9394"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.appiconset/Icon-16.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2ac771471cc7e6f18d9b77eb94cd0350ee3b0d40",
+      "size": 3070,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/2ac771471cc7e6f18d9b77eb94cd0350ee3b0d40"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.appiconset/Icon-256 1.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f59072aefb7e942e1f480106986ae993b0de035c",
+      "size": 79469,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/f59072aefb7e942e1f480106986ae993b0de035c"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.appiconset/Icon-256.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f59072aefb7e942e1f480106986ae993b0de035c",
+      "size": 79469,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/f59072aefb7e942e1f480106986ae993b0de035c"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.appiconset/Icon-32 1.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9ba12cb868ed9e0a5d4cf7b6588161943eef9afd",
+      "size": 4289,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/9ba12cb868ed9e0a5d4cf7b6588161943eef9afd"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.appiconset/Icon-32.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9ba12cb868ed9e0a5d4cf7b6588161943eef9afd",
+      "size": 4289,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/9ba12cb868ed9e0a5d4cf7b6588161943eef9afd"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.appiconset/Icon-512 1.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1f42398cbd28432ffe84771836bc2b516d30a0d4",
+      "size": 286132,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/1f42398cbd28432ffe84771836bc2b516d30a0d4"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.appiconset/Icon-512.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1f42398cbd28432ffe84771836bc2b516d30a0d4",
+      "size": 286132,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/1f42398cbd28432ffe84771836bc2b516d30a0d4"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.appiconset/Icon-64.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2911833a64226845ec882c7e2643c8a2d9a8b67e",
+      "size": 8397,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/2911833a64226845ec882c7e2643c8a2d9a8b67e"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.appiconset/Icon-Square 1.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8ad90c3c8292827961b95b55071fae5be6d70f42",
+      "size": 1187037,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/8ad90c3c8292827961b95b55071fae5be6d70f42"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.appiconset/Icon-Square.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8ad90c3c8292827961b95b55071fae5be6d70f42",
+      "size": 1187037,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/8ad90c3c8292827961b95b55071fae5be6d70f42"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.solidimagestack",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "8eb56d96c57ae0cabe30ee070ae0c0ae62305508",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/8eb56d96c57ae0cabe30ee070ae0c0ae62305508"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.solidimagestack/Back.solidimagestacklayer",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "eaa39bb94fbf5540c33c5e0fbf4317bcac6046e7",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/eaa39bb94fbf5540c33c5e0fbf4317bcac6046e7"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.solidimagestack/Back.solidimagestacklayer/Content.imageset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "010c979aa1a86a689b567c4cf14415f110a3563c",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/010c979aa1a86a689b567c4cf14415f110a3563c"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.solidimagestack/Back.solidimagestacklayer/Content.imageset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bd349820a17048315e644998a8cee582fb62dd20",
+      "size": 180,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/bd349820a17048315e644998a8cee582fb62dd20"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.solidimagestack/Back.solidimagestacklayer/Content.imageset/Icon-Square.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8ad90c3c8292827961b95b55071fae5be6d70f42",
+      "size": 1187037,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/8ad90c3c8292827961b95b55071fae5be6d70f42"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.solidimagestack/Back.solidimagestacklayer/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "73c00596a7fca3f3d4bdd64053b69d86745f9e10",
+      "size": 63,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/73c00596a7fca3f3d4bdd64053b69d86745f9e10"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.solidimagestack/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bb816dab338d26ec9ffc1efdf5b15c7589af5819",
+      "size": 203,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/bb816dab338d26ec9ffc1efdf5b15c7589af5819"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.solidimagestack/Front.solidimagestacklayer",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "eaa39bb94fbf5540c33c5e0fbf4317bcac6046e7",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/eaa39bb94fbf5540c33c5e0fbf4317bcac6046e7"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.solidimagestack/Front.solidimagestacklayer/Content.imageset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "010c979aa1a86a689b567c4cf14415f110a3563c",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/010c979aa1a86a689b567c4cf14415f110a3563c"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.solidimagestack/Front.solidimagestacklayer/Content.imageset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bd349820a17048315e644998a8cee582fb62dd20",
+      "size": 180,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/bd349820a17048315e644998a8cee582fb62dd20"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.solidimagestack/Front.solidimagestacklayer/Content.imageset/Icon-Square.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8ad90c3c8292827961b95b55071fae5be6d70f42",
+      "size": 1187037,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/8ad90c3c8292827961b95b55071fae5be6d70f42"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/AppIcon.solidimagestack/Front.solidimagestacklayer/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "73c00596a7fca3f3d4bdd64053b69d86745f9e10",
+      "size": 63,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/73c00596a7fca3f3d4bdd64053b69d86745f9e10"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "73c00596a7fca3f3d4bdd64053b69d86745f9e10",
+      "size": 63,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/73c00596a7fca3f3d4bdd64053b69d86745f9e10"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/HWS.imageset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d6648b9e9d8c085e82766151919274c66fb7877d",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/d6648b9e9d8c085e82766151919274c66fb7877d"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/HWS.imageset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "23dc40f67c882279bdd5caa0ef8db54152bb9d1f",
+      "size": 367,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/23dc40f67c882279bdd5caa0ef8db54152bb9d1f"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/HWS.imageset/HWS.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "48a7f209805bc8581c748f9212f7516fc70b5c57",
+      "size": 6079,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/48a7f209805bc8581c748f9212f7516fc70b5c57"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/HWS.imageset/HWS@2x.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2059bd034dbadc668919760f879330d4d58fdc25",
+      "size": 8913,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/2059bd034dbadc668919760f879330d4d58fdc25"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/HWS.imageset/HWS@3x.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a47ba289ce9e92879a9549f93fcb0c72f5b0f04e",
+      "size": 12190,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/a47ba289ce9e92879a9549f93fcb0c72f5b0f04e"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/circle.imageset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "0a006046eee2c9ee05e8b06de86e38f1cf1fcc84",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/0a006046eee2c9ee05e8b06de86e38f1cf1fcc84"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/circle.imageset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8fc741b2ca84665f7c2a3a3c1bdd7d5031a96032",
+      "size": 304,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/8fc741b2ca84665f7c2a3a3c1bdd7d5031a96032"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/circle.imageset/circle.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3383a218caa6310f93bf704104a41f01aaa95691",
+      "size": 5191,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/3383a218caa6310f93bf704104a41f01aaa95691"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/confetti.imageset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "766ae0c78f9f12a200bc5a69104bc9038230a9bb",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/766ae0c78f9f12a200bc5a69104bc9038230a9bb"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/confetti.imageset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6b4c7c1cf4462f84597da55ee2e9322c191c0276",
+      "size": 306,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/6b4c7c1cf4462f84597da55ee2e9322c191c0276"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/confetti.imageset/confetti.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8ca42c00e29e95c8f6805d6ac5f02c4f1c320b77",
+      "size": 4017,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/8ca42c00e29e95c8f6805d6ac5f02c4f1c320b77"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/logo.imageset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "475652656a7aa3e8c2c39c305d652c2fc7d30500",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/475652656a7aa3e8c2c39c305d652c2fc7d30500"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/logo.imageset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b54d4d9a0ae4cc50fce1aa7d570bd299f6920a2e",
+      "size": 370,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/b54d4d9a0ae4cc50fce1aa7d570bd299f6920a2e"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/logo.imageset/logo.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b3219abb6dd3a47d6c30bbd3889333376782bdb4",
+      "size": 39538,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/b3219abb6dd3a47d6c30bbd3889333376782bdb4"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/logo.imageset/logo@2x.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e8a7212891aeda3348ff20a3868e28e9e6dc5d05",
+      "size": 128834,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/e8a7212891aeda3348ff20a3868e28e9e6dc5d05"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/logo.imageset/logo@3x.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "36fff1c9c1291208d9be74196d0974d6b8c2a377",
+      "size": 260015,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/36fff1c9c1291208d9be74196d0974d6b8c2a377"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/sparkle.imageset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "1833fd3abf3a6fa82e4c0d2e0695d114d0db42da",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/1833fd3abf3a6fa82e4c0d2e0695d114d0db42da"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/sparkle.imageset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "572581a6a1e4bb47f6789045ea78ac9e5aca798e",
+      "size": 305,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/572581a6a1e4bb47f6789045ea78ac9e5aca798e"
+    },
+    {
+      "path": "Sandbox/Sandbox/Assets.xcassets/sparkle.imageset/sparkle.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2fab4f4d945fac9a85053034869eed1b22b65937",
+      "size": 3740,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/2fab4f4d945fac9a85053034869eed1b22b65937"
+    },
+    {
+      "path": "Sandbox/Sandbox/ContentView.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6673af46b214f5e6955e199fea8a09c1cbb10da2",
+      "size": 1211,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/6673af46b214f5e6955e199fea8a09c1cbb10da2"
+    },
+    {
+      "path": "Sandbox/Sandbox/PlatformShims.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d82e79bab40bf9f250d1b5a92fc7ec57c1f9950b",
+      "size": 379,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/d82e79bab40bf9f250d1b5a92fc7ec57c1f9950b"
+    },
+    {
+      "path": "Sandbox/Sandbox/Preview Content",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7e0df99bd7a819d184beca3c06db266d033cc025",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/7e0df99bd7a819d184beca3c06db266d033cc025"
+    },
+    {
+      "path": "Sandbox/Sandbox/Preview Content/Preview Assets.xcassets",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "62cdbafc8b45291bf80fe22a2550934c91a39691",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/62cdbafc8b45291bf80fe22a2550934c91a39691"
+    },
+    {
+      "path": "Sandbox/Sandbox/Preview Content/Preview Assets.xcassets/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "73c00596a7fca3f3d4bdd64053b69d86745f9e10",
+      "size": 63,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/73c00596a7fca3f3d4bdd64053b69d86745f9e10"
+    },
+    {
+      "path": "Sandbox/Sandbox/PreviewViews",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d331b573e8317a21e0a82527676399e69c4baa45",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/d331b573e8317a21e0a82527676399e69c4baa45"
+    },
+    {
+      "path": "Sandbox/Sandbox/PreviewViews/ConfettiView.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "71f0fa2a0d12b141915c916cbb2a1cc614983e9a",
+      "size": 1073,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/71f0fa2a0d12b141915c916cbb2a1cc614983e9a"
+    },
+    {
+      "path": "Sandbox/Sandbox/PreviewViews/FireView.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3d2a6363517ab9f0652b1486cea99bebb9815422",
+      "size": 1683,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/3d2a6363517ab9f0652b1486cea99bebb9815422"
+    },
+    {
+      "path": "Sandbox/Sandbox/PreviewViews/FirefliesView.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4de292666182a8098f69956ac86d72c5aeb2cda6",
+      "size": 1747,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/4de292666182a8098f69956ac86d72c5aeb2cda6"
+    },
+    {
+      "path": "Sandbox/Sandbox/PreviewViews/FireworksView.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f792c1dba3065a4feca004950646e1ff9f5ad093",
+      "size": 665,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/f792c1dba3065a4feca004950646e1ff9f5ad093"
+    },
+    {
+      "path": "Sandbox/Sandbox/PreviewViews/MagicView.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1fa2dc4fa275a1f6641c865c36cc53396e5adc65",
+      "size": 553,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/1fa2dc4fa275a1f6641c865c36cc53396e5adc65"
+    },
+    {
+      "path": "Sandbox/Sandbox/PreviewViews/RainView.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "07c6d2262e0ef9ae2bdfc25a942d7557ca2354ee",
+      "size": 562,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/07c6d2262e0ef9ae2bdfc25a942d7557ca2354ee"
+    },
+    {
+      "path": "Sandbox/Sandbox/PreviewViews/SmokeView.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4d51f7c6d40f582d21118a0f7b0500d970c62891",
+      "size": 602,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/4d51f7c6d40f582d21118a0f7b0500d970c62891"
+    },
+    {
+      "path": "Sandbox/Sandbox/PreviewViews/SnowView.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0758084400a6c0324bfb90717681834c171dd3c9",
+      "size": 595,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/0758084400a6c0324bfb90717681834c171dd3c9"
+    },
+    {
+      "path": "Sandbox/Sandbox/PreviewViews/SparkView.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5dab962cacd89323a108631e6fead3487cf9fb2f",
+      "size": 568,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/5dab962cacd89323a108631e6fead3487cf9fb2f"
+    },
+    {
+      "path": "Sandbox/Sandbox/PreviewViews/SplashView.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "98604fac189155b6365d71b9bb71d1e948b151d3",
+      "size": 890,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/98604fac189155b6365d71b9bb71d1e948b151d3"
+    },
+    {
+      "path": "Sandbox/Sandbox/Sandbox.entitlements",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "18aff0ce43c2084462a8f12ea6e9c55c87914caf",
+      "size": 310,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/18aff0ce43c2084462a8f12ea6e9c55c87914caf"
+    },
+    {
+      "path": "Sandbox/Sandbox/SandboxApp.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "67c4d1e085a5c35d78208a08664d86a4cd35ec54",
+      "size": 260,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/67c4d1e085a5c35d78208a08664d86a4cd35ec54"
+    },
+    {
+      "path": "Sandbox/Sandbox/WelcomeView.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7d62a11b803d84ae31f17109f5cccbfc82a6c52a",
+      "size": 1416,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/7d62a11b803d84ae31f17109f5cccbfc82a6c52a"
+    },
+    {
+      "path": "Sources",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "f1553bb00eae77e328f1067ff2d2dead262ad573",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/f1553bb00eae77e328f1067ff2d2dead262ad573"
+    },
+    {
+      "path": "Sources/Vortex",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "cb59a52f0687c941c81d5448f4502721caf0c9de",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/cb59a52f0687c941c81d5448f4502721caf0c9de"
+    },
+    {
+      "path": "Sources/Vortex/Helpers",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d285984ff43da35a40103bc27e9fce0a32c07e24",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/d285984ff43da35a40103bc27e9fce0a32c07e24"
+    },
+    {
+      "path": "Sources/Vortex/Helpers/Angle+Codable.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "605fa511eeed24e2bfe3f81f01d8295cdd8f0988",
+      "size": 588,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/605fa511eeed24e2bfe3f81f01d8295cdd8f0988"
+    },
+    {
+      "path": "Sources/Vortex/Helpers/Array-InterpolatedColor.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5bc12ca5ba56fccab0d24b184e92cabb014f7513",
+      "size": 1801,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/5bc12ca5ba56fccab0d24b184e92cabb014f7513"
+    },
+    {
+      "path": "Sources/Vortex/Helpers/Lerping.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6b292dce4819dbd77975a786f15b8117725dc343",
+      "size": 535,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/6b292dce4819dbd77975a786f15b8117725dc343"
+    },
+    {
+      "path": "Sources/Vortex/Helpers/RandomSpread.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3b5d1aa7216437fa1f764764409dfc71c46c54e3",
+      "size": 921,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/3b5d1aa7216437fa1f764764409dfc71c46c54e3"
+    },
+    {
+      "path": "Sources/Vortex/Presets",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d3e44fc4035c078dafcf05bf8a076b33f41d5a60",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/d3e44fc4035c078dafcf05bf8a076b33f41d5a60"
+    },
+    {
+      "path": "Sources/Vortex/Presets/Confetti.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a78703047ea3a9a666911fca27d956e58e43bf57",
+      "size": 2255,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/a78703047ea3a9a666911fca27d956e58e43bf57"
+    },
+    {
+      "path": "Sources/Vortex/Presets/Fire.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "877dd247a6cc87798a5fc9e290db6b28269b801c",
+      "size": 755,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/877dd247a6cc87798a5fc9e290db6b28269b801c"
+    },
+    {
+      "path": "Sources/Vortex/Presets/Fireflies.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "256ef49f7d0ec157acab549b788606135b697862",
+      "size": 738,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/256ef49f7d0ec157acab549b788606135b697862"
+    },
+    {
+      "path": "Sources/Vortex/Presets/Fireworks.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ddabed0aa7eb0ffc67361881a8e38b73de59aa8f",
+      "size": 1835,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/ddabed0aa7eb0ffc67361881a8e38b73de59aa8f"
+    },
+    {
+      "path": "Sources/Vortex/Presets/Magic.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "394545afc6b8c7ac27b43d0bb47ca3faf02db435",
+      "size": 788,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/394545afc6b8c7ac27b43d0bb47ca3faf02db435"
+    },
+    {
+      "path": "Sources/Vortex/Presets/Rain.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fcf1c1b29ce4342171b7b0c73897b18fa986d4e4",
+      "size": 903,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/fcf1c1b29ce4342171b7b0c73897b18fa986d4e4"
+    },
+    {
+      "path": "Sources/Vortex/Presets/Smoke.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a678e63427ee6d82991d27fde6d8bbfce6b2bad1",
+      "size": 660,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/a678e63427ee6d82991d27fde6d8bbfce6b2bad1"
+    },
+    {
+      "path": "Sources/Vortex/Presets/Snow.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "55fb07a0e643fa1a7b387a82752272760564f99a",
+      "size": 659,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/55fb07a0e643fa1a7b387a82752272760564f99a"
+    },
+    {
+      "path": "Sources/Vortex/Presets/Spark.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "be18fe2cedda575ed8f21a79a0c7f8d67f155213",
+      "size": 873,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/be18fe2cedda575ed8f21a79a0c7f8d67f155213"
+    },
+    {
+      "path": "Sources/Vortex/Presets/Splash.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "65f018efd9c1d123cf769aa7251b1263e1276874",
+      "size": 1286,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/65f018efd9c1d123cf769aa7251b1263e1276874"
+    },
+    {
+      "path": "Sources/Vortex/Resources",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "ed69941377c48dbb27832d5992d85f8d06462919",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/ed69941377c48dbb27832d5992d85f8d06462919"
+    },
+    {
+      "path": "Sources/Vortex/Resources/Assets.xcassets",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "92296bba75704156434b3b8168f2ecdcf503b10e",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/92296bba75704156434b3b8168f2ecdcf503b10e"
+    },
+    {
+      "path": "Sources/Vortex/Resources/Assets.xcassets/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "73c00596a7fca3f3d4bdd64053b69d86745f9e10",
+      "size": 63,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/73c00596a7fca3f3d4bdd64053b69d86745f9e10"
+    },
+    {
+      "path": "Sources/Vortex/Resources/Assets.xcassets/circle.imageset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "0a006046eee2c9ee05e8b06de86e38f1cf1fcc84",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/0a006046eee2c9ee05e8b06de86e38f1cf1fcc84"
+    },
+    {
+      "path": "Sources/Vortex/Resources/Assets.xcassets/circle.imageset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8fc741b2ca84665f7c2a3a3c1bdd7d5031a96032",
+      "size": 304,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/8fc741b2ca84665f7c2a3a3c1bdd7d5031a96032"
+    },
+    {
+      "path": "Sources/Vortex/Resources/Assets.xcassets/circle.imageset/circle.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3383a218caa6310f93bf704104a41f01aaa95691",
+      "size": 5191,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/3383a218caa6310f93bf704104a41f01aaa95691"
+    },
+    {
+      "path": "Sources/Vortex/Resources/Assets.xcassets/confetti.imageset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "766ae0c78f9f12a200bc5a69104bc9038230a9bb",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/766ae0c78f9f12a200bc5a69104bc9038230a9bb"
+    },
+    {
+      "path": "Sources/Vortex/Resources/Assets.xcassets/confetti.imageset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6b4c7c1cf4462f84597da55ee2e9322c191c0276",
+      "size": 306,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/6b4c7c1cf4462f84597da55ee2e9322c191c0276"
+    },
+    {
+      "path": "Sources/Vortex/Resources/Assets.xcassets/confetti.imageset/confetti.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8ca42c00e29e95c8f6805d6ac5f02c4f1c320b77",
+      "size": 4017,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/8ca42c00e29e95c8f6805d6ac5f02c4f1c320b77"
+    },
+    {
+      "path": "Sources/Vortex/Resources/Assets.xcassets/sparkle.imageset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "1833fd3abf3a6fa82e4c0d2e0695d114d0db42da",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/1833fd3abf3a6fa82e4c0d2e0695d114d0db42da"
+    },
+    {
+      "path": "Sources/Vortex/Resources/Assets.xcassets/sparkle.imageset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "572581a6a1e4bb47f6789045ea78ac9e5aca798e",
+      "size": 305,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/572581a6a1e4bb47f6789045ea78ac9e5aca798e"
+    },
+    {
+      "path": "Sources/Vortex/Resources/Assets.xcassets/sparkle.imageset/sparkle.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2fab4f4d945fac9a85053034869eed1b22b65937",
+      "size": 3740,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/2fab4f4d945fac9a85053034869eed1b22b65937"
+    },
+    {
+      "path": "Sources/Vortex/Resources/DefaultSymbols.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6d362bac76186d083aabfc5093d5bdadbc8e1677",
+      "size": 483,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/6d362bac76186d083aabfc5093d5bdadbc8e1677"
+    },
+    {
+      "path": "Sources/Vortex/System",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "069a82ce2f65e92c03dcdba9298d3a21b145b764",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/069a82ce2f65e92c03dcdba9298d3a21b145b764"
+    },
+    {
+      "path": "Sources/Vortex/System/Color.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7e2ed002ce739214d2b3f6e32a6666832b944cfa",
+      "size": 4957,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/7e2ed002ce739214d2b3f6e32a6666832b944cfa"
+    },
+    {
+      "path": "Sources/Vortex/System/ColorMode.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "03287abe27799cd4a383c47dcc0fdee363ca6e94",
+      "size": 1475,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/03287abe27799cd4a383c47dcc0fdee363ca6e94"
+    },
+    {
+      "path": "Sources/Vortex/System/Particle.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "89496e737dcc8b22e742bcf659ab2462532e0528",
+      "size": 1542,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/89496e737dcc8b22e742bcf659ab2462532e0528"
+    },
+    {
+      "path": "Sources/Vortex/System/Shape.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2c28cfcf1e58d11d9b4f60673d84e0e3fc469be3",
+      "size": 899,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/2c28cfcf1e58d11d9b4f60673d84e0e3fc469be3"
+    },
+    {
+      "path": "Sources/Vortex/System/SpawnOccasion.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "da48ff4221b194917092fe160443e91251e09cf8",
+      "size": 555,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/da48ff4221b194917092fe160443e91251e09cf8"
+    },
+    {
+      "path": "Sources/Vortex/System/VortexSystem-Behavior.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c4e7ce938f467dbd59b5e39a5748a17f01df37e6",
+      "size": 7924,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/c4e7ce938f467dbd59b5e39a5748a17f01df37e6"
+    },
+    {
+      "path": "Sources/Vortex/System/VortexSystem.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ab330c3c77a64af2c535ad7342b2e51449bb2413",
+      "size": 15462,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/ab330c3c77a64af2c535ad7342b2e51449bb2413"
+    },
+    {
+      "path": "Sources/Vortex/Views",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "502175eead96e08352dccd0275a19cdfb20048ea",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/502175eead96e08352dccd0275a19cdfb20048ea"
+    },
+    {
+      "path": "Sources/Vortex/Views/VortexProxy.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "369454877f6e8cfeadc020285845c851bc9146ee",
+      "size": 1254,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/369454877f6e8cfeadc020285845c851bc9146ee"
+    },
+    {
+      "path": "Sources/Vortex/Views/VortexSystemPreferenceKey.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "be0134fbd828facfb784140f7156f677894e2e42",
+      "size": 468,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/be0134fbd828facfb784140f7156f677894e2e42"
+    },
+    {
+      "path": "Sources/Vortex/Views/VortexView.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8294e901913980ddaa4c26e447478112bef64c4b",
+      "size": 5235,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/8294e901913980ddaa4c26e447478112bef64c4b"
+    },
+    {
+      "path": "Sources/Vortex/Views/VortexViewReader.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "41a11cc1b4538667e51aed7f901b9b3a9f7b9aa3",
+      "size": 1426,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/41a11cc1b4538667e51aed7f901b9b3a9f7b9aa3"
+    },
+    {
+      "path": "Tests",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "716e1b775a3cc0ea32101b25458f55581a5536a2",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/716e1b775a3cc0ea32101b25458f55581a5536a2"
+    },
+    {
+      "path": "Tests/VortexTests",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "877973f7daf992556d83fcc4b66c77eb585e995e",
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/trees/877973f7daf992556d83fcc4b66c77eb585e995e"
+    },
+    {
+      "path": "Tests/VortexTests/VortexTests.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "58ba25878c6c1c5e6b03d616d7fe84298e9945a3",
+      "size": 355,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/58ba25878c6c1c5e6b03d616d7fe84298e9945a3"
+    },
+    {
+      "path": "logo.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a1652c25a28ee5b34a0bedfa144201b4d5516f9c",
+      "size": 259941,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/a1652c25a28ee5b34a0bedfa144201b4d5516f9c"
+    },
+    {
+      "path": "sandbox-preview.gif",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5dbaca6251c5108bc5624161d0e052b23c0d41ad",
+      "size": 1245974,
+      "url": "https://api.github.com/repos/twostraws/Vortex/git/blobs/5dbaca6251c5108bc5624161d0e052b23c0d41ad"
+    }
+  ],
+  "truncated": false
+}

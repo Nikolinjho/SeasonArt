@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="generator" content="reports-index">
+<title>KoiArt: открытые реализации и наша база macOS</title>
+<style>
+:root {
+  --text:#1f2937; --text-strong:#0f172a; --text-muted:#64748b;
+  --bg:#fafaf9; --card:#ffffff; --border:#e5e7eb; --border-soft:#f1f5f9;
+  --code-bg:#f1f5f9; --link:#1d4ed8;
+  --open:#15803d; --open-bg:#f0fdf4; --open-border:#bbf7d0;
+  --closed:#475569; --closed-bg:#f1f5f9; --closed-border:#cbd5e1;
+  /* sequence-диаграммы (lib/diagram.js): цвета вынесены сюда, чтобы правка палитры
+     репорта меняла и картинки — SVG инлайновый и видит эти переменные */
+  --dg-line:#94a3b8; --dg-text:#1f2937; --dg-muted:#64748b;
+  --dg-box:#ffffff; --dg-box-border:#cbd5e1; --dg-head:#f1f5f9;
+  --dg-note:#fffbeb; --dg-note-border:#fcd34d;
+  --dg-frame:#cbd5e1; --dg-frame-label:#eef2ff;
+}
+html { -webkit-text-size-adjust:100%; color-scheme:light only; }
+* { box-sizing:border-box; }
+body { font-family:system-ui,-apple-system,"SF Pro Text","Segoe UI",Roboto,sans-serif; font-size:18px; line-height:1.6;
+       color:var(--text); background:var(--bg); text-rendering:optimizeLegibility; font-feature-settings:"kern";
+       margin:0; padding:0 0 80px; }
+.wrap { max-width:980px; margin:0 auto; padding:0 32px; }
+h1 { font-size:34px; line-height:1.25; margin:0 0 8px; font-weight:700; letter-spacing:-0.5px; color:var(--text-strong); }
+h2 { font-size:26px; line-height:1.3; margin:48px 0 18px; padding-bottom:10px; border-bottom:1px solid var(--border); font-weight:700; letter-spacing:-0.2px; color:var(--text-strong); }
+h3 { font-size:20px; line-height:1.4; margin:20px 0 10px; font-weight:700; color:var(--text-strong); }
+p { margin:10px 0; }
+ul, ol { padding-left:26px; margin:10px 0; }
+li > ul, li > ol { margin:4px 0 2px; }
+li { margin:6px 0; }
+/* Чеклисты `- [ ]` / `- [x]`: квадрат рисуется рамкой, чтобы не зависеть от шрифта */
+li.task { list-style:none; position:relative; margin-left:-24px; padding-left:24px; }
+li.task .box { position:absolute; left:0; top:5px; width:14px; height:14px; box-sizing:border-box;
+               border:1.5px solid var(--closed-border); border-radius:3px; background:var(--card); }
+li.task .box.on { border-color:var(--open); background:var(--open); }
+li.task .box.on::after { content:""; position:absolute; left:3px; top:1px; width:4px; height:8px;
+                         box-sizing:border-box; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(40deg); }
+b, strong { font-weight:600; color:var(--text-strong); }
+code, pre { font-family:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace; }
+code { font-size:0.875em; background:var(--code-bg); padding:1px 6px; border-radius:4px; color:var(--text-strong);
+       overflow-wrap:anywhere; }
+pre { background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:14px 16px; font-size:15px; line-height:1.55; overflow-x:auto; margin:12px 0; }
+pre code { background:none; padding:0; font-size:inherit; overflow-wrap:normal; }
+a { color:var(--link); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.meta { color:var(--text-muted); font-size:16px; margin:6px 0 12px; }
+.mut { color:var(--text-muted); font-size:15px; }
+table { border-collapse:collapse; width:100%; margin:16px 0; font-size:16px; background:var(--card); border-radius:6px; overflow:hidden; border:1px solid var(--border); }
+th, td { border-bottom:1px solid var(--border-soft); padding:10px 14px; vertical-align:top; text-align:left; }
+tr:last-child th, tr:last-child td { border-bottom:none; }
+th { background:#f8fafc; font-weight:600; color:var(--text-strong); border-bottom-color:var(--border); cursor:pointer; user-select:none; white-space:nowrap; }
+th .dir { color:var(--link); }
+tbody tr:hover { background:#fafbfc; }
+tr.row:hover { background:#f0f6ff; cursor:pointer; }
+td.title { max-width:420px; } td.title b { font-weight:600; color:var(--text-strong); }
+.pill { display:inline-block; padding:2px 9px; border-radius:4px; font-size:14px; font-weight:700; letter-spacing:0.4px;
+        margin-right:8px; vertical-align:1px; line-height:1.4; border:1px solid; white-space:nowrap; }
+.p-open { background:var(--open-bg); color:var(--open); border-color:var(--open-border); }
+.p-closed { background:var(--closed-bg); color:var(--closed); border-color:var(--closed-border); }
+.chip { display:inline-block; background:var(--code-bg); color:#334155; border-radius:4px; padding:1px 8px; font-size:14px;
+        margin:2px 4px 0 0; font-family:ui-monospace,"SF Mono",Menlo,monospace; border:1px solid var(--border); }
+header { padding:34px 0 0; }
+header .sub { color:var(--text-muted); font-size:16px; }
+#toolbar { background:var(--bg); border-bottom:1px solid var(--border); padding:12px 0; position:sticky; top:0; z-index:2; }
+#toolbar .wrap { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+input[type=search] { flex:1 1 240px; padding:7px 12px; border:1px solid var(--border); border-radius:6px; font-size:16.5px; background:var(--card); }
+select { padding:7px 8px; border:1px solid var(--border); border-radius:6px; background:var(--card); font-size:15.5px; max-width:170px; color:var(--text); }
+main { margin-top:10px; }
+#count { color:var(--text-muted); margin:14px 0 0; font-size:16px; }
+#doc { display:none; }
+#doc.show { display:block; }
+#list.hide { display:none; }
+#back { display:none; color:var(--link); cursor:pointer; background:var(--card); border:1px solid var(--border);
+        border-radius:6px; font-size:16px; padding:6px 14px; }
+#back:hover { background:#f0f6ff; }
+body.doc-mode #back { display:inline-block; }
+body.doc-mode #toolbar input, body.doc-mode #toolbar select { display:none; }
+body.doc-mode header { display:none; }
+#doc-head h1 { margin-top:24px; }
+#doc-body blockquote { border-left:3px solid var(--border); margin:10px 0; padding:4px 14px; color:var(--text-muted); }
+#doc-body hr { border:none; border-top:1px solid var(--border); margin:24px 0; }
+#doc-body img { display:block; max-width:100%; height:auto; margin:14px 0 2px; border:1px solid var(--border); border-radius:8px; }
+#doc-body .cap { display:block; font-size:15px; color:var(--text-muted); margin:0 0 14px; }
+/* Таблицы в теле документа: колонки переносят текст, а не раздувают страницу.
+   nowrap на th нужен только сортируемым заголовкам списка, здесь он лишний. */
+#doc-body th { white-space:normal; cursor:auto; }
+#doc-body th, #doc-body td { overflow-wrap:break-word; }
+/* То же для текста: голый URL (youtube, obsidian://) переносу не поддаётся,
+   распирает строку и тянет горизонтальный скролл всей страницы. */
+#doc-body p, #doc-body li, #doc-body a { overflow-wrap:break-word; }
+/* Широкую таблицу скроллим внутри её обёртки, а не всем документом */
+#doc-body .table-scroll { overflow-x:auto; margin:16px 0; }
+#doc-body .table-scroll > table { margin:0; }
+/* Код в ячейке целиком на одной строке: `variant-b` рвался на дефисе. Колонку под самый длинный код
+   рендер считает сам, тесная таблица скроллится, а не переносит код. */
+#doc-body td code, #doc-body th code { white-space:nowrap; overflow-wrap:normal; }
+/* Служебные колонки берут ровно свою ширину: идентификатор, приоритет, короткий
+   статус. Без этого раскладка делила место «по-честному», короткий код рвался
+   по буквам (SCH-110 в четыре строки), а текстовые колонки сжимались в полоски.
+   Отметку ставит рендер: колонка, где ни одна ячейка не длиннее 14 знаков. */
+#doc-body th.tight, #doc-body td.tight { white-space:nowrap; width:1%; overflow-wrap:normal; }
+#doc-body th.tight code, #doc-body td.tight code { overflow-wrap:normal; }
+/* Когда колонок три и больше, тесноту лечим прокруткой внутри обёртки, а не
+   сминанием: ниже этой ширины таблица едет вбок, страница остаётся на месте */
+#doc-body .table-scroll.wide > table { min-width:600px; }
+.tldr { background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:18px 24px; margin:20px 0 28px; }
+.tldr h2 { font-size:16px; margin:0 0 10px; border:none; padding:0; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-weight:700; }
+.tldr table { margin:0; }
+.tldr td { padding:6px 12px; font-size:15.5px; }
+.tldr td:first-child { color:var(--text-muted); white-space:nowrap; width:1%; }
+/* пункты преамбулы, которые не являются парами «ключ: значение» */
+.tldr .fields-note { margin:10px 0 0; padding-left:20px; font-size:15.5px; color:var(--text-muted); }
+.tldr .fields-note li { margin:4px 0; }
+.card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:18px 24px; margin:18px 0; line-height:1.65; }
+.card h3 { margin:0 0 10px; font-size:18px; display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 8px; }
+.card > p:last-child, .card > *:last-child { margin-bottom:0; }
+.card .meta { margin:0 0 8px; }
+.card.ctx { border-left:4px solid #7c3aed; }
+.comment { margin:28px 0; }
+.comment .c-name { font-size:16px; font-weight:600; color:var(--text-strong); }
+.comment .c-date { font-size:15px; color:var(--text-muted); margin-left:8px; }
+.comment .c-body { margin-top:4px; }
+.comment .c-body p { margin:6px 0; }
+.clamp.collapsed { max-height:350px; overflow:hidden; position:relative; }
+.clamp.collapsed::after { content:""; position:absolute; left:0; right:0; bottom:0; height:70px;
+  background:linear-gradient(rgba(250,250,249,0), var(--bg)); pointer-events:none; }
+.card .clamp.collapsed::after { background:linear-gradient(rgba(255,255,255,0), var(--card)); }
+.clamp-toggle { display:block; width:100%; text-align:left; margin:6px 0 28px; color:var(--link); cursor:pointer;
+  background:none; border:none; font-size:16px; padding:14px 12px; min-height:44px; border-radius:6px; font-family:inherit; }
+.clamp-toggle:hover { background:#eff3ff; text-decoration:underline; }
+.card.warn { background:#fffbeb; border-color:#fde68a; }
+.card.done { border-left:4px solid #16a34a; }
+@media (max-width:800px){ .opt { display:none; } td.title { max-width:none; } }
+
+/* --- Страница репорта: секции-карточки и сайдбар-оглавление --- */
+html { scroll-behavior:smooth; }
+.sec { background:var(--card); border:1px solid var(--border); border-radius:12px;
+       padding:6px 28px 22px; margin:22px 0; scroll-margin-top:24px;
+       box-shadow:0 1px 2px rgba(15,23,42,0.04); }
+.sec h2 { margin-top:22px; }
+.sec > :last-child { margin-bottom:0; }
+/* секции-обёртки вокруг готовых карточек (⚠, Outline): без собственной рамки */
+.sec.bare { background:none; border:none; padding:0; box-shadow:none; margin:0; }
+.sec h3 { scroll-margin-top:24px; }
+/* 1552 = 64 (паддинги .wrap) + 248 (оглавление) + 44 (отбивка) + 904 (текст) + 292 (поле справа) */
+.layout { --toc-w:clamp(150px, 22%, 248px); --toc-gap:clamp(20px, 3vw, 44px);
+          display:flex; align-items:flex-start; max-width:1552px; }
+.layout #doc-body { flex:1; min-width:0; }
+/* Оглавление слева от текста. Ширина колонки — процент от раскладки с полом и
+   потолком: сайдбар сжимается вместе с окном, а не роняет раскладку в столбик,
+   пока место есть. align-self:stretch обязателен: с align-items:flex-start
+   колонка сжимается до высоты содержимого и sticky-блоку некуда «ехать» */
+#toc { width:var(--toc-w); margin-right:var(--toc-gap); flex:none; align-self:stretch; }
+/* Пустое поле справа ровно в ширину оглавления с отбивкой: колонка текста
+   встаёт по центру страницы, а не сдвинутой вправо на ширину сайдбара.
+   Note: поле растёт от нуля начиная с 1000px и добирает полную ширину к ~1250px —
+   иначе на средних окнах симметрия отгрызала бы у текста те же 290px, которых
+   ему там и так не хватает. Центрирование точное, пока min() держит первую ветку. */
+.layout::after { content:''; flex:none;
+                 width:min(calc(var(--toc-w) + var(--toc-gap)), max(0px, (100vw - 1000px) * 1.2)); }
+#toc .toc-inner { position:sticky; top:24px; max-height:calc(100vh - 48px); overflow-y:auto;
+                  padding:18px 0; margin-top:96px; }
+#toc .toc-title { font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:1px;
+                  color:var(--text-muted); margin-bottom:10px; }
+#toc ul { list-style:none; margin:0; padding:0; }
+#toc li { margin:0; }
+#toc li a { display:block; padding:5px 0; font-size:15.5px; line-height:1.45; color:var(--text); }
+#toc li.sub a { padding-left:14px; font-size:14.5px; color:var(--text-muted); }
+#toc li a:hover { color:var(--link); text-decoration:none; }
+/* Средние окна: отступ сверху не нужен — на узкой колонке оглавление и так
+   начинается ниже шапки, а лишние 96px просто съедают видимую часть списка */
+@media (max-width:1000px){
+  #toc .toc-inner { margin-top:64px; }
+}
+/* В столбик — только на телефонных ширинах, где колонка текста ушла бы ниже ~380px.
+   Сложенное оглавление ограничено по высоте и скроллится: иначе длинный список
+   встаёт стеной над документом и до заголовка приходится листать. */
+@media (max-width:620px){
+  .wrap { padding:0 16px; }
+  .layout { display:block; }
+  .layout::after { display:none; }
+  #toc { width:auto; margin-right:0; }
+  #toc .toc-inner { position:static; margin:20px 0 0; padding:0 0 12px; max-height:210px; overflow-y:auto;
+                    border-bottom:1px solid var(--border); }
+}
+
+/* Кнопка «Поделиться» в шапке репорта и её попап. Единственное интерактивное
+   место в странице; Finder-ссылка ведёт на схему sp-reveal:// (см. render.js). */
+[hidden] { display:none !important; }
+.head-row { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
+.head-row h1 { flex:1 1 auto; min-width:0; }
+.share { position:relative; flex:0 0 auto; margin-top:30px; }
+.share-btn { display:inline-flex; align-items:center; gap:7px; padding:7px 11px; font:inherit; font-size:15px;
+             color:var(--text-muted); background:transparent; border:0; border-radius:7px;
+             cursor:pointer; white-space:nowrap; }
+.share-btn:hover,
+.share-btn[aria-expanded="true"] { background:var(--border-soft); color:var(--text-strong); }
+.share-btn svg { flex:0 0 auto; opacity:0.75; }
+.share-pop { position:absolute; right:0; top:calc(100% + 8px); z-index:5; width:320px; max-width:calc(100vw - 64px);
+             background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 16px;
+             box-shadow:0 10px 28px rgba(15,23,42,0.13); }
+.share-file { font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:13px; color:var(--text-strong);
+              overflow-wrap:anywhere; line-height:1.45; }
+.share-dir { font-size:13px; color:var(--text-muted); margin:2px 0 12px; overflow-wrap:anywhere; }
+.share-act { display:flex; align-items:center; gap:8px; padding:10px 12px; font-size:15px; border-radius:7px;
+             color:var(--text-strong); background:var(--border-soft); border:0; }
+.share-act:hover { background:var(--code-bg); text-decoration:none; }
+.share-note { font-size:13.5px; color:var(--text-muted); margin:0; }
+@media (max-width:600px) {
+  .head-row { flex-direction:column; gap:0; }
+  .share { margin:4px 0 8px; }
+  .share-pop { right:auto; left:0; }
+}
+
+/* Диаграммы. История трёх заходов, чтобы не наступить снова:
+   1) max-width:100% в узкой колонке (её сужает сайдбар оглавления) сжимал
+      диаграмму 900+ px почти вдвое — подписи становились нечитаемыми;
+   2) natural size без сжатия давал горизонтальный скролл — читается так же плохо;
+   3) статичную картинку нельзя ни подвинуть, ни приблизить.
+   Итог: фигура уезжает вправо в свободное поле страницы, диаграмма вписывается
+   целиком, а деталь смотрится зумом (lib/diagram.js подмешивает svg-pan-zoom). */
+.diagram { margin:18px 0; padding:0; position:relative; }
+/* Диаграмма живёт строго в колонке текста: bleed вправо пробовали — он выносил
+   картинку за границы страницы, и это читалось как поломка. Мелкий текст лечится
+   не растягиванием, а зумом (lib/diagram.js: svg-pan-zoom, кнопки, полный экран). */
+.dg-scroll { background:var(--card); border:1px solid var(--border-soft); border-radius:8px;
+             padding:12px 10px; overflow:hidden; }
+.dg { display:block; }
+.diagram figcaption { font-size:14px; color:var(--text-muted); margin-top:6px; }
+
+/* Панель управления показывается только когда pan/zoom реально включился:
+   без JS (печать, Quick Look) кнопки бесполезны и их не видно */
+.dg-tools { display:none; gap:6px; justify-content:flex-end; margin-bottom:6px; }
+.dg-live .dg-tools { display:flex; }
+.dg-btn { font:inherit; font-size:13.5px; line-height:1; padding:6px 10px; cursor:pointer;
+          color:var(--text-muted); background:var(--card); border:1px solid var(--border);
+          border-radius:6px; }
+.dg-btn:hover { color:var(--text-strong); background:var(--code-bg); }
+.dg-live .dg-scroll { cursor:grab; }
+.dg-live .dg-scroll:active { cursor:grabbing; }
+/* во весь экран: фон и центрирование, иначе картинка прилипает к левому верху */
+.dg-scroll:fullscreen { display:flex; align-items:center; justify-content:center;
+                        background:var(--bg); border:none; border-radius:0; padding:24px; }
+.dg-scroll:fullscreen .dg { max-height:none; height:100%; width:100%; }
+
+/* --- Кирпичи блоков-директив (::: nav / tags / kv / cards) --- */
+
+/* Лента навигации: ряд карточек-ссылок на соседние страницы серии или на
+   разделы этой же. Колонки набираются по ширине, поэтому семь пунктов на
+   широком окне встают в ряд, а на телефоне — в два столбца, без медиазапроса. */
+.strip { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:8px; margin:16px 0; }
+.strip > a, .strip > .here { display:block; padding:10px 12px; border-radius:8px; border:1px solid var(--border);
+                             background:var(--card); color:var(--text); font-size:15px; line-height:1.35; }
+.strip > a:hover { border-color:var(--link); text-decoration:none; }
+/* Текущая страница: плашка вместо ссылки — ходить по ней некуда */
+.strip > .here { background:var(--code-bg); border-color:transparent; }
+.strip .n { display:block; font-size:11.5px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase;
+            color:var(--text-muted); margin-bottom:3px; }
+.strip .t { display:block; color:var(--text-strong); }
+.strip .c { display:block; font-size:13.5px; color:var(--text-muted); margin-top:3px;
+            font-variant-numeric:tabular-nums; }
+.strip > .here .n { color:var(--link); }
+
+/* Бейджи-пилюли: оси предусловия строкой вместо таблицы на две колонки */
+.tagrow { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 16px; }
+.tag { display:inline-block; font-size:11.5px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+       padding:3px 9px; border-radius:999px; white-space:nowrap;
+       background:var(--code-bg); color:#334155; border:1px solid var(--border); }
+.tag.crit { background:#fde7e7; color:#a01212; border-color:#f6c9c9; }
+.tag.done { background:var(--open-bg); color:var(--open); border-color:var(--open-border); }
+.tag.mut { background:none; color:var(--text-muted); }
+
+/* Пары «подпись — значение»: узкая колонка подписей слева, значения справа */
+.kv { display:grid; grid-template-columns:minmax(110px, 150px) 1fr; gap:6px 18px; margin:14px 0; font-size:16px; }
+.kv dt { color:var(--text-muted); }
+.kv dd { margin:0; color:var(--text); }
+
+/* Плитка карточек: короткие списки рядом, а не простынёй друг под другом */
+.grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin:16px 0; }
+.gcard { background:#f8fafc; border:1px solid var(--border-soft); border-radius:8px; padding:14px 16px; }
+.gcard .k { font-size:11.5px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase;
+            color:var(--text-muted); margin-bottom:8px; }
+.gcard > :last-child { margin-bottom:0; }
+.gcard ul { padding-left:18px; margin:6px 0; font-size:15.5px; }
+.gcard li { margin:4px 0; }
+.gcard p { font-size:15.5px; margin:6px 0; }
+
+@media (max-width:620px) {
+  .kv { grid-template-columns:1fr; gap:0 0; }
+  .kv dt { margin-top:10px; font-size:14px; }
+}
+
+/* Документ с широкими таблицами: поле справа отдаётся содержимому. Пустая
+   полоса в 292px нужна была для оптического центрирования колонки текста, но
+   рядом с таблицей на четыре колонки она просто отнимает место. Абзацы, списки
+   и цитаты при этом держат свой потолок ширины, иначе строка уезжает на 1200px
+   и её неудобно читать. */
+.layout.wide-doc::after { width:0; }
+.wide-doc #doc-body p,
+.wide-doc #doc-body ul,
+.wide-doc #doc-body ol,
+.wide-doc #doc-body blockquote,
+.wide-doc #doc-body .kv { max-width:84ch; }
+
+/* --- Тест-кейсы блоками (::: cases) --- */
+/* Таблицей они не живут: две текстовые колонки делят остаток ширины и сминаются
+   в полоски, а короткий идентификатор ещё и рвётся по буквам. Блок отдаёт тексту
+   всю ширину колонки и не зависит от числа колонок.
+
+   Подписи «делаем» и «ожидаем» стоят своей колонкой, а не в начале строки:
+   когда подпись висела инлайном, текст обтекал её и вторая строка уезжала под
+   подпись — глазу не за что зацепиться. Ожидаемый результат набран тем же
+   контрастом, что и действие: это то, с чем сверяются, а не сноска. */
+.cases { list-style:none; margin:14px 0 4px; padding:0; }
+.case { display:grid; grid-template-columns:86px 74px minmax(0, 1fr);
+        column-gap:16px; row-gap:14px; padding:19px 0;
+        border-top:1px solid var(--border-soft); scroll-margin-top:24px; }
+.case:first-child { border-top:none; padding-top:4px; }
+/* Рейка с идентификатором занимает обе строки справа от себя */
+.cid { grid-row:1 / span 2; display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
+.cno { font-family:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace; font-size:13.5px;
+       color:var(--text-muted); white-space:nowrap; }
+.prio { font-size:11px; font-weight:700; letter-spacing:0.05em; padding:2px 7px; border-radius:999px;
+        border:1px solid; line-height:1.4; }
+.prio.p0 { background:#fde7e7; color:#a01212; border-color:#f6c9c9; }
+.prio.p1 { background:var(--code-bg); color:#334155; border-color:var(--border); }
+.prio.p2 { background:none; color:var(--text-muted); border-color:var(--border-soft); }
+.clab { font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase;
+        color:var(--text-muted); line-height:1.6; padding-top:3px; white-space:nowrap; }
+.cwhat { color:var(--text-strong); }
+/* Ожидаемый результат — главное в кейсе. Отделён линейкой слева, а не серым */
+.cexp { color:var(--text-strong); border-left:2px solid var(--border); padding-left:14px;
+        margin-left:-16px; }
+.case:target { background:#fffbeb; box-shadow:0 0 0 10px #fffbeb; border-radius:2px; }
+/* Узкие окна: рейка ложится строкой, подписи встают над своим текстом */
+@media (max-width:760px) {
+  .case { grid-template-columns:1fr; row-gap:10px; }
+  .cid { grid-row:auto; flex-direction:row; align-items:center; gap:8px; margin-bottom:3px; }
+  .clab { padding-top:0; margin-bottom:-6px; }
+  .cexp { margin-left:0; }
+}
+/* Тема «doc» – простой репорт в вёрстке Claude Docs. Подключается поверх style.css
+   классом body.theme-doc (флаг `report --theme doc`). Палитра снята пипеткой с
+   экспорта Claude Doc в PDF: тёплые нейтральные серые, белая страница, без карточек.
+   Шрифты Anthropic Sans/Serif/Mono берутся, если стоят в системе; иначе – системные
+   аналоги (ui-serif на macOS – New York). Файлы шрифтов в репорт не вшиваем. */
+.theme-doc {
+  --text:#1f1e1d; --text-strong:#1f1e1d; --text-muted:#73726c;
+  --bg:#ffffff; --card:#ffffff; --border:#e8e5dc; --border-soft:#e8e5dc;
+  --code-bg:#f3f1ec; --link:#2a78d6;
+  --chip-bg:#f0efec; --pre-bg:#f8f8f6; --th-bg:#f5f3ed; --th-text:#52514e;
+  --font-sans:"Anthropic Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-serif:"Anthropic Serif", ui-serif, "New York", Georgia, "Times New Roman", serif;
+  --font-mono:"Anthropic Mono", ui-monospace, "SF Mono", Menlo, Monaco, monospace;
+  font-family:var(--font-sans); font-size:17px; line-height:1.55; background:var(--bg); color:var(--text);
+}
+.theme-doc .wrap { max-width:824px; }
+
+/* Заголовки – serif обычного веса, без подчёркивающих линий */
+.theme-doc h1, .theme-doc h2, .theme-doc h3 { font-family:var(--font-serif); font-weight:400; color:var(--text-strong); letter-spacing:-0.01em; }
+.theme-doc h1 { font-size:40px; line-height:1.18; margin:56px 0 18px; }
+.theme-doc #doc-head h1 { margin-top:56px; }
+.theme-doc h2 { font-size:27px; line-height:1.3; margin:44px 0 12px; padding:0; border:none; }
+.theme-doc h3 { font-size:20px; line-height:1.4; margin:28px 0 8px; }
+.theme-doc p { margin:12px 0; }
+.theme-doc li { margin:4px 0; }
+.theme-doc b, .theme-doc strong { font-weight:600; }
+/* авто-жирный лид-ин «Фраза: …» базового рендера – в доке его нет */
+.theme-doc b.lead { font-weight:inherit; }
+
+/* Секции без карточек: сплошной документ, как в Claude Docs */
+.theme-doc .sec { background:none; border:none; box-shadow:none; border-radius:0; padding:0; margin:0; }
+.theme-doc .sec h2 { margin-top:44px; }
+
+/* Byline: чип даты · чип автора; под ним приглушённая строка полей */
+.theme-doc .byline { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0 0 6px; font-size:14px; }
+.theme-doc .byline .bchip { background:var(--chip-bg); color:var(--text-strong); border-radius:6px; padding:2px 8px; line-height:1.5; }
+.theme-doc .byline .dot { color:var(--text-muted); }
+.theme-doc .doc-meta { color:var(--text-muted); font-size:14px; margin:4px 0 8px; }
+.theme-doc .doc-meta a { color:var(--text-muted); text-decoration:underline; text-underline-offset:2px; }
+
+/* Ссылки – синие с подчёркиванием */
+.theme-doc a { color:var(--link); text-decoration:underline; text-underline-offset:2px; text-decoration-thickness:1px; }
+.theme-doc a:hover { text-decoration-thickness:2px; }
+
+/* Код */
+.theme-doc code, .theme-doc pre { font-family:var(--font-mono); }
+.theme-doc code { background:var(--code-bg); color:var(--text-strong); font-size:0.86em; padding:1px 5px; border-radius:4px; }
+.theme-doc pre { background:var(--pre-bg); border:none; border-radius:8px; padding:14px 16px; font-size:14px; line-height:1.6; margin:12px 0; }
+.theme-doc pre code { background:none; padding:0; font-size:inherit; }
+/* Подпись языка в правом верхнем углу блока, как в Claude Docs */
+.theme-doc pre[data-lang] { position:relative; padding-top:30px; }
+.theme-doc pre[data-lang]::before { content:attr(data-lang); position:absolute; top:8px; right:12px;
+  font-family:var(--font-sans); font-size:11.5px; color:var(--text-muted); }
+/* Токены highlight.js – светлая палитра: строки зелёные, ключевые слова синие */
+.theme-doc .hljs-comment, .theme-doc .hljs-quote { color:#8a8984; font-style:italic; }
+.theme-doc .hljs-keyword, .theme-doc .hljs-selector-tag, .theme-doc .hljs-literal, .theme-doc .hljs-built_in { color:#2f5fb3; }
+.theme-doc .hljs-string, .theme-doc .hljs-regexp, .theme-doc .hljs-addition { color:#2f7d32; }
+.theme-doc .hljs-number, .theme-doc .hljs-symbol, .theme-doc .hljs-bullet { color:#b4541a; }
+.theme-doc .hljs-title, .theme-doc .hljs-title.function_, .theme-doc .hljs-section { color:#7a3fb3; }
+.theme-doc .hljs-attr, .theme-doc .hljs-attribute, .theme-doc .hljs-property, .theme-doc .hljs-variable { color:#a3366b; }
+.theme-doc .hljs-tag, .theme-doc .hljs-name, .theme-doc .hljs-type, .theme-doc .hljs-title.class_ { color:#1f7a8c; }
+.theme-doc .hljs-meta, .theme-doc .hljs-deletion { color:#b3261e; }
+
+/* Таблицы – сетка тёплых линий, шапка на бежевом, обычный вес */
+.theme-doc table { border:1px solid var(--border); border-radius:0; background:var(--card); font-size:15.5px; margin:18px 0; }
+.theme-doc th, .theme-doc td { border:1px solid var(--border); padding:10px 12px; }
+.theme-doc td code, .theme-doc th code { font-size:0.84em; }
+.theme-doc th { background:var(--th-bg); color:var(--th-text); font-weight:400; cursor:auto; }
+.theme-doc tbody tr:hover { background:none; }
+
+/* Чек-лист: светлый квадрат со скруглением */
+.theme-doc li.task .box { width:15px; height:15px; top:5px; border:1px solid #d0d0d0; border-radius:4px; background:#f7f7f7; }
+.theme-doc li.task .box.on { border-color:var(--text-strong); background:var(--text-strong); }
+
+/* Цитаты, картинки, разделители */
+.theme-doc #doc-body blockquote { border-left:3px solid var(--border); color:var(--text-muted); }
+.theme-doc #doc-body img { border:none; border-radius:8px; }
+.theme-doc #doc-body hr { border-top-color:var(--border); }
+
+/* Кнопка «Поделиться» – без рамки, приглушённая, в правом верхнем углу страницы:
+   из строки заголовка её убрали, чтобы она не сужала H1 */
+.theme-doc #doc-head { position:relative; display:flow-root; } /* flow-root: отступ H1 не схлопывается с шапкой, кнопка остаётся над заголовком */
+.theme-doc #doc-head .head-row { display:block; }
+.theme-doc .share { position:absolute; top:0; right:0; margin-top:12px; }
+.theme-doc #doc-head h1 { padding-right:0; }
+.theme-doc .share-btn { border-color:transparent; background:none; color:var(--text-muted); font-size:14px; }
+.theme-doc .share-btn:hover, .theme-doc .share-btn[aria-expanded="true"] { background:var(--chip-bg); color:var(--text-strong); }
+.theme-doc .share-act { text-decoration:none; }
+
+@media (max-width:620px){
+  .theme-doc h1 { font-size:32px; margin-top:32px; }
+  .theme-doc #doc-head h1 { margin-top:32px; }
+  .theme-doc h2 { font-size:24px; }
+  .theme-doc .share { position:static; margin:12px 0 0; }
+}
+@media print {
+  .theme-doc .share { display:none; }
+  .theme-doc pre { white-space:pre-wrap; }
+}
+</style></head><body class="theme-doc">
+<main class="wrap wide-doc"><article id="doc-body"><div id="doc-head"><div class="head-row"><h1>KoiArt: открытые реализации и наша база macOS</h1><div class="share" data-path="/Users/itsnikoko/SeasonArt/docs/research/reports/2026-11-06-koiart-open-source-context.html"><button class="share-btn" type="button" aria-expanded="false" aria-controls="share-pop"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10.5V2"/><path d="M5 4.8 8 1.8l3 3"/><path d="M3.2 8.4v5.2h9.6V8.4"/></svg>Поделиться</button><div class="share-pop" id="share-pop" hidden><div class="share-file">2026-11-06-koiart-open-source-context.html</div><div class="share-dir">~/SeasonArt/docs/research/reports</div><a class="share-act" href="sp-reveal:///Users/itsnikoko/SeasonArt/docs/research/reports/2026-11-06-koiart-open-source-context.html"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.8 4h4.1l1.4 1.6h6.9v7.6H1.8z"/></svg>Открыть в Finder</a><p class="share-note" hidden>Это копия файла: Finder открывается только там, где репорт создан.</p></div></div></div><p class="byline"><span class="bchip">6 нояб. 2026</span><span class="dot">·</span><span class="bchip">@Pyanov Nikita</span></p><p class="doc-meta">исследование · KoiArt · <a href="https://koiart.app/" target="_blank">источник</a></p></div><section class="sec" id="вывод"><h2>Вывод</h2><p>Для аналога KoiArt есть готовые технические ориентиры и собственная основа в Oasis и Speakey. Стартовать с изучения AppKit с нуля нам не требуется. Мой предыдущий пункт о дополнительных 40–100 часах на освоение Swift/AppKit не учитывал наши проекты и к этой работе неприменим.</p>
+<p>Ближайшие найденные реализации – Snowhush и Snowfall на GitHub, MacSnow на GitLab. Они подтверждают схему с прозрачным окном, геометрией чужих окон и отдельным движком частиц. Накопление снега можно реализовать как профиль высот вдоль опорного края, без тяжёлой трёхмерной физики.</p>
+<p>Для платного продукта удобнее опираться на собственный код, Apache-2.0 Snowfall и MIT-компоненты. Текущий Snowhush и MacSnow имеют ограничения на коммерческое использование. Старый тег Snowhush v0.6.1 отдельно проверен: его LICENSE содержит MIT.</p></section><section class="sec" id="что-проверено"><h2>Что проверено</h2><p>Изучены документация, деревья и выбранные исходники пяти GitHub-репозиториев, документация и три исходника MacSnow, списки issues и PR двух проектов. Основной разбор кода охватывает Snowhush, Snowfall, Vortex и desktop-pet. У Fluffel проверены описание и дерево, он оставлен дополнительным примером SpriteKit.</p>
+<p>Для своих проектов прочитаны текущие исходники, README, манифесты, сборочные скрипты и история Git. Memora использована для поиска прежних решений и известных проблем. Даты и состояния старых записей памяти не приравниваются к текущей версии исходников.</p>
+<p><b class="lead">Проверка выполнена 6 ноября 2026 года.</b> Приложения из найденных репозиториев не собирались и не запускались. Показатели производительности авторов не воспроизводились.</p></section><section class="sec" id="открытые-реализации"><h2>Открытые реализации</h2><div class="table-scroll"><table style="min-width:904px"><thead><tr><th class="tight" style="min-width:127px">Проект</th><th style="min-width:259px">Технологии по коду и документации</th><th style="min-width:259px">Что полезно</th><th style="min-width:259px">Лицензия проверенной версии</th></tr></thead><tbody><tr><td class="tight"><a href="https://github.com/mbezruchko/Snowhush" target="_blank">Snowhush</a></td><td>macOS: Swift, AppKit, MetalKit, собственная симуляция, Sparkle</td><td>Ближайший пример накопления, стряхивания и нескольких погодных режимов</td><td>Текущая PolyForm Noncommercial. Тег v0.6.1 – MIT</td></tr><tr><td class="tight"><a href="https://github.com/BarredEwe/Snowfall" target="_blank">Snowfall</a></td><td>SwiftUI, AppKit, MetalKit, Metal compute shaders</td><td>Компактный пример GPU-частиц и прозрачных окон</td><td>Apache-2.0</td></tr><tr><td class="tight"><a href="https://gitlab.com/heroyik/macsnow" target="_blank">MacSnow</a></td><td>SwiftPM, AppKit, SpriteKit, CoreGraphics</td><td>Альтернативная архитектура с отдельной сценой на монитор</td><td>Собственная ограничительная, все права сохранены</td></tr><tr><td class="tight"><a href="https://github.com/twostraws/Vortex" target="_blank">Vortex</a></td><td>SwiftUI Canvas и TimelineView, SwiftPM</td><td>Быстрые пресеты частиц: снег, дождь, светлячки, искры</td><td>MIT</td></tr><tr><td class="tight"><a href="https://github.com/bssm-oss/desktop-pet/blob/master/docs/architecture.md" target="_blank">desktop-pet</a></td><td>Swift, AppKit, CALayer, SwiftUI для настроек</td><td>Документированная оболочка прозрачного настольного приложения</td><td>MIT</td></tr></tbody></table></div>
+<h3 id="snowhush-самый-близкий-пример-механики">Snowhush: самый близкий пример механики</h3>
+<p>В macOS-части <code>OverlayWindow.swift</code> создаёт прозрачное окно с пропуском кликов. <code>WindowTracker.swift</code> получает поверхности, <code>SnowSimulation.swift</code> обновляет движение, <code>SnowLayer.swift</code> хранит накопление, <code>Renderer.swift</code> рисует через Metal. Это разделение подтверждено чтением исходников, а не только README.</p>
+<p>Накопление – массив высот колонок с маской видимости и опорной поверхностью. При движении окна учитываются скорость и ускорение. Передние окна скрывают закрытые участки. Рендерер отдельно управляет частотой кадров, монитор питания учитывает батарею, Low Power Mode и нагрев. В репозитории также есть Rust-ядро для других платформ, но проверенный macOS-таргет содержит свою Swift-симуляцию.</p>
+<p>В текущей версии часть интеграции опирается на приватный SkyLight: работа со Spaces, геометрией Dock и скруглениями. Поэтому наличие реализации не означает, что все её приёмы подходят нашему выбранному способу распространения.</p>
+<p><b class="lead">Проверенный снимок:</b> <code>013f36782e5c6d017725aeb4b2173ae329bf0c6e</code>. Основные точки: <a href="https://github.com/mbezruchko/Snowhush/blob/013f36782e5c6d017725aeb4b2173ae329bf0c6e/Sources/Snowhush/SnowLayer.swift" target="_blank">SnowLayer.swift</a>, <a href="https://github.com/mbezruchko/Snowhush/blob/013f36782e5c6d017725aeb4b2173ae329bf0c6e/Sources/Snowhush/Renderer.swift" target="_blank">Renderer.swift</a>, <a href="https://github.com/mbezruchko/Snowhush/blob/013f36782e5c6d017725aeb4b2173ae329bf0c6e/Sources/Snowhush/WindowTracker.swift" target="_blank">WindowTracker.swift</a>.</p>
+<p>Лицензию изменили в <a href="https://github.com/mbezruchko/Snowhush/pull/49" target="_blank">PR #49</a> после появления платных приложений на основе кода. У тега <a href="https://github.com/mbezruchko/Snowhush/blob/v0.6.1/LICENSE" target="_blank">v0.6.1</a>, коммит <code>4539daf04d477ac32d110ed5f5468d6255dde916</code>, MIT подтверждена отдельным чтением. При выборе этого варианта нужно фиксировать старую версию и проверять происхождение добавляемых позже изменений.</p>
+<h3 id="snowfall-небольшой-пример-metal">Snowfall: небольшой пример Metal</h3>
+<p><code>MenuBarExtra</code> показывает настройки SwiftUI. AppKit создаёт прозрачные окна на мониторах. <code>MTKView</code> запускает вычислительный шейдер движения и графический проход. В <code>SnowShader.metal</code> есть столкновение с прямоугольником окна. В <code>SnowRenderer.swift</code> геометрия проверяется раз в 0,5 секунды.</p>
+<p><b class="lead">Ограничение:</b> <code>WindowInfo.swift</code> возвращает один подходящий прямоугольник, а не полную карту открытых краёв всех окон. Это хорошая стартовая реализация частиц, но полноценное оседание и стряхивание уровня KoiArt ещё потребуют работы.</p>
+<p><b class="lead">Проверенный снимок:</b> <code>1d3b65a7d873ffb1bff7727bcdb927eb19002702</code>. Читать: <a href="https://github.com/BarredEwe/Snowfall/blob/1d3b65a7d873ffb1bff7727bcdb927eb19002702/SnowfallApp/Sources/Common/SnowRenderer.swift" target="_blank">SnowRenderer.swift</a>, <a href="https://github.com/BarredEwe/Snowfall/blob/1d3b65a7d873ffb1bff7727bcdb927eb19002702/SnowfallApp/Sources/Common/SnowShader.metal" target="_blank">SnowShader.metal</a>, <a href="https://github.com/BarredEwe/Snowfall/blob/1d3b65a7d873ffb1bff7727bcdb927eb19002702/SnowfallApp/Sources/Common/WindowInfo.swift" target="_blank">WindowInfo.swift</a>.</p>
+<h3 id="macsnow-подтверждение-варианта-со-spritekit">MacSnow: подтверждение варианта со SpriteKit</h3>
+<p>В <a href="https://gitlab.com/heroyik/macsnow/-/raw/main/README.md" target="_blank">документации MacSnow</a> описаны SwiftPM, AppKit, SpriteKit и отдельная сцена на каждый монитор. Код подтверждает прозрачное окно, сканирование геометрии через CoreGraphics, опрос раз в 0,5 секунды и ограничение выборки двадцатью окнами.</p>
+<p>Это прототип без готового механизма обновлений и нотарифицированного распространения. <a href="https://gitlab.com/heroyik/macsnow/-/raw/main/LICENSE" target="_blank">LICENSE</a> разрешает личное изучение, но ограничивает копирование, распространение и использование репозитория для конкурирующего клона. В коммерческую основу его код не закладываю.</p>
+<h3 id="vortex-и-desktop-pet-отдельные-строительные-блоки">Vortex и desktop-pet: отдельные строительные блоки</h3>
+<p><a href="https://github.com/twostraws/Vortex" target="_blank">Vortex</a> имеет пресеты снега, дождя, светлячков и других частиц. Проверенный <code>VortexView.swift</code> использует SwiftUI Canvas внутри TimelineView, манифест допускает macOS 12+. MIT подтверждена файлом LICENSE. Библиотека сама по себе не знает геометрию других приложений и не решает накопление на окнах. Её полезно проверить для первых визуальных вариантов и простых режимов.</p>
+<p>В <a href="https://github.com/bssm-oss/desktop-pet/blob/master/docs/architecture.md" target="_blank">архитектуре desktop-pet</a> подробно разобраны прозрачность, уровень окна, Spaces, строка меню, хранение настроек и воспроизведение кадров. Это пример оболочки, а не погодной симуляции. В дополнение <a href="https://github.com/JoeanSteinbock/Fluffel" target="_blank">Fluffel</a> показывает применение SpriteKit к настольному персонажу, но лицензию для заимствования его кода в этом исследовании не подтвердил.</p></section><section class="sec" id="треды-с-полезными-проблемами"><h2>Треды с полезными проблемами</h2><div class="table-scroll"><table style="min-width:645px"><thead><tr><th style="min-width:127px">Тред</th><th style="min-width:259px">Что описано</th><th style="min-width:259px">Что это меняет в нашей проверке</th></tr></thead><tbody><tr><td><a href="https://github.com/BarredEwe/Snowfall/issues/3" target="_blank">Snowfall #3</a></td><td>Окно на одном мониторе вызывает накопление в той же области другого. Issue открыт на момент чтения</td><td>Проверять привязку поверхности к дисплею, масштаб, смещение и отрицательные координаты</td></tr><tr><td><a href="https://github.com/BarredEwe/Snowfall/issues/5" target="_blank">Snowfall #5</a></td><td>Эффект отсутствует в fullscreen. Issue открыт</td><td>Заранее выбрать поведение в fullscreen и проверить его отдельно</td></tr><tr><td><a href="https://github.com/mbezruchko/Snowhush/issues/65" target="_blank">Snowhush #65</a></td><td>Системный скриншот окна выбирает слой эффектов. Issue закрыт ссылкой на PR #73</td><td>Пропуск обычных кликов не гарантирует правильный захват окна системой</td></tr><tr><td><a href="https://github.com/mbezruchko/Snowhush/pull/51" target="_blank">Snowhush PR #51</a></td><td>Снег попадал на миниатюры и панель Spaces в Mission Control</td><td>Фильтровать системные поверхности и переходные состояния</td></tr><tr><td><a href="https://github.com/mbezruchko/Snowhush/pull/84" target="_blank">Snowhush PR #84</a></td><td>При переносе Dock снег оставался на прежнем мониторе. PR открыт на момент чтения</td><td>Проверять перенос Dock, очистку старой сцены и рассогласование источников координат</td></tr><tr><td><a href="https://github.com/mbezruchko/Snowhush/pull/49" target="_blank">Snowhush PR #49</a></td><td>Смена MIT на PolyForm Noncommercial</td><td>Фиксировать версию и текст лицензии при выборе основы</td></tr></tbody></table></div>
+<p>Это сообщения пользователей и описания изменений авторов. Их наличие подтверждает реальные классы проблем, но не означает, что мы воспроизвели каждый баг или проверили исправления.</p>
+<p>В отдельном <a href="https://www.reddit.com/r/sideprojects/comments/1x4v9po/i_built_a_mac_app_where_snow_actually_piles_up_on/" target="_blank">авторском треде Snowfall for Mac</a> описан ещё один подход: прозрачный слой, отслеживание порядка окон и трёхмерные сугробы на RealityKit. Автор заявляет около суток до приложения и первых продаж. Исходники в этом треде не представлены. Это демонстрация возможного короткого прототипирования, а не подтверждённый срок разработки продукта с полной совместимостью. Этот продукт не следует путать с GitHub-проектом BarredEwe/Snowfall.</p></section><section class="sec" id="контекст-наших-macos-разработок"><h2>Контекст наших macOS-разработок</h2><h3 id="oasis">Oasis</h3>
+<p><a href="https://github.com/Nikolinjho/oasis" target="_blank">Репозиторий</a>, локально <code>/Users/itsnikoko/oasis</code>, проверенный HEAD <code>ba094db</code>. Основной код на Swift, UI на SwiftUI внутри AppKit. SwiftPM разделяет IslandCore, IslandSources, IslandUI и приложение. Минимальная система в актуальном Package.swift – macOS 26.</p>
+<div class="table-scroll wide"><table style="min-width:1010px"><thead><tr><th style="min-width:259px">Уже реализовано</th><th style="min-width:492px">Где смотреть</th><th style="min-width:259px">Применимость к погодной утилите</th></tr></thead><tbody><tr><td>Прозрачная панель, неактивирующий режим, уровень окна, Spaces</td><td><code>app/Sources/Oasis/NotchPanel.swift:6</code></td><td>Основа оболочки. Рамку и правила размещения нужно заменить на полноэкранный слой для каждого монитора</td></tr><tr><td>Глобальные и локальные события мыши, пропуск кликов</td><td><code>app/Sources/Oasis/IslandWindowController.swift:106</code></td><td>Полезно для реакции на указатель и сохранения фокуса</td></tr><tr><td>Обнаружение fullscreen и смены Space</td><td><code>app/Sources/Oasis/FullscreenMonitor.swift:9</code></td><td>Основа остановки и возобновления эффекта</td></tr><tr><td>Преобразование координат AppKit и CoreGraphics</td><td><code>app/Sources/IslandSources/Screen/FullscreenWindows.swift:8</code></td><td>Нужный приём для геометрии поверхностей</td></tr><tr><td>Состояние питания через IOKit</td><td><code>app/Sources/IslandSources/Power/PowerSource.swift:8</code></td><td>Источник данных для энергосбережения</td></tr><tr><td>Сборка .app и установка одной рабочей копии</td><td><code>app/Scripts/bundle.sh:1</code>, <code>app/Scripts/install.sh:1</code></td><td>Основа локального цикла разработки</td></tr></tbody></table></div>
+<p>Oasis уже показывает, как не забирать фокус, переключать обработку мыши и встраивать SwiftUI в AppKit. При этом его панель привязана к вырезу MacBook. Она не является готовым движком эффектов на всех мониторах.</p>
+<p>В памяти есть подтверждённая проблема: NSTextView мог забрать mouseUp, оставляя остров в состоянии удержания. В текущем контроллере есть сверка с <code>NSEvent.pressedMouseButtons</code>. Для нового проекта стоит сохранить принцип сверки реального состояния ввода, не рассчитывая только на последовательность событий.</p>
+<p>Код Oasis – MIT, но сторонние звуки, видео и иконки сохраняют отдельные права. Полную локальную папку ресурсов переносить в распространяемый продукт нельзя без отдельной проверки. README описывает подпись исторически, текущий сборочный скрипт использует <code>Oasis Dev</code> и допускает ad-hoc fallback. Это локальный процесс, не доказательство готовой коммерческой поставки.</p>
+<h3 id="speakey-бывший-keyboop">Speakey, бывший Keyboop</h3>
+<p><a href="https://github.com/Nikolinjho/speakey" target="_blank">Репозиторий</a>, локально <code>/Users/itsnikoko/speakey</code>, проверенный HEAD <code>fec242a</code>. Нативное приложение на Swift/AppKit для раскладки, диктовки, сниппетов и истории. В текущем манифесте Swift tools 6.2 и минимальная macOS 13. README уточняет более высокие требования отдельных голосовых функций на Apple silicon.</p>
+<div class="table-scroll"><table style="min-width:850px"><thead><tr><th style="min-width:259px">Уже реализовано</th><th style="min-width:332px">Где смотреть</th><th style="min-width:259px">Применимость</th></tr></thead><tbody><tr><td>Панель над вырезом, геометрия экранов</td><td><code>Sources/Speakey/NotchIsland.swift:1</code></td><td>Дополнительный источник решений для размещения и уровней окон</td></tr><tr><td>Собственный визуальный индикатор диктовки</td><td><code>Sources/Speakey/VoiceIndicator.swift:1</code></td><td>Опыт лёгкой отрисовки и анимации на AppKit</td></tr><tr><td>Системные события и восстановление CGEventTap</td><td><code>Sources/Speakey/EventTap.swift:37</code></td><td>Понимание жизненного цикла перехвата ввода. Полный клавиатурный перехват для погоды не требуется</td></tr><tr><td>Работа с разрешениями</td><td><code>Sources/Speakey/Permissions.swift:6</code></td><td>Опыт первого запуска и повторной проверки доступов</td></tr><tr><td>Постоянная подпись без ad-hoc fallback</td><td><code>scripts/sign-speakey-app.sh:1</code></td><td>Более строгая основа сборки с устойчивой идентичностью приложения</td></tr></tbody></table></div>
+<p>В <code>NotchIsland.swift</code> отдельно зафиксирован порядок настройки окна: включение floating-panel может изменить уровень, поэтому окончательный level задаётся после него. Это пример мелкой настройки AppKit, влияющей на реальное поведение поверх окон.</p>
+<p>Memora содержит историю проверки сохранения TCC-разрешений после обновления с постоянной подписью. Текущая документация также запрещает ad-hoc для Speakey. Это полезный опыт, но локальный сертификат не заменяет Developer ID и notarization для публичной поставки.</p>
+<p><code>/Users/itsnikoko/tools/keyboop</code> – старый клон той же линии разработки, с тем же GitHub origin и более ранним HEAD <code>8e087a8</code>. Его не считаю отдельным актуальным Swift-продуктом. В актуальном README Speakey указано, что локальная сборка не имеет автообновлений, поэтому готовый updater из него не закладываю.</p>
+<h3 id="keep-you-mac-up">Keep You Mac Up</h3>
+<p><a href="https://github.com/Nikolinjho/keep-you-mac-up" target="_blank">Репозиторий</a>, локально <code>/Users/itsnikoko/keepyouawake</code>, проверенный HEAD <code>7acc8f1</code>. Это наш форк KeepingYouAwake с дополнительным helper для работы с закрытой крышкой. Его нельзя описывать как полностью Swift-приложение: основа смешанная, в том числе Objective-C и Swift-пакеты.</p>
+<p>Применимы опыт работы со строкой меню, helper-процессом, завершением сессий, упаковкой DMG/ZIP и проверкой подписи. Управление крышкой и приватный вызов IOKit погодной утилите не нужны. По README используется ad-hoc, поэтому этот процесс также не является готовой публичной поставкой с notarization.</p>
+<h3 id="что-не-следует-смешивать-с-нативной-базой">Что не следует смешивать с нативной базой</h3>
+<p>Soon – наше приложение, но в текущем <code>package.json</code> это Electron + React. Его интеграция в Oasis полезна как опыт обмена данными, но Swift-основой для рендерера погоды Soon не является.</p>
+<p>В каталогах исходников Oasis и Speakey поиском не найдены импорты Metal, MetalKit, SpriteKit и RealityKit или использование CAEmitterLayer. В выбранной собственной базе готовый погодный движок не обнаружен. Это вывод о проверенных каталогах, не обо всех когда-либо существовавших прототипах.</p></section><section class="sec" id="как-собрать-собственный-вариант"><h2>Как собрать собственный вариант</h2><p>Я бы начал с отдельного SwiftPM-проекта под macOS 14+, сохранив подход Oasis к разделению чистой логики, системных источников и интерфейса. Текущий пакет Oasis требует macOS 26, поэтому подключить его целиком и одновременно обещать macOS 14 нельзя без проверки совместимости.</p>
+<div class="table-scroll"><table style="min-width:723px"><thead><tr><th style="min-width:205px">Часть</th><th style="min-width:259px">Откуда взять основу</th><th style="min-width:259px">Что потребуется сделать</th></tr></thead><tbody><tr><td>Окна, строка меню, фокус и мышь</td><td>Собственные Oasis и Speakey</td><td>Обобщить на монитор, убрать привязку к вырезу</td></tr><tr><td>Источник геометрии</td><td>Собственный опыт CGWindowList</td><td>Отслеживать несколько окон, открытые края и перекрытия</td></tr><tr><td>Снег и накопление</td><td>Своя реализация или отдельно выбранный MIT-тег Snowhush</td><td>Профиль высот, движение опор, осыпание и курсор</td></tr><tr><td>Рендер</td><td>Для прототипа SpriteKit или Vortex, для контроля нагрузки Metal</td><td>Измерить расход CPU/GPU и число вызовов отрисовки</td></tr><tr><td>Режимы питания</td><td>Источники Oasis и проверенный подход Snowhush</td><td>Ограничить FPS и количество частиц, останавливать невидимую сцену</td></tr><tr><td>Локальная сборка и подпись</td><td>Процесс Speakey</td><td>Новый bundle ID и сертификат, отдельная установленная копия</td></tr><tr><td>Продажа, лицензии, обновления</td><td>Новая работа</td><td>Платёжный API, активация, email, Developer ID, notarization и updater</td></tr></tbody></table></div>
+<p>Для первого эксперимента достаточно снега на открытых краях двух-трёх окон и реакции на курсор. Проверки: два монитора, перенос окна между ними, fullscreen, Mission Control, перенос Dock и системный скриншот отдельного окна.</p>
+<p><b class="lead">Сначала стоит сравнить цену двух путей:</b> собственный небольшой движок и адаптация старого MIT-снимка. Полноценную карту окон, тестирование и коммерческую поставку готовые примеры не отменяют. Моё прежнее число 2–3,25 млн ₽ описывало заказ полного продукта с нуля. Оно не является необходимой суммой денежных вложений для нашей самостоятельной разработки.</p></section><section class="sec" id="сохранённый-контекст-и-доказательства"><h2>Сохранённый контекст и доказательства</h2><p>Снимки деревьев GitHub, выбранные исходники и лицензии лежат в <code>~/SeasonArt/docs/research/reports/assets/2026-11-06-koiart-sources</code>. Для GitHub исходники загружены по зафиксированным SHA, лицензия старого Snowhush – по тегу v0.6.1. MacSnow прочитан из main без фиксации SHA, поэтому его снимок имеет меньшую воспроизводимость.</p>
+<p>Собственные исходники не менялись, сборки и установки не выполнялись. У Speakey и Keep You Mac Up рабочие деревья чистые. У Oasis есть два неотслеживаемых файла браузерной проверки, их не меняли. Текущие локальные HEAD приведены выше, установленным приложениям они автоматически не приписываются.</p>
+<p><b class="lead">Использованные записи Memora:</b> Oasis #360, #607, #616 и #938, Speakey/Keyboop #873, #892 и #1057, Keep You Mac Up #934. Память содержит историю, поэтому при расхождении описание текущего кода и README имеет приоритет для этого отчёта.</p></section></article></main>
+<script>(function(){var w=document.querySelector(".share");if(!w)return;var b=w.querySelector(".share-btn"),p=w.querySelector(".share-pop");var here="";try{here=decodeURIComponent(location.pathname)}catch(e){here=location.pathname}if(location.protocol!=="file:"||here!==w.dataset.path){w.querySelector(".share-act").hidden=true;w.querySelector(".share-note").hidden=false}var set=function(open){p.hidden=!open;b.setAttribute("aria-expanded",String(open))};b.addEventListener("click",function(e){e.stopPropagation();set(p.hidden)});document.addEventListener("click",function(e){if(!w.contains(e.target))set(false)});document.addEventListener("keydown",function(e){if(e.key==="Escape")set(false)});})();</script>
+
+</body></html>

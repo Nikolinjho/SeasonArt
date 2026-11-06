@@ -1,0 +1,1892 @@
+{
+  "sha": "013f36782e5c6d017725aeb4b2173ae329bf0c6e",
+  "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/013f36782e5c6d017725aeb4b2173ae329bf0c6e",
+  "tree": [
+    {
+      "path": ".github",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "f9bb37cfada86838c6b763cabd6d8b49b0491072",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/f9bb37cfada86838c6b763cabd6d8b49b0491072"
+    },
+    {
+      "path": ".github/FUNDING.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aadb02eabcc7d0f43120a80158844daef6adf515",
+      "size": 19,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/aadb02eabcc7d0f43120a80158844daef6adf515"
+    },
+    {
+      "path": ".github/workflows",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7015c3f581e3f2845568d1636327689ef09e6aa7",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/7015c3f581e3f2845568d1636327689ef09e6aa7"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fae866a25845e484040770776b89a1d57ab797ca",
+      "size": 1447,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/fae866a25845e484040770776b89a1d57ab797ca"
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "53b50dd2b1500c419db6f1d5f915906abc64903a",
+      "size": 1035,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/53b50dd2b1500c419db6f1d5f915906abc64903a"
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8a578c8b530b6641c5fe750f13c4bef0c0f3b557",
+      "size": 202,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/8a578c8b530b6641c5fe750f13c4bef0c0f3b557"
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5b6d486de5dc5395c5c49eed697d1aa3e8800779",
+      "size": 4656,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/5b6d486de5dc5395c5c49eed697d1aa3e8800779"
+    },
+    {
+      "path": "PRODUCT.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fff5fec5b722df0e625e063ce1a239fd4ff3d9fe",
+      "size": 3338,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/fff5fec5b722df0e625e063ce1a239fd4ff3d9fe"
+    },
+    {
+      "path": "Package.resolved",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "89a223c624b1be8c500453f1b5714f05ecfcc066",
+      "size": 303,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/89a223c624b1be8c500453f1b5714f05ecfcc066"
+    },
+    {
+      "path": "Package.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "375d39ddcd05c065f06045e0c7e1a0c535c94989",
+      "size": 560,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/375d39ddcd05c065f06045e0c7e1a0c535c94989"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3125f3056c1323686d47116327ee1b343eaeec1f",
+      "size": 6120,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/3125f3056c1323686d47116327ee1b343eaeec1f"
+    },
+    {
+      "path": "RELEASING.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0c8f603dbb6c1163ff2a43dd8e98d8fb58d7adeb",
+      "size": 2677,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/0c8f603dbb6c1163ff2a43dd8e98d8fb58d7adeb"
+    },
+    {
+      "path": "Resources",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d572a611caf21367ac8bb5bd1ce2cbfd7a09505c",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/d572a611caf21367ac8bb5bd1ce2cbfd7a09505c"
+    },
+    {
+      "path": "Resources/AppIcon.icns",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5baaf9198ab0842955d8aa7fa30a0424a1e058be",
+      "size": 1353380,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/5baaf9198ab0842955d8aa7fa30a0424a1e058be"
+    },
+    {
+      "path": "Resources/Info.plist",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "835312cd3dfbd6eb646a173ecdb8f93f56377e19",
+      "size": 1329,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/835312cd3dfbd6eb646a173ecdb8f93f56377e19"
+    },
+    {
+      "path": "Sources",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c32047717bb87bc68c29f67973f14d1b8d8c1aab",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/c32047717bb87bc68c29f67973f14d1b8d8c1aab"
+    },
+    {
+      "path": "Sources/Snowhush",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "df0bb9ce856549613880d1a3a8b01dafced9f62b",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/df0bb9ce856549613880d1a3a8b01dafced9f62b"
+    },
+    {
+      "path": "Sources/Snowhush/AppDelegate.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eeed8e7c51d75a8fc1ddca36ad2ed48a2622ff59",
+      "size": 17200,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/eeed8e7c51d75a8fc1ddca36ad2ed48a2622ff59"
+    },
+    {
+      "path": "Sources/Snowhush/AppMover.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a3b8cdcdfa29e6ee79bd555017a9a163f60c5cfd",
+      "size": 2791,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/a3b8cdcdfa29e6ee79bd555017a9a163f60c5cfd"
+    },
+    {
+      "path": "Sources/Snowhush/Blossom.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2cf814e838b9f9811b09a4ff1b12db04e9c0ef39",
+      "size": 1366,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/2cf814e838b9f9811b09a4ff1b12db04e9c0ef39"
+    },
+    {
+      "path": "Sources/Snowhush/DockOverlay.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2ed38497f973747852fba8a77575c47f92897e87",
+      "size": 3159,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/2ed38497f973747852fba8a77575c47f92897e87"
+    },
+    {
+      "path": "Sources/Snowhush/Halloween.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a0924b1896f8adbf34b2df9ab682d0e36bc591f0",
+      "size": 3507,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/a0924b1896f8adbf34b2df9ab682d0e36bc591f0"
+    },
+    {
+      "path": "Sources/Snowhush/HalloweenPumpkin.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4d72dc2670c7cffa4022722a4c99da2e1f91cb72",
+      "size": 5342,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/4d72dc2670c7cffa4022722a4c99da2e1f91cb72"
+    },
+    {
+      "path": "Sources/Snowhush/HalloweenSign.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b0b1a5ddff57636b161add2b22fbd6f4a05d9e5e",
+      "size": 7595,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/b0b1a5ddff57636b161add2b22fbd6f4a05d9e5e"
+    },
+    {
+      "path": "Sources/Snowhush/OverlayWindow.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "68eaf01c19cfa89b2e3963eb0924ecaba692d396",
+      "size": 3607,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/68eaf01c19cfa89b2e3963eb0924ecaba692d396"
+    },
+    {
+      "path": "Sources/Snowhush/PowerMonitor.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d2af7b77f895ff77cb78d3edc63f18747848648a",
+      "size": 2099,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/d2af7b77f895ff77cb78d3edc63f18747848648a"
+    },
+    {
+      "path": "Sources/Snowhush/Preferences.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "43afbca5773939579df752e336d849dfee902a08",
+      "size": 4692,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/43afbca5773939579df752e336d849dfee902a08"
+    },
+    {
+      "path": "Sources/Snowhush/Renderer.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d1a028a256beb8a4c04f6b204f1b83efa0b3a74f",
+      "size": 24901,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/d1a028a256beb8a4c04f6b204f1b83efa0b3a74f"
+    },
+    {
+      "path": "Sources/Snowhush/SceneLight.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "289817db3cab6106281838cb111c64333cee582c",
+      "size": 5402,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/289817db3cab6106281838cb111c64333cee582c"
+    },
+    {
+      "path": "Sources/Snowhush/ScreenSnow.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "076ff9bfdcb2315724ff3b2cacfd07bd08de616f",
+      "size": 18620,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/076ff9bfdcb2315724ff3b2cacfd07bd08de616f"
+    },
+    {
+      "path": "Sources/Snowhush/ScreenshotWatch.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2c1c732a08feca8f71592caec832fafb55bbfd98",
+      "size": 6102,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/2c1c732a08feca8f71592caec832fafb55bbfd98"
+    },
+    {
+      "path": "Sources/Snowhush/Shaders.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0c84c86722bdfd780da21f170eec9dd8fc425c38",
+      "size": 54949,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/0c84c86722bdfd780da21f170eec9dd8fc425c38"
+    },
+    {
+      "path": "Sources/Snowhush/SnowLayer.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "22f75229850c5e4e8395882fa097daea6128775c",
+      "size": 17129,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/22f75229850c5e4e8395882fa097daea6128775c"
+    },
+    {
+      "path": "Sources/Snowhush/SnowSimulation.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4c2bab7e2612666dec353c60ca838acd2f61c61a",
+      "size": 161918,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/4c2bab7e2612666dec353c60ca838acd2f61c61a"
+    },
+    {
+      "path": "Sources/Snowhush/SnowfallSlider.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5c3eec42d3a9729041cdb002fde0c05f8d671a8a",
+      "size": 2208,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/5c3eec42d3a9729041cdb002fde0c05f8d671a8a"
+    },
+    {
+      "path": "Sources/Snowhush/WelcomeWindow.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "31a195315eaa91cfd72f79544adfbe843ab474ae",
+      "size": 13850,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/31a195315eaa91cfd72f79544adfbe843ab474ae"
+    },
+    {
+      "path": "Sources/Snowhush/WindowTracker.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e49b5be2f0401f4037112ae278b68cfdbb23a5a4",
+      "size": 56916,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/e49b5be2f0401f4037112ae278b68cfdbb23a5a4"
+    },
+    {
+      "path": "Sources/Snowhush/main.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c39deb8319c78310beb4094115ba7f16697354e1",
+      "size": 145,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/c39deb8319c78310beb4094115ba7f16697354e1"
+    },
+    {
+      "path": "build.sh",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "62000a7091adeb92a0c5165baffdce61b8ab45b7",
+      "size": 1733,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/62000a7091adeb92a0c5165baffdce61b8ab45b7"
+    },
+    {
+      "path": "core",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "02c4b4a5a69f5b3b66bb7ef75f957c0eed3b18d2",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/02c4b4a5a69f5b3b66bb7ef75f957c0eed3b18d2"
+    },
+    {
+      "path": "core/Cargo.lock",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "def831a09e5daebcf7b3577d5d5ebc4802393002",
+      "size": 157,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/def831a09e5daebcf7b3577d5d5ebc4802393002"
+    },
+    {
+      "path": "core/Cargo.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1bb9462544a73995d0dc5d477699d4f91b5290bd",
+      "size": 66,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/1bb9462544a73995d0dc5d477699d4f91b5290bd"
+    },
+    {
+      "path": "core/rustfmt.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3121924d651ded44b389c1f699ab9d1152ecbfb1",
+      "size": 45,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/3121924d651ded44b389c1f699ab9d1152ecbfb1"
+    },
+    {
+      "path": "core/src",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "3be56b4e119220fba864cd3d17a61ffd6756db7d",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/3be56b4e119220fba864cd3d17a61ffd6756db7d"
+    },
+    {
+      "path": "core/src/geometry.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9094d8c84110a0e5ef9e588e5b2779e5273d94bf",
+      "size": 2150,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/9094d8c84110a0e5ef9e588e5b2779e5273d94bf"
+    },
+    {
+      "path": "core/src/halloween.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3956d33816d2adca75467b756e485f4e70b16525",
+      "size": 3896,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/3956d33816d2adca75467b756e485f4e70b16525"
+    },
+    {
+      "path": "core/src/layer.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7bd932ca4d9d7f4f674bea04446783499e58a63f",
+      "size": 18592,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/7bd932ca4d9d7f4f674bea04446783499e58a63f"
+    },
+    {
+      "path": "core/src/lib.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b4d00c3e1997fb5ce2b3103fc9a8491adf5dd6bd",
+      "size": 286,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/b4d00c3e1997fb5ce2b3103fc9a8491adf5dd6bd"
+    },
+    {
+      "path": "core/src/simulation.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "69609b7c2fb9741add722411fa5e423f18190855",
+      "size": 115964,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/69609b7c2fb9741add722411fa5e423f18190855"
+    },
+    {
+      "path": "core/src/simulation",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "b358d38b8067d52fb7633775c11b26e44b03696e",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/b358d38b8067d52fb7633775c11b26e44b03696e"
+    },
+    {
+      "path": "core/src/simulation/ghosts.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3e1f41a35eb199c760369b81df4323217398664b",
+      "size": 44615,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/3e1f41a35eb199c760369b81df4323217398664b"
+    },
+    {
+      "path": "core/src/simulation/pumpkins.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f1b3743e62916da6845bb1b9e020e323bdce262f",
+      "size": 6319,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/f1b3743e62916da6845bb1b9e020e323bdce262f"
+    },
+    {
+      "path": "core/src/simulation/rain.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "087704f5a1829253e927117277194a0e1156efac",
+      "size": 39600,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/087704f5a1829253e927117277194a0e1156efac"
+    },
+    {
+      "path": "core/src/tests.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "41ceb9ec2d3dbb434ace41155daf1d9532fdc070",
+      "size": 37305,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/41ceb9ec2d3dbb434ace41155daf1d9532fdc070"
+    },
+    {
+      "path": "core/src/version.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "edf9d76fd4846dc05933a98fadde7447d89064fc",
+      "size": 1080,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/edf9d76fd4846dc05933a98fadde7447d89064fc"
+    },
+    {
+      "path": "linux",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c8151cfab0378f5f434c6527a862c3951f24ff13",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/c8151cfab0378f5f434c6527a862c3951f24ff13"
+    },
+    {
+      "path": "linux/Cargo.lock",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5606e97906763ab6899c447be05f0ec3814f7466",
+      "size": 37587,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/5606e97906763ab6899c447be05f0ec3814f7466"
+    },
+    {
+      "path": "linux/Cargo.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5e8fa3992c6eb76381835445988542913bc46006",
+      "size": 925,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/5e8fa3992c6eb76381835445988542913bc46006"
+    },
+    {
+      "path": "linux/bench",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c630c70dc20be1c28103176f2e1eef9a9e069333",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/c630c70dc20be1c28103176f2e1eef9a9e069333"
+    },
+    {
+      "path": "linux/bench/Dockerfile",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c4d23a66e0d7c8c5d8bbe75bca6d393ec9d96e89",
+      "size": 694,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/c4d23a66e0d7c8c5d8bbe75bca6d393ec9d96e89"
+    },
+    {
+      "path": "linux/bench/run.sh",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "139c24150d86c4f949add4557915588408b77867",
+      "size": 1463,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/139c24150d86c4f949add4557915588408b77867"
+    },
+    {
+      "path": "linux/bench/scene.sh",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "8af3702c958dbe640d8cb8d461f6817613101e21",
+      "size": 4433,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/8af3702c958dbe640d8cb8d461f6817613101e21"
+    },
+    {
+      "path": "linux/packaging",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "ba4b2f3c935c8b3750040b79169ce9a4d5cbc5b7",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/ba4b2f3c935c8b3750040b79169ce9a4d5cbc5b7"
+    },
+    {
+      "path": "linux/packaging/PKGBUILD",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0e6f400c853fc5a384d5485a018b151bee1c498b",
+      "size": 1288,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/0e6f400c853fc5a384d5485a018b151bee1c498b"
+    },
+    {
+      "path": "linux/packaging/aur",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "6ccd2d65ed2d55756a6aa528bd5d7a28d1c60f7d",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/6ccd2d65ed2d55756a6aa528bd5d7a28d1c60f7d"
+    },
+    {
+      "path": "linux/packaging/aur/.SRCINFO",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cfaeed640e24c630449dba8123ffd26d9922006f",
+      "size": 631,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/cfaeed640e24c630449dba8123ffd26d9922006f"
+    },
+    {
+      "path": "linux/packaging/aur/PKGBUILD",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "02e6c29bec007ac84777c7ab391410fb04db7318",
+      "size": 776,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/02e6c29bec007ac84777c7ab391410fb04db7318"
+    },
+    {
+      "path": "linux/packaging/aur/update.sh",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "d6f92b5400ac1d9d5febf5f4718d826bd8c37673",
+      "size": 1475,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/d6f92b5400ac1d9d5febf5f4718d826bd8c37673"
+    },
+    {
+      "path": "linux/packaging/package.sh",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "41046ce604c381c0748264ce7b406335814f46d9",
+      "size": 3814,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/41046ce604c381c0748264ce7b406335814f46d9"
+    },
+    {
+      "path": "linux/packaging/snowhush.desktop",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f4aee9a9d45b63ec84b18497a0debca5f246d02f",
+      "size": 199,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/f4aee9a9d45b63ec84b18497a0debca5f246d02f"
+    },
+    {
+      "path": "linux/packaging/snowhush.spec",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "501390224b15d6a2a6a8674172d3a08e70aef495",
+      "size": 919,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/501390224b15d6a2a6a8674172d3a08e70aef495"
+    },
+    {
+      "path": "linux/rustfmt.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3121924d651ded44b389c1f699ab9d1152ecbfb1",
+      "size": 45,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/3121924d651ded44b389c1f699ab9d1152ecbfb1"
+    },
+    {
+      "path": "linux/src",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "ad45899eee2c69c3b01fed2fae6258f5f481d681",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/ad45899eee2c69c3b01fed2fae6258f5f481d681"
+    },
+    {
+      "path": "linux/src/chores.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4b7ba06d85fbffc41b70fccf572855a9631f1267",
+      "size": 8343,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/4b7ba06d85fbffc41b70fccf572855a9631f1267"
+    },
+    {
+      "path": "linux/src/hyprland.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "392cc3b037770539df46c5b3739740b832fd0653",
+      "size": 12515,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/392cc3b037770539df46c5b3739740b832fd0653"
+    },
+    {
+      "path": "linux/src/kwin.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ffdfd9ebb1a893d880a9a5a5946e172f396d0edb",
+      "size": 8847,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/ffdfd9ebb1a893d880a9a5a5946e172f396d0edb"
+    },
+    {
+      "path": "linux/src/light.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cd856260df10897f88ce6dbc385ce366dcff9278",
+      "size": 5944,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/cd856260df10897f88ce6dbc385ce366dcff9278"
+    },
+    {
+      "path": "linux/src/log.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a2bc09fae00d6c6d2b1c6628c2fa5d6cdb9ad70c",
+      "size": 1148,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/a2bc09fae00d6c6d2b1c6628c2fa5d6cdb9ad70c"
+    },
+    {
+      "path": "linux/src/main.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b1a47e45008784215d5b0191db557259bb5b5024",
+      "size": 334,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/b1a47e45008784215d5b0191db557259bb5b5024"
+    },
+    {
+      "path": "linux/src/niri.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e38f827b5fd39a8afa8a2a536249291bb8a2c3b0",
+      "size": 9838,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/e38f827b5fd39a8afa8a2a536249291bb8a2c3b0"
+    },
+    {
+      "path": "linux/src/prefs.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b9e48858c20e6c27e2b680e7d6b8686ad62e4525",
+      "size": 6092,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/b9e48858c20e6c27e2b680e7d6b8686ad62e4525"
+    },
+    {
+      "path": "linux/src/render.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2ad30f517b5f468d780988c5b7613f7e9d093532",
+      "size": 33064,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/2ad30f517b5f468d780988c5b7613f7e9d093532"
+    },
+    {
+      "path": "linux/src/screen.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9b7b7dd144db9876f4d225e53dcbda6dad6ea30b",
+      "size": 22514,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/9b7b7dd144db9876f4d225e53dcbda6dad6ea30b"
+    },
+    {
+      "path": "linux/src/shaders",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d008cb77af4d05b9a4c1b85c5838f263ef5c2237",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/d008cb77af4d05b9a4c1b85c5838f263ef5c2237"
+    },
+    {
+      "path": "linux/src/shaders/drop.glsl",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "18d8b37e4a5173544dd45c45fd7479eb2f721b9a",
+      "size": 1634,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/18d8b37e4a5173544dd45c45fd7479eb2f721b9a"
+    },
+    {
+      "path": "linux/src/shaders/field.frag",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ef47bc196c30b481ac7983444c9dcb430728f082",
+      "size": 1859,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/ef47bc196c30b481ac7983444c9dcb430728f082"
+    },
+    {
+      "path": "linux/src/shaders/glass.frag",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3457a0798bae9bfd9d4a51af7d2d6d16bb2b5784",
+      "size": 2707,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/3457a0798bae9bfd9d4a51af7d2d6d16bb2b5784"
+    },
+    {
+      "path": "linux/src/shaders/glass.vert",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0e09d40b1afd7413a3d7e35c3aafe52ab1ddec67",
+      "size": 262,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/0e09d40b1afd7413a3d7e35c3aafe52ab1ddec67"
+    },
+    {
+      "path": "linux/src/shaders/pile.frag",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e2da63716e90d2b8f08e2f44fd9f3defc927fdc4",
+      "size": 7975,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/e2da63716e90d2b8f08e2f44fd9f3defc927fdc4"
+    },
+    {
+      "path": "linux/src/shaders/pile.vert",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "846737351b48a451e178d301ae3c8bc7fbfb9596",
+      "size": 618,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/846737351b48a451e178d301ae3c8bc7fbfb9596"
+    },
+    {
+      "path": "linux/src/shaders/pumpkin.frag",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "80eefb91834465865aa7ae11ca14dc0a30774162",
+      "size": 1818,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/80eefb91834465865aa7ae11ca14dc0a30774162"
+    },
+    {
+      "path": "linux/src/shaders/pumpkin.vert",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "32856c2fdbdc72e65f2187e39ec1600f6a4b2d5c",
+      "size": 803,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/32856c2fdbdc72e65f2187e39ec1600f6a4b2d5c"
+    },
+    {
+      "path": "linux/src/shaders/sign.frag",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a0451caa727811ad30dfc5e59502ccf93d1c6e7f",
+      "size": 1864,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/a0451caa727811ad30dfc5e59502ccf93d1c6e7f"
+    },
+    {
+      "path": "linux/src/shaders/sign.vert",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "99cd409dd614bfed4f87e659dd04f826beb3879c",
+      "size": 898,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/99cd409dd614bfed4f87e659dd04f826beb3879c"
+    },
+    {
+      "path": "linux/src/shaders/sprite.frag",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c98c3dfd5b21abd871e1953d7061b9dfc0fce26c",
+      "size": 33252,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/c98c3dfd5b21abd871e1953d7061b9dfc0fce26c"
+    },
+    {
+      "path": "linux/src/shaders/sprite.vert",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "baf350bec223d48ff0e0029ebd15a675a36c2e16",
+      "size": 9551,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/baf350bec223d48ff0e0029ebd15a675a36c2e16"
+    },
+    {
+      "path": "linux/src/snow.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3d702c7152ab4aebae5a91c95d6ffef7da89d102",
+      "size": 25126,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/3d702c7152ab4aebae5a91c95d6ffef7da89d102"
+    },
+    {
+      "path": "linux/src/snowhush.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eb0fee79715e405a959e3dbeea3d409358df0f63",
+      "size": 7634,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/eb0fee79715e405a959e3dbeea3d409358df0f63"
+    },
+    {
+      "path": "linux/src/source.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1a7c1e71fdefe28faeef0d20ad5472a01e1fa777",
+      "size": 6929,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/1a7c1e71fdefe28faeef0d20ad5472a01e1fa777"
+    },
+    {
+      "path": "linux/src/sway.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f74544fa7aea2dca73bffc8c7f933fcef2dc7bba",
+      "size": 10495,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/f74544fa7aea2dca73bffc8c7f933fcef2dc7bba"
+    },
+    {
+      "path": "linux/src/tray.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5613cc065910fed6896b9ed5df163f693bfbf458",
+      "size": 13590,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/5613cc065910fed6896b9ed5df163f693bfbf458"
+    },
+    {
+      "path": "linux/src/windows.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "01fa730fd59578f66885baace89704bf14a7731b",
+      "size": 9303,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/01fa730fd59578f66885baace89704bf14a7731b"
+    },
+    {
+      "path": "release.sh",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "2bb2d7971db6a1cde21c710c2b4f91a6603765fd",
+      "size": 5982,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/2bb2d7971db6a1cde21c710c2b4f91a6603765fd"
+    },
+    {
+      "path": "scripts",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "986f74b01905a84acdbe5a931e53789a6e8016d2",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/986f74b01905a84acdbe5a931e53789a6e8016d2"
+    },
+    {
+      "path": "scripts/dmg-settings.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "02757d4039c244b1b274f2e90badf4671d563e76",
+      "size": 833,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/02757d4039c244b1b274f2e90badf4671d563e76"
+    },
+    {
+      "path": "scripts/make-cask.sh",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "b666e0f43c1407e3b6fc45db5037cfd6cced92a2",
+      "size": 987,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/b666e0f43c1407e3b6fc45db5037cfd6cced92a2"
+    },
+    {
+      "path": "scripts/make-dmg-background.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5b1edf0133da3261002cc500219fdc8792429b42",
+      "size": 6327,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/5b1edf0133da3261002cc500219fdc8792429b42"
+    },
+    {
+      "path": "scripts/make-icon.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "869a1e39d3856843837e2896fd931bc64b64bd04",
+      "size": 6632,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/869a1e39d3856843837e2896fd931bc64b64bd04"
+    },
+    {
+      "path": "site",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7198a1cfcfdf1133fee471c182e1baf21003eba8",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/7198a1cfcfdf1133fee471c182e1baf21003eba8"
+    },
+    {
+      "path": "site/_headers",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dbc0c9b9ea227744177c96302bb746996007812d",
+      "size": 139,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/dbc0c9b9ea227744177c96302bb746996007812d"
+    },
+    {
+      "path": "site/assets",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "9ea66fe4abd40b8abd365649d6c299550eea81cb",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/9ea66fe4abd40b8abd365649d6c299550eea81cb"
+    },
+    {
+      "path": "site/assets/apple-touch-icon.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8c8ce23d64b9dde2d78d22376d610e01301b2848",
+      "size": 28015,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/8c8ce23d64b9dde2d78d22376d610e01301b2848"
+    },
+    {
+      "path": "site/assets/halloween",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "a4a0a622e1caba67ba702cdc26c32640df6a1592",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/a4a0a622e1caba67ba702cdc26c32640df6a1592"
+    },
+    {
+      "path": "site/assets/halloween/boo.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9e91f35846d0bb2f08a32dbfa596d36b9b4504c8",
+      "size": 48988,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/9e91f35846d0bb2f08a32dbfa596d36b9b4504c8"
+    },
+    {
+      "path": "site/assets/icon-512.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9803cf3033e1bd623085961bbcc25b0c073f8c5f",
+      "size": 191925,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/9803cf3033e1bd623085961bbcc25b0c073f8c5f"
+    },
+    {
+      "path": "site/assets/icon-64.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "02953d0988c8cd8ffc0e6c0479544db4c760e6af",
+      "size": 5617,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/02953d0988c8cd8ffc0e6c0479544db4c760e6af"
+    },
+    {
+      "path": "site/index.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "729355912982f8418ec134a5096ce66679d7ce9e",
+      "size": 35287,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/729355912982f8418ec134a5096ce66679d7ce9e"
+    },
+    {
+      "path": "site/snow.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5a535fdbdbf5cd904079ac2f72497c14a82fd060",
+      "size": 70261,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/5a535fdbdbf5cd904079ac2f72497c14a82fd060"
+    },
+    {
+      "path": "windows",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "46a64f73e1e33dcc83038e5556ab382b572736b2",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/46a64f73e1e33dcc83038e5556ab382b572736b2"
+    },
+    {
+      "path": "windows/.cargo",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "8e2346a100dfe39f2f88d9ab03fa6b61f7dc025a",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/8e2346a100dfe39f2f88d9ab03fa6b61f7dc025a"
+    },
+    {
+      "path": "windows/.cargo/config.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ac2b23f81468463fa64b8d33becb590396eecf20",
+      "size": 81,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/ac2b23f81468463fa64b8d33becb590396eecf20"
+    },
+    {
+      "path": "windows/Cargo.lock",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e847049ceb546fc151f5d2e3bd9aa67387becc5c",
+      "size": 3970,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/e847049ceb546fc151f5d2e3bd9aa67387becc5c"
+    },
+    {
+      "path": "windows/Cargo.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "29b57f7acc1236e2e481c1cc06bdafb015ff625d",
+      "size": 1524,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/29b57f7acc1236e2e481c1cc06bdafb015ff625d"
+    },
+    {
+      "path": "windows/assets",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "44d501c9877725df6955e87983ac5eff2e6587e6",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/44d501c9877725df6955e87983ac5eff2e6587e6"
+    },
+    {
+      "path": "windows/assets/Snowhush.ico",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4565ee1734fee7a04fea293e08298d8334856bf1",
+      "size": 72658,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/4565ee1734fee7a04fea293e08298d8334856bf1"
+    },
+    {
+      "path": "windows/assets/icon-256.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "96473ad41a1faf32bbccd82170759849b8e9c908",
+      "size": 52979,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/96473ad41a1faf32bbccd82170759849b8e9c908"
+    },
+    {
+      "path": "windows/assets/lanterns",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c5ffe795200276de67ee8255fd48fb562379cc47",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/c5ffe795200276de67ee8255fd48fb562379cc47"
+    },
+    {
+      "path": "windows/assets/lanterns/face.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "44f4c3e6be9ba878492907428e33bde1523361cf",
+      "size": 5547,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/44f4c3e6be9ba878492907428e33bde1523361cf"
+    },
+    {
+      "path": "windows/assets/lanterns/shell.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "042dd1386fda844db765807b13e011587b340862",
+      "size": 24883,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/042dd1386fda844db765807b13e011587b340862"
+    },
+    {
+      "path": "windows/assets/signs",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c56b55c2ec13af309d1f7f671679b5f1a347ff45",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/c56b55c2ec13af309d1f7f671679b5f1a347ff45"
+    },
+    {
+      "path": "windows/assets/signs/sign-00.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2469de4ff098907000279d594ef74e7aca1e8cb2",
+      "size": 5825,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/2469de4ff098907000279d594ef74e7aca1e8cb2"
+    },
+    {
+      "path": "windows/assets/signs/sign-01.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d8c07570a356e3ae5b2de0a8e0592a6750ee3009",
+      "size": 9036,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/d8c07570a356e3ae5b2de0a8e0592a6750ee3009"
+    },
+    {
+      "path": "windows/assets/signs/sign-02.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6444fa9e53cba104179ff8015e10d324d7d5ffae",
+      "size": 8585,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/6444fa9e53cba104179ff8015e10d324d7d5ffae"
+    },
+    {
+      "path": "windows/assets/signs/sign-03.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b2eea5fda5376151511cccb2c726518e53b7fe69",
+      "size": 9840,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/b2eea5fda5376151511cccb2c726518e53b7fe69"
+    },
+    {
+      "path": "windows/assets/signs/sign-04.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ae2ea63ed4ef35e0180abf10d7fba2adba0b4751",
+      "size": 9911,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/ae2ea63ed4ef35e0180abf10d7fba2adba0b4751"
+    },
+    {
+      "path": "windows/assets/signs/sign-05.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5a7613feb2fb6d876af209b2dfc0f80ea3eb858e",
+      "size": 8468,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/5a7613feb2fb6d876af209b2dfc0f80ea3eb858e"
+    },
+    {
+      "path": "windows/assets/signs/sign-06.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7bd3cc2d999f190b2642b8a6a52b9a4d34846264",
+      "size": 6686,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/7bd3cc2d999f190b2642b8a6a52b9a4d34846264"
+    },
+    {
+      "path": "windows/assets/signs/sign-07.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "027d0f2d904b50f29c4b2310472026c2a5c8ac02",
+      "size": 8305,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/027d0f2d904b50f29c4b2310472026c2a5c8ac02"
+    },
+    {
+      "path": "windows/assets/signs/sign-08.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3b004fb98942ef24e8e4d989432bc1af5c8ef043",
+      "size": 8444,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/3b004fb98942ef24e8e4d989432bc1af5c8ef043"
+    },
+    {
+      "path": "windows/assets/signs/sign-09.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7b8fc895948ec7f52ef60334780a97163b557c9b",
+      "size": 12130,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/7b8fc895948ec7f52ef60334780a97163b557c9b"
+    },
+    {
+      "path": "windows/assets/signs/sign-10.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b337c884ac27336137d21aec9259dea6a098da63",
+      "size": 10910,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/b337c884ac27336137d21aec9259dea6a098da63"
+    },
+    {
+      "path": "windows/assets/signs/sign-11.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ddd690b1b967de6bc7982cdc23340699c0b530da",
+      "size": 11149,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/ddd690b1b967de6bc7982cdc23340699c0b530da"
+    },
+    {
+      "path": "windows/assets/tray",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "edd0f33a6dbfeb65921c97db7419e83082fb553f",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/edd0f33a6dbfeb65921c97db7419e83082fb553f"
+    },
+    {
+      "path": "windows/assets/tray/blossom-black-16.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c4ef200e44b624444b061e4ccee1e1c5234ede8e",
+      "size": 428,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/c4ef200e44b624444b061e4ccee1e1c5234ede8e"
+    },
+    {
+      "path": "windows/assets/tray/blossom-black-20.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fd1d10182c06591e67fb4c273ba7517ce00feea3",
+      "size": 537,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/fd1d10182c06591e67fb4c273ba7517ce00feea3"
+    },
+    {
+      "path": "windows/assets/tray/blossom-black-24.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d4f9fa0afcd1f93f3ba56c60ea00de84e32dd278",
+      "size": 662,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/d4f9fa0afcd1f93f3ba56c60ea00de84e32dd278"
+    },
+    {
+      "path": "windows/assets/tray/blossom-black-32.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1edfc9fa050806e52bf0a28b02ee8ea7bafa2fd7",
+      "size": 1050,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/1edfc9fa050806e52bf0a28b02ee8ea7bafa2fd7"
+    },
+    {
+      "path": "windows/assets/tray/blossom-black-40.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4060fc638d2d6a8f029923e51900c36629ef52fb",
+      "size": 1296,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/4060fc638d2d6a8f029923e51900c36629ef52fb"
+    },
+    {
+      "path": "windows/assets/tray/blossom-black-48.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "256ef5bb37b2251324932c2f62d1f577ee55ed22",
+      "size": 1647,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/256ef5bb37b2251324932c2f62d1f577ee55ed22"
+    },
+    {
+      "path": "windows/assets/tray/blossom-black-64.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dd6d1dc07aafaefd42b10b80bf49f0fe07b138ef",
+      "size": 2240,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/dd6d1dc07aafaefd42b10b80bf49f0fe07b138ef"
+    },
+    {
+      "path": "windows/assets/tray/blossom-white-16.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "64f60ec69af1d9cb2dc670919081aacf3a915268",
+      "size": 452,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/64f60ec69af1d9cb2dc670919081aacf3a915268"
+    },
+    {
+      "path": "windows/assets/tray/blossom-white-20.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "27653b552f32d33b70daa19b5fd34fb2854248c7",
+      "size": 582,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/27653b552f32d33b70daa19b5fd34fb2854248c7"
+    },
+    {
+      "path": "windows/assets/tray/blossom-white-24.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "21bff8e60d2c474498371bb59ceb96d239d8a052",
+      "size": 709,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/21bff8e60d2c474498371bb59ceb96d239d8a052"
+    },
+    {
+      "path": "windows/assets/tray/blossom-white-32.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "266e4753097291dd5749e764a2e22b6f863e0bd1",
+      "size": 1149,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/266e4753097291dd5749e764a2e22b6f863e0bd1"
+    },
+    {
+      "path": "windows/assets/tray/blossom-white-40.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8ce6414f5c6c17fb889c8839e53202e20d101913",
+      "size": 1398,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/8ce6414f5c6c17fb889c8839e53202e20d101913"
+    },
+    {
+      "path": "windows/assets/tray/blossom-white-48.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0c4bbb63731745792579050122ee688fd0ff6ab9",
+      "size": 1801,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/0c4bbb63731745792579050122ee688fd0ff6ab9"
+    },
+    {
+      "path": "windows/assets/tray/blossom-white-64.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8b3d2843e4bd5b8049a466c8af93292570fa1031",
+      "size": 2394,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/8b3d2843e4bd5b8049a466c8af93292570fa1031"
+    },
+    {
+      "path": "windows/assets/tray/leaf-black-16.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "211260094c934945d9ab4f2ec0d8e78a17397859",
+      "size": 361,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/211260094c934945d9ab4f2ec0d8e78a17397859"
+    },
+    {
+      "path": "windows/assets/tray/leaf-black-20.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e04dcc3496a41f0f9ed59aeddf6cf3a595387696",
+      "size": 454,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/e04dcc3496a41f0f9ed59aeddf6cf3a595387696"
+    },
+    {
+      "path": "windows/assets/tray/leaf-black-24.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "838d4e9023c93ef3d455cca370dfa6d45c6679d3",
+      "size": 538,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/838d4e9023c93ef3d455cca370dfa6d45c6679d3"
+    },
+    {
+      "path": "windows/assets/tray/leaf-black-32.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c28196ee82a94e1be3947b666f6d77f83f340c29",
+      "size": 731,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/c28196ee82a94e1be3947b666f6d77f83f340c29"
+    },
+    {
+      "path": "windows/assets/tray/leaf-black-40.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1e1b686ceb5f80e6ca0546e76850062367c26948",
+      "size": 905,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/1e1b686ceb5f80e6ca0546e76850062367c26948"
+    },
+    {
+      "path": "windows/assets/tray/leaf-black-48.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "331516db49deb13abd5c511e3abf8fef3c2b41ff",
+      "size": 1062,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/331516db49deb13abd5c511e3abf8fef3c2b41ff"
+    },
+    {
+      "path": "windows/assets/tray/leaf-black-64.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "686bb84cd8d7fcccc11a4fb293c4e335886b693e",
+      "size": 1407,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/686bb84cd8d7fcccc11a4fb293c4e335886b693e"
+    },
+    {
+      "path": "windows/assets/tray/leaf-white-16.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e9edc92f3eb664fc5de0d5310ca4cc9b4929c641",
+      "size": 405,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/e9edc92f3eb664fc5de0d5310ca4cc9b4929c641"
+    },
+    {
+      "path": "windows/assets/tray/leaf-white-20.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5a5969636fda569e95385eb8bf30bed973b9f583",
+      "size": 501,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/5a5969636fda569e95385eb8bf30bed973b9f583"
+    },
+    {
+      "path": "windows/assets/tray/leaf-white-24.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "74c047c319ae3ebe4adb91a8efafea5284a1d42b",
+      "size": 598,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/74c047c319ae3ebe4adb91a8efafea5284a1d42b"
+    },
+    {
+      "path": "windows/assets/tray/leaf-white-32.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b5c7bbbcb6cab11890758f41b3a248fbafd89f9b",
+      "size": 821,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/b5c7bbbcb6cab11890758f41b3a248fbafd89f9b"
+    },
+    {
+      "path": "windows/assets/tray/leaf-white-40.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "13a11575a43f31cf8149fce051374169e11e8d37",
+      "size": 1033,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/13a11575a43f31cf8149fce051374169e11e8d37"
+    },
+    {
+      "path": "windows/assets/tray/leaf-white-48.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a61878d3d50335acf7c84555cf3cb68916c2d275",
+      "size": 1225,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/a61878d3d50335acf7c84555cf3cb68916c2d275"
+    },
+    {
+      "path": "windows/assets/tray/leaf-white-64.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "45d9cb170b5d72f7bf3261b9fb6f66db9625edd6",
+      "size": 1662,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/45d9cb170b5d72f7bf3261b9fb6f66db9625edd6"
+    },
+    {
+      "path": "windows/assets/tray/pumpkin-black-16.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8e7a36ba5cf7eaafed29737ea4ff9879be8a5f6d",
+      "size": 319,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/8e7a36ba5cf7eaafed29737ea4ff9879be8a5f6d"
+    },
+    {
+      "path": "windows/assets/tray/pumpkin-black-20.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cc102e8e814c3a5d47dc2183474e3ece23820f02",
+      "size": 368,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/cc102e8e814c3a5d47dc2183474e3ece23820f02"
+    },
+    {
+      "path": "windows/assets/tray/pumpkin-black-24.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "750cb9b9ce9aa2962ff70c1b2e3d863e8ae498a6",
+      "size": 480,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/750cb9b9ce9aa2962ff70c1b2e3d863e8ae498a6"
+    },
+    {
+      "path": "windows/assets/tray/pumpkin-black-32.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "444249d46dbd16223fe643d8dea1a52f6c9f54a7",
+      "size": 605,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/444249d46dbd16223fe643d8dea1a52f6c9f54a7"
+    },
+    {
+      "path": "windows/assets/tray/pumpkin-black-40.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e5b90a4b3231a4f5c3624eb09f89b2ac81f73b0e",
+      "size": 686,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/e5b90a4b3231a4f5c3624eb09f89b2ac81f73b0e"
+    },
+    {
+      "path": "windows/assets/tray/pumpkin-black-48.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "46e7ed692e25b15f07261d6f219991323d70dd5e",
+      "size": 833,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/46e7ed692e25b15f07261d6f219991323d70dd5e"
+    },
+    {
+      "path": "windows/assets/tray/pumpkin-black-64.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "52579d2362b812f7a817cc61fe7cdb530d47d1da",
+      "size": 1088,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/52579d2362b812f7a817cc61fe7cdb530d47d1da"
+    },
+    {
+      "path": "windows/assets/tray/pumpkin-white-16.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b64dc3ac258756e3f635af64e82fd5be126a2e66",
+      "size": 348,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/b64dc3ac258756e3f635af64e82fd5be126a2e66"
+    },
+    {
+      "path": "windows/assets/tray/pumpkin-white-20.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8be8aea00434d84792b744d4c905f3f05b750a7d",
+      "size": 414,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/8be8aea00434d84792b744d4c905f3f05b750a7d"
+    },
+    {
+      "path": "windows/assets/tray/pumpkin-white-24.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0d2bcb361e98ac6aae8944095cb0d6665bca9cc5",
+      "size": 520,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/0d2bcb361e98ac6aae8944095cb0d6665bca9cc5"
+    },
+    {
+      "path": "windows/assets/tray/pumpkin-white-32.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5377b7814ed7be0f63644e545d020c884e0d1ae4",
+      "size": 660,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/5377b7814ed7be0f63644e545d020c884e0d1ae4"
+    },
+    {
+      "path": "windows/assets/tray/pumpkin-white-40.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c3731e038786bcd36a25bdebb8aa2787f8d57f07",
+      "size": 758,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/c3731e038786bcd36a25bdebb8aa2787f8d57f07"
+    },
+    {
+      "path": "windows/assets/tray/pumpkin-white-48.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ad9fa0c1eb7ed0d1145d4ddd37fd5d27dc506c6f",
+      "size": 952,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/ad9fa0c1eb7ed0d1145d4ddd37fd5d27dc506c6f"
+    },
+    {
+      "path": "windows/assets/tray/pumpkin-white-64.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8fbb6154abfbfdb7a88f98235780dac597c3f5a7",
+      "size": 1326,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/8fbb6154abfbfdb7a88f98235780dac597c3f5a7"
+    },
+    {
+      "path": "windows/assets/tray/rain-black-16.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d41a07b4ab95deca17a1f8c3939368a6a5aa8a9e",
+      "size": 414,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/d41a07b4ab95deca17a1f8c3939368a6a5aa8a9e"
+    },
+    {
+      "path": "windows/assets/tray/rain-black-20.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "83b51994455ec3f7f34b7d82633c20e27f913d16",
+      "size": 450,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/83b51994455ec3f7f34b7d82633c20e27f913d16"
+    },
+    {
+      "path": "windows/assets/tray/rain-black-24.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "10a9f2fabe43ed5ff4b666fa91f3496b20c20d02",
+      "size": 584,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/10a9f2fabe43ed5ff4b666fa91f3496b20c20d02"
+    },
+    {
+      "path": "windows/assets/tray/rain-black-32.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c1b046caeab0c98298c9b9dbca764617ccb93b98",
+      "size": 653,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/c1b046caeab0c98298c9b9dbca764617ccb93b98"
+    },
+    {
+      "path": "windows/assets/tray/rain-black-40.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8bc86f3e7ad03b4b0dad2615f8b0464846368292",
+      "size": 822,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/8bc86f3e7ad03b4b0dad2615f8b0464846368292"
+    },
+    {
+      "path": "windows/assets/tray/rain-black-48.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5684203a865a2f0c2db2e9131953f7156e88c0f4",
+      "size": 1177,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/5684203a865a2f0c2db2e9131953f7156e88c0f4"
+    },
+    {
+      "path": "windows/assets/tray/rain-black-64.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fdc58db9bb5e2a2946a96144978a7b66c4fc9fa5",
+      "size": 1476,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/fdc58db9bb5e2a2946a96144978a7b66c4fc9fa5"
+    },
+    {
+      "path": "windows/assets/tray/rain-white-16.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1327a9257c274cbf914c0abcf8140642e5dc8432",
+      "size": 419,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/1327a9257c274cbf914c0abcf8140642e5dc8432"
+    },
+    {
+      "path": "windows/assets/tray/rain-white-20.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "df20a34f63aa8fe2cda0a91cb734c0418cd0d483",
+      "size": 466,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/df20a34f63aa8fe2cda0a91cb734c0418cd0d483"
+    },
+    {
+      "path": "windows/assets/tray/rain-white-24.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c86e5f7586273ca5bb3097aa823e87129ebfc35f",
+      "size": 623,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/c86e5f7586273ca5bb3097aa823e87129ebfc35f"
+    },
+    {
+      "path": "windows/assets/tray/rain-white-32.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dc2f994099873aeeadaddfe88c90bced2708b478",
+      "size": 714,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/dc2f994099873aeeadaddfe88c90bced2708b478"
+    },
+    {
+      "path": "windows/assets/tray/rain-white-40.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f7e78283ff4ffb726a5cb4776566cded08945a79",
+      "size": 858,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/f7e78283ff4ffb726a5cb4776566cded08945a79"
+    },
+    {
+      "path": "windows/assets/tray/rain-white-48.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "52963c1925dac5349b175954dee0137153dfd737",
+      "size": 1260,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/52963c1925dac5349b175954dee0137153dfd737"
+    },
+    {
+      "path": "windows/assets/tray/rain-white-64.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "84dc5e62e181ce37b6910510e017be79650310a5",
+      "size": 1630,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/84dc5e62e181ce37b6910510e017be79650310a5"
+    },
+    {
+      "path": "windows/assets/tray/snowflake-black-16.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f788b325bf0ceb6def289369901ada8848f62e0d",
+      "size": 365,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/f788b325bf0ceb6def289369901ada8848f62e0d"
+    },
+    {
+      "path": "windows/assets/tray/snowflake-black-20.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "97154088bab20520e735de30f355f1505bf178ab",
+      "size": 428,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/97154088bab20520e735de30f355f1505bf178ab"
+    },
+    {
+      "path": "windows/assets/tray/snowflake-black-24.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b3e8118bd2b614185378110eff8166c5d56ecc5b",
+      "size": 560,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/b3e8118bd2b614185378110eff8166c5d56ecc5b"
+    },
+    {
+      "path": "windows/assets/tray/snowflake-black-32.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aa9957bb45bd04bb40490eb4b9cd45764085dd49",
+      "size": 656,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/aa9957bb45bd04bb40490eb4b9cd45764085dd49"
+    },
+    {
+      "path": "windows/assets/tray/snowflake-black-40.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c021308a445a03e1013025b71f9dfd9ecb895cbb",
+      "size": 892,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/c021308a445a03e1013025b71f9dfd9ecb895cbb"
+    },
+    {
+      "path": "windows/assets/tray/snowflake-black-48.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6e01cc39a57a6121e0a97f7ec16c218213f9d8a3",
+      "size": 1018,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/6e01cc39a57a6121e0a97f7ec16c218213f9d8a3"
+    },
+    {
+      "path": "windows/assets/tray/snowflake-black-64.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a1cabf7c65bb401dc6487322ab5a68becfaa4339",
+      "size": 1365,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/a1cabf7c65bb401dc6487322ab5a68becfaa4339"
+    },
+    {
+      "path": "windows/assets/tray/snowflake-white-16.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "26c83f69e364477385c24c84d2ae24fcfc168f06",
+      "size": 415,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/26c83f69e364477385c24c84d2ae24fcfc168f06"
+    },
+    {
+      "path": "windows/assets/tray/snowflake-white-20.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "232761db1f9076295ea4b2f3f3e109adb89eb9c8",
+      "size": 471,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/232761db1f9076295ea4b2f3f3e109adb89eb9c8"
+    },
+    {
+      "path": "windows/assets/tray/snowflake-white-24.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a9081cef5bc10b551a2fd11308e4685881af0c67",
+      "size": 622,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/a9081cef5bc10b551a2fd11308e4685881af0c67"
+    },
+    {
+      "path": "windows/assets/tray/snowflake-white-32.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9f4a34a427dc36624ec791186bd992ea0760c0b8",
+      "size": 739,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/9f4a34a427dc36624ec791186bd992ea0760c0b8"
+    },
+    {
+      "path": "windows/assets/tray/snowflake-white-40.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e47ee141e4e24a999da44552b9df0e83bff6a87a",
+      "size": 1048,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/e47ee141e4e24a999da44552b9df0e83bff6a87a"
+    },
+    {
+      "path": "windows/assets/tray/snowflake-white-48.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a3bf746a8c6af0f28d8d47c021d60b11ee430a83",
+      "size": 1196,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/a3bf746a8c6af0f28d8d47c021d60b11ee430a83"
+    },
+    {
+      "path": "windows/assets/tray/snowflake-white-64.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7d793e24de536653d52f86a3868cafb83a6ef891",
+      "size": 1696,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/7d793e24de536653d52f86a3868cafb83a6ef891"
+    },
+    {
+      "path": "windows/build.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a9813e50c46e3551142024a7fad1e033637a7a6e",
+      "size": 6260,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/a9813e50c46e3551142024a7fad1e033637a7a6e"
+    },
+    {
+      "path": "windows/build.sh",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "bd8fa6d5e05a43a1282bd8c96698a4043ef20208",
+      "size": 789,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/bd8fa6d5e05a43a1282bd8c96698a4043ef20208"
+    },
+    {
+      "path": "windows/rustfmt.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3121924d651ded44b389c1f699ab9d1152ecbfb1",
+      "size": 45,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/3121924d651ded44b389c1f699ab9d1152ecbfb1"
+    },
+    {
+      "path": "windows/scripts",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "008cdee5331b5e65100fb0f11781ff4b10080e07",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/008cdee5331b5e65100fb0f11781ff4b10080e07"
+    },
+    {
+      "path": "windows/scripts/make-ico.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3165d983638bd0665f290d306c31d358030646a1",
+      "size": 1109,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/3165d983638bd0665f290d306c31d358030646a1"
+    },
+    {
+      "path": "windows/src",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "1b26fc96a5a9bda09fa5bf268299fd858e84e0f2",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/1b26fc96a5a9bda09fa5bf268299fd858e84e0f2"
+    },
+    {
+      "path": "windows/src/app.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "22b1ed259db3832e3b78103e77bdacafdc7f5881",
+      "size": 28362,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/22b1ed259db3832e3b78103e77bdacafdc7f5881"
+    },
+    {
+      "path": "windows/src/bin",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "859313fcb60d3567021c4f9929bccfd0bff251ce",
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/trees/859313fcb60d3567021c4f9929bccfd0bff251ce"
+    },
+    {
+      "path": "windows/src/bin/setup.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4bcde98293b49c6cf7ab9b3f9548ad7209892326",
+      "size": 9363,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/4bcde98293b49c6cf7ab9b3f9548ad7209892326"
+    },
+    {
+      "path": "windows/src/card.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d6b713e8a413fc51529910cdd84aeb4db51e2f98",
+      "size": 15737,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/d6b713e8a413fc51529910cdd84aeb4db51e2f98"
+    },
+    {
+      "path": "windows/src/desktop.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b0f7beae60e3a4ad2adb894be9a2245dae9adb04",
+      "size": 3412,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/b0f7beae60e3a4ad2adb894be9a2245dae9adb04"
+    },
+    {
+      "path": "windows/src/halloween.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f587622e4c261bf7096cfbca92eb68b4091ced20",
+      "size": 3966,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/f587622e4c261bf7096cfbca92eb68b4091ced20"
+    },
+    {
+      "path": "windows/src/install.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1c58dabc305fb5d46822fec56f23d28225d36b2a",
+      "size": 7987,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/1c58dabc305fb5d46822fec56f23d28225d36b2a"
+    },
+    {
+      "path": "windows/src/lib.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7182a58343cb049b39ac06f434513661b57c0ce1",
+      "size": 63,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/7182a58343cb049b39ac06f434513661b57c0ce1"
+    },
+    {
+      "path": "windows/src/light.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0a2dca95ddf0a95f79f82c6a981e225b2169d79c",
+      "size": 6408,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/0a2dca95ddf0a95f79f82c6a981e225b2169d79c"
+    },
+    {
+      "path": "windows/src/log.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "20afc0b33c8d10799a4dfc22c145a22eb8680ca0",
+      "size": 974,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/20afc0b33c8d10799a4dfc22c145a22eb8680ca0"
+    },
+    {
+      "path": "windows/src/main.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3ce55665ac46344dee485056a33ff75fad2648eb",
+      "size": 1102,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/3ce55665ac46344dee485056a33ff75fad2648eb"
+    },
+    {
+      "path": "windows/src/menu.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "535cbcec8450570420293924429b6d4416f861a5",
+      "size": 34947,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/535cbcec8450570420293924429b6d4416f861a5"
+    },
+    {
+      "path": "windows/src/prefs.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e46f54ba8a28dd1f1b935979afd46510159b6198",
+      "size": 6201,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/e46f54ba8a28dd1f1b935979afd46510159b6198"
+    },
+    {
+      "path": "windows/src/render.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "99ba3979631e9d5706644db611985352b2ea72f8",
+      "size": 33190,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/99ba3979631e9d5706644db611985352b2ea72f8"
+    },
+    {
+      "path": "windows/src/screen.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5657d031ce7833f56ebe70c4b3114ad0adafbecf",
+      "size": 35035,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/5657d031ce7833f56ebe70c4b3114ad0adafbecf"
+    },
+    {
+      "path": "windows/src/shaders.hlsl",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d88f2f742500e80aac32df8dff0de2c41d58e1c9",
+      "size": 56490,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/d88f2f742500e80aac32df8dff0de2c41d58e1c9"
+    },
+    {
+      "path": "windows/src/snow.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "28ce1dc072cbac16379300c5450f7f2b59819109",
+      "size": 24744,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/28ce1dc072cbac16379300c5450f7f2b59819109"
+    },
+    {
+      "path": "windows/src/tracker.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4ba5b0b799113f97c06759f9c07ca77b5a083ab2",
+      "size": 24518,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/4ba5b0b799113f97c06759f9c07ca77b5a083ab2"
+    },
+    {
+      "path": "windows/src/update.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1a52891671917faf1c23ed313d6dc2591a26b876",
+      "size": 4176,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/1a52891671917faf1c23ed313d6dc2591a26b876"
+    },
+    {
+      "path": "windows/src/welcome.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8b4d30b4ac2c814b53329839b720cc900e978dcc",
+      "size": 14399,
+      "url": "https://api.github.com/repos/mbezruchko/Snowhush/git/blobs/8b4d30b4ac2c814b53329839b720cc900e978dcc"
+    }
+  ],
+  "truncated": false
+}

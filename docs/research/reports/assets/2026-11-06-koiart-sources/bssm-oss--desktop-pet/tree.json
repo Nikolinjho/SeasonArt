@@ -1,0 +1,985 @@
+{
+  "sha": "7aa38e9842562dc7d73f2b757fef98213f910f77",
+  "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/7aa38e9842562dc7d73f2b757fef98213f910f77",
+  "tree": [
+    {
+      "path": ".github",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "ad6accbeb1b850067b674617e5d20b1c14e69653",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/ad6accbeb1b850067b674617e5d20b1c14e69653"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "0c6a602187b9b264a53367cc6d4d9a002efcc945",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/0c6a602187b9b264a53367cc6d4d9a002efcc945"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/bug_report.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fed349d195441af3fd7379763d39d5f600efcc7e",
+      "size": 1656,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/fed349d195441af3fd7379763d39d5f600efcc7e"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/feature_request.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ea33a74d20b75579a0117dbf3529eb8bff5376f8",
+      "size": 1339,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/ea33a74d20b75579a0117dbf3529eb8bff5376f8"
+    },
+    {
+      "path": ".github/pull_request_template.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e76c7a6b1a0bb3ac09ac8336985966b921a21d12",
+      "size": 1034,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/e76c7a6b1a0bb3ac09ac8336985966b921a21d12"
+    },
+    {
+      "path": ".github/workflows",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "1ba9ba39d323c412e1fb67e94912678b1d1ae291",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/1ba9ba39d323c412e1fb67e94912678b1d1ae291"
+    },
+    {
+      "path": ".github/workflows/build-check.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f0c437db73fc7211e3f09aaefb3c1283d58fbbda",
+      "size": 3926,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/f0c437db73fc7211e3f09aaefb3c1283d58fbbda"
+    },
+    {
+      "path": ".github/workflows/build-mac.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "189ab85e759d2a42723c8ef9661048a6afa41069",
+      "size": 2650,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/189ab85e759d2a42723c8ef9661048a6afa41069"
+    },
+    {
+      "path": ".github/workflows/build-windows.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "093d28a42629ea09c69a7baaf85a76ada3de56d9",
+      "size": 1539,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/093d28a42629ea09c69a7baaf85a76ada3de56d9"
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "895b887729c6e8b65e81eccc33df206f4ed9934e",
+      "size": 13731,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/895b887729c6e8b65e81eccc33df206f4ed9934e"
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4f52fa1430739d575386407ccaddeaeb25e249fe",
+      "size": 730,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/4f52fa1430739d575386407ccaddeaeb25e249fe"
+    },
+    {
+      "path": "AGENTS.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6651a0d34f3771c095501d6b898c570214418384",
+      "size": 4606,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/6651a0d34f3771c095501d6b898c570214418384"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e84ec9718397c3064be979e9d4e16ab0881c9b6f",
+      "size": 7340,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/e84ec9718397c3064be979e9d4e16ab0881c9b6f"
+    },
+    {
+      "path": "Casks",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7771fb5bf999cc2287e1a0515d8e6ec3acb61abe",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/7771fb5bf999cc2287e1a0515d8e6ec3acb61abe"
+    },
+    {
+      "path": "Casks/desktop-pet.rb",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aba9f1373772e2c7e692c2af630feacd345823fa",
+      "size": 1214,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/aba9f1373772e2c7e692c2af630feacd345823fa"
+    },
+    {
+      "path": "DesktopPet.Windows",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "b947a3cc2f26f3734026160470e3ce2a2efa8bd1",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/b947a3cc2f26f3734026160470e3ce2a2efa8bd1"
+    },
+    {
+      "path": "DesktopPet.Windows/App.manifest",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "adc7af20df1fef2d6ce8ddfd305e59630eb7e57e",
+      "size": 767,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/adc7af20df1fef2d6ce8ddfd305e59630eb7e57e"
+    },
+    {
+      "path": "DesktopPet.Windows/App.manifest.rc",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fa92395bffe93b62873da949b2ab2a6df6d76bfe",
+      "size": 41,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/fa92395bffe93b62873da949b2ab2a6df6d76bfe"
+    },
+    {
+      "path": "DesktopPet.Windows/App",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "e36dee0016a1968e3a751ceb016e8acbe67e573f",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/e36dee0016a1968e3a751ceb016e8acbe67e573f"
+    },
+    {
+      "path": "DesktopPet.Windows/App/AppController.cpp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d207ac7323addb92b8ff768392efe9fae1a3019c",
+      "size": 12412,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/d207ac7323addb92b8ff768392efe9fae1a3019c"
+    },
+    {
+      "path": "DesktopPet.Windows/App/AppController.h",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bc0ae2bb41c5b75f49b518d26d0a4ba008405c7a",
+      "size": 1284,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/bc0ae2bb41c5b75f49b518d26d0a4ba008405c7a"
+    },
+    {
+      "path": "DesktopPet.Windows/App/WinMain.cpp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ec0e15a232fd3cc443fef2ee758e1d9c38e56f98",
+      "size": 382,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/ec0e15a232fd3cc443fef2ee758e1d9c38e56f98"
+    },
+    {
+      "path": "DesktopPet.Windows/CMakeLists.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "40be5699ba78ce4929f0fc8f33826d567925cd7d",
+      "size": 3317,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/40be5699ba78ce4929f0fc8f33826d567925cd7d"
+    },
+    {
+      "path": "DesktopPet.Windows/Playback",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7d20c2c745f4bd3eed79fd860fe05f9a505c1043",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/7d20c2c745f4bd3eed79fd860fe05f9a505c1043"
+    },
+    {
+      "path": "DesktopPet.Windows/Playback/APNGDecoder.cpp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c52503d903b10b43b53994d391c77b43e40bdcae",
+      "size": 3986,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/c52503d903b10b43b53994d391c77b43e40bdcae"
+    },
+    {
+      "path": "DesktopPet.Windows/Playback/APNGDecoder.h",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3cae37eb6d9af0f9e74f80144b757e1d1f4b3365",
+      "size": 142,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/3cae37eb6d9af0f9e74f80144b757e1d1f4b3365"
+    },
+    {
+      "path": "DesktopPet.Windows/Playback/AnimationPlayer.cpp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5a822694266095828573134aa3ffde216bba0717",
+      "size": 1106,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/5a822694266095828573134aa3ffde216bba0717"
+    },
+    {
+      "path": "DesktopPet.Windows/Playback/AnimationPlayer.h",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4e41d6d99afc2ae105477e474dc463d54206d221",
+      "size": 781,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/4e41d6d99afc2ae105477e474dc463d54206d221"
+    },
+    {
+      "path": "DesktopPet.Windows/Playback/FrameSequence.h",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8fe945e7bb7fa08a5323c0342f0fb5140cfa5e42",
+      "size": 988,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/8fe945e7bb7fa08a5323c0342f0fb5140cfa5e42"
+    },
+    {
+      "path": "DesktopPet.Windows/Playback/GIFDecoder.cpp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cccc1af9744b6198c969388c4de8ed28a4bc0bc2",
+      "size": 5747,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/cccc1af9744b6198c969388c4de8ed28a4bc0bc2"
+    },
+    {
+      "path": "DesktopPet.Windows/Playback/GIFDecoder.h",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "20ef03cda0b67ca538001dbc5d6d17ea695e2fa3",
+      "size": 141,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/20ef03cda0b67ca538001dbc5d6d17ea695e2fa3"
+    },
+    {
+      "path": "DesktopPet.Windows/Playback/PNGSequenceDecoder.cpp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cde210bfd188e3db40c7bb8a50a9695ee77825bb",
+      "size": 3612,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/cde210bfd188e3db40c7bb8a50a9695ee77825bb"
+    },
+    {
+      "path": "DesktopPet.Windows/Playback/PNGSequenceDecoder.h",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4b652012d5d4a30ddf58bf0fa203b6acff4ddd25",
+      "size": 169,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/4b652012d5d4a30ddf58bf0fa203b6acff4ddd25"
+    },
+    {
+      "path": "DesktopPet.Windows/Playback/VideoPlayer.cpp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2f65d6ec1899caa6f74855c77c251a8ea778aab8",
+      "size": 2282,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/2f65d6ec1899caa6f74855c77c251a8ea778aab8"
+    },
+    {
+      "path": "DesktopPet.Windows/Playback/VideoPlayer.h",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "da403eaae9ae19c145e7bb99ef605541101da297",
+      "size": 469,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/da403eaae9ae19c145e7bb99ef605541101da297"
+    },
+    {
+      "path": "DesktopPet.Windows/Resource.h",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "df47163fdbd519876ec84a0c043d6c8ec360fd61",
+      "size": 1113,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/df47163fdbd519876ec84a0c043d6c8ec360fd61"
+    },
+    {
+      "path": "DesktopPet.Windows/Resource.rc",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "022403d3e9bee015c02b7370be30e06419260f14",
+      "size": 1834,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/022403d3e9bee015c02b7370be30e06419260f14"
+    },
+    {
+      "path": "DesktopPet.Windows/Settings",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "44fcbbfbb0aa86ecb7457a347960703c97fd9648",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/44fcbbfbb0aa86ecb7457a347960703c97fd9648"
+    },
+    {
+      "path": "DesktopPet.Windows/Settings/AppSettings.cpp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "852613eac487e4b60a92091e888d8d95a3a2d3ce",
+      "size": 4250,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/852613eac487e4b60a92091e888d8d95a3a2d3ce"
+    },
+    {
+      "path": "DesktopPet.Windows/Settings/AppSettings.h",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "03d8494254fa86added97a3309a40276df06f0c6",
+      "size": 705,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/03d8494254fa86added97a3309a40276df06f0c6"
+    },
+    {
+      "path": "DesktopPet.Windows/Settings/SettingsDialog.cpp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b6dd8968f8dd2e97c98d818bdda1aa5069792bf0",
+      "size": 6110,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/b6dd8968f8dd2e97c98d818bdda1aa5069792bf0"
+    },
+    {
+      "path": "DesktopPet.Windows/Settings/SettingsDialog.h",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "097ba504ef00538641cada4449cda21b9b28b6b9",
+      "size": 274,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/097ba504ef00538641cada4449cda21b9b28b6b9"
+    },
+    {
+      "path": "DesktopPet.Windows/TrayIcon",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "a9feaee3ba2c7c9bf036024f7e8df1a7e7fda03c",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/a9feaee3ba2c7c9bf036024f7e8df1a7e7fda03c"
+    },
+    {
+      "path": "DesktopPet.Windows/TrayIcon/TrayController.cpp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "40618fa7ae813b14a3340caa773840bf62b8242f",
+      "size": 2969,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/40618fa7ae813b14a3340caa773840bf62b8242f"
+    },
+    {
+      "path": "DesktopPet.Windows/TrayIcon/TrayController.h",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0441b453738cd93efec6ce2afd1177bbe7a16a88",
+      "size": 897,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/0441b453738cd93efec6ce2afd1177bbe7a16a88"
+    },
+    {
+      "path": "DesktopPet.Windows/Utilities",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "12d6ebc949e5f2c42c8c04e5ec74dd3add5ebd24",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/12d6ebc949e5f2c42c8c04e5ec74dd3add5ebd24"
+    },
+    {
+      "path": "DesktopPet.Windows/Utilities/PlaceholderAnimation.cpp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "245c4a980c6e20795aba6c9b443384654183ef35",
+      "size": 4185,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/245c4a980c6e20795aba6c9b443384654183ef35"
+    },
+    {
+      "path": "DesktopPet.Windows/Utilities/PlaceholderAnimation.h",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d01d5570412b72d50ca5445612f27d1586d2ab76",
+      "size": 168,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/d01d5570412b72d50ca5445612f27d1586d2ab76"
+    },
+    {
+      "path": "DesktopPet.Windows/Window",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "b5274b9954d6c2ad524d4b78e54abac1a41e6031",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/b5274b9954d6c2ad524d4b78e54abac1a41e6031"
+    },
+    {
+      "path": "DesktopPet.Windows/Window/OverlayWindow.cpp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "506e07d861a3029a23283f312ee1ada70f4bc88e",
+      "size": 10417,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/506e07d861a3029a23283f312ee1ada70f4bc88e"
+    },
+    {
+      "path": "DesktopPet.Windows/Window/OverlayWindow.h",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "87b36f7ea03621453ff453593c66c569504eb2fa",
+      "size": 1991,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/87b36f7ea03621453ff453593c66c569504eb2fa"
+    },
+    {
+      "path": "DesktopPet.Windows/Window/PetRender.cpp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "85f4a1260ec437d042196e99734ae28ab64e73db",
+      "size": 811,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/85f4a1260ec437d042196e99734ae28ab64e73db"
+    },
+    {
+      "path": "DesktopPet.Windows/Window/PetRender.h",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2bd92f0bf04be88f14a41c4f71c6a66e3c014cb1",
+      "size": 118,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/2bd92f0bf04be88f14a41c4f71c6a66e3c014cb1"
+    },
+    {
+      "path": "DesktopPet.Windows/app.ico",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "15d001c7fd45cac4f22b8f132864a3b05cf99041",
+      "size": 13515,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/15d001c7fd45cac4f22b8f132864a3b05cf99041"
+    },
+    {
+      "path": "DesktopPet.Windows/bucket",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "a0580dbccbe6f3a020bac7a89f80b6ee3a09b8f5",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/a0580dbccbe6f3a020bac7a89f80b6ee3a09b8f5"
+    },
+    {
+      "path": "DesktopPet.Windows/bucket/desktop-pet.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "81cd70037e0a1b185f17b9649676cbc6bb3cfd18",
+      "size": 698,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/81cd70037e0a1b185f17b9649676cbc6bb3cfd18"
+    },
+    {
+      "path": "DesktopPet.Windows/icon.rc",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "290cac1c726df5a0c96fd55b12fa0d876522da8b",
+      "size": 42,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/290cac1c726df5a0c96fd55b12fa0d876522da8b"
+    },
+    {
+      "path": "DesktopPet.Windows/installer.nsi",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0de03b4b0827e7fcd4ad4a3a9121baddbca8fd86",
+      "size": 2058,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/0de03b4b0827e7fcd4ad4a3a9121baddbca8fd86"
+    },
+    {
+      "path": "DesktopPet.Windows/manifest.rc",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2a15f353c30b74c4eb807347ebe061fb69342757",
+      "size": 52,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/2a15f353c30b74c4eb807347ebe061fb69342757"
+    },
+    {
+      "path": "DesktopPet.Windows/winget",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "8e0417051eab64b87545d5f701c50b20fcb843ec",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/8e0417051eab64b87545d5f701c50b20fcb843ec"
+    },
+    {
+      "path": "DesktopPet.Windows/winget/desktop-pet.yaml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "21d4dc7b826a15f344ac48230f6e46b04cb53c2d",
+      "size": 621,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/21d4dc7b826a15f344ac48230f6e46b04cb53c2d"
+    },
+    {
+      "path": "DesktopPet.xcodeproj",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "00c2d3b38d47cbeaa79d938888e7a8b02acd2352",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/00c2d3b38d47cbeaa79d938888e7a8b02acd2352"
+    },
+    {
+      "path": "DesktopPet.xcodeproj/project.pbxproj",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a8292727f734647c886bb8fb4277a5079f835d3c",
+      "size": 14758,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/a8292727f734647c886bb8fb4277a5079f835d3c"
+    },
+    {
+      "path": "DesktopPet.xcodeproj/xcshareddata",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "e4581b5361e44c83587205f19517630767647df5",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/e4581b5361e44c83587205f19517630767647df5"
+    },
+    {
+      "path": "DesktopPet.xcodeproj/xcshareddata/xcschemes",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "bdc22bb9e0f3787c1fabbe86873fb346d579c1ff",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/bdc22bb9e0f3787c1fabbe86873fb346d579c1ff"
+    },
+    {
+      "path": "DesktopPet.xcodeproj/xcshareddata/xcschemes/DesktopPet.xcscheme",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "988f767796ea85ab97ecfb0242838dab429b792b",
+      "size": 2813,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/988f767796ea85ab97ecfb0242838dab429b792b"
+    },
+    {
+      "path": "DesktopPet",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "a758d8f298b9afe33e228c75543d9fb384e83b19",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/a758d8f298b9afe33e228c75543d9fb384e83b19"
+    },
+    {
+      "path": "DesktopPet/App",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "e3d5da4cd62448e51631ccfb74710a583680a86f",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/e3d5da4cd62448e51631ccfb74710a583680a86f"
+    },
+    {
+      "path": "DesktopPet/App/AppDelegate.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5564701feffdee4f7100cb62a2d74213ff455abf",
+      "size": 2763,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/5564701feffdee4f7100cb62a2d74213ff455abf"
+    },
+    {
+      "path": "DesktopPet/App/Info.plist",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9d24aa63ff5e4c8adf711119387142fef10bb872",
+      "size": 1151,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/9d24aa63ff5e4c8adf711119387142fef10bb872"
+    },
+    {
+      "path": "DesktopPet/App/main.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c82418ad4d8307012f477b8ed6de264e3ff0406d",
+      "size": 245,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/c82418ad4d8307012f477b8ed6de264e3ff0406d"
+    },
+    {
+      "path": "DesktopPet/Assets.xcassets",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "2101f23aade4f6438580610ecdfcba272f334782",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/2101f23aade4f6438580610ecdfcba272f334782"
+    },
+    {
+      "path": "DesktopPet/Assets.xcassets/AccentColor.colorset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "47bde569a55573a38b9786175b8bbe296aa5fb0b",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/47bde569a55573a38b9786175b8bbe296aa5fb0b"
+    },
+    {
+      "path": "DesktopPet/Assets.xcassets/AccentColor.colorset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c0d52faae64c22a2a3556076dc32c80e9e312a2b",
+      "size": 329,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/c0d52faae64c22a2a3556076dc32c80e9e312a2b"
+    },
+    {
+      "path": "DesktopPet/Assets.xcassets/AppIcon.appiconset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "df53953beecc8ce1d54ec8374822f3b16122aa2d",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/df53953beecc8ce1d54ec8374822f3b16122aa2d"
+    },
+    {
+      "path": "DesktopPet/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "97a371cce866e4e294a049166ced129393ee410e",
+      "size": 1044,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/97a371cce866e4e294a049166ced129393ee410e"
+    },
+    {
+      "path": "DesktopPet/Assets.xcassets/AppIcon.appiconset/icon_128x128.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6272dd26599f22dfa0f6b9fd7ae666a57d452bd5",
+      "size": 1485,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/6272dd26599f22dfa0f6b9fd7ae666a57d452bd5"
+    },
+    {
+      "path": "DesktopPet/Assets.xcassets/AppIcon.appiconset/icon_128x128@2x.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4bfcc410e9df45d58e053e5af64f71b3fb6eac33",
+      "size": 2764,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/4bfcc410e9df45d58e053e5af64f71b3fb6eac33"
+    },
+    {
+      "path": "DesktopPet/Assets.xcassets/AppIcon.appiconset/icon_16x16.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8badd57687faf6fef58bda130742996e7d9ffca0",
+      "size": 238,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/8badd57687faf6fef58bda130742996e7d9ffca0"
+    },
+    {
+      "path": "DesktopPet/Assets.xcassets/AppIcon.appiconset/icon_16x16@2x.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "83fab10e386e8b684c0ceab41881bbdfde10a4db",
+      "size": 456,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/83fab10e386e8b684c0ceab41881bbdfde10a4db"
+    },
+    {
+      "path": "DesktopPet/Assets.xcassets/AppIcon.appiconset/icon_256x256.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4bfcc410e9df45d58e053e5af64f71b3fb6eac33",
+      "size": 2764,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/4bfcc410e9df45d58e053e5af64f71b3fb6eac33"
+    },
+    {
+      "path": "DesktopPet/Assets.xcassets/AppIcon.appiconset/icon_256x256@2x.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "41d2a0902b6b05af65534bea1a844c90e9a83602",
+      "size": 5545,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/41d2a0902b6b05af65534bea1a844c90e9a83602"
+    },
+    {
+      "path": "DesktopPet/Assets.xcassets/AppIcon.appiconset/icon_32x32.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "83fab10e386e8b684c0ceab41881bbdfde10a4db",
+      "size": 456,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/83fab10e386e8b684c0ceab41881bbdfde10a4db"
+    },
+    {
+      "path": "DesktopPet/Assets.xcassets/AppIcon.appiconset/icon_32x32@2x.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "17504df4417d59697978fe390f3aa9d86328c3ca",
+      "size": 832,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/17504df4417d59697978fe390f3aa9d86328c3ca"
+    },
+    {
+      "path": "DesktopPet/Assets.xcassets/AppIcon.appiconset/icon_512x512.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "41d2a0902b6b05af65534bea1a844c90e9a83602",
+      "size": 5545,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/41d2a0902b6b05af65534bea1a844c90e9a83602"
+    },
+    {
+      "path": "DesktopPet/Assets.xcassets/AppIcon.appiconset/icon_512x512@2x.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8b0258eb7dbe9b1dd9584ea5bf93549fc502df90",
+      "size": 12875,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/8b0258eb7dbe9b1dd9584ea5bf93549fc502df90"
+    },
+    {
+      "path": "DesktopPet/Assets.xcassets/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "73c00596a7fca3f3d4bdd64053b69d86745f9e10",
+      "size": 63,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/73c00596a7fca3f3d4bdd64053b69d86745f9e10"
+    },
+    {
+      "path": "DesktopPet/DesktopPet.entitlements",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a709ba25b337e56bee63330a0b80eedb62dcd216",
+      "size": 493,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/a709ba25b337e56bee63330a0b80eedb62dcd216"
+    },
+    {
+      "path": "DesktopPet/MenuBar",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "27e42c311539a6f471e3981e95c729fa40713137",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/27e42c311539a6f471e3981e95c729fa40713137"
+    },
+    {
+      "path": "DesktopPet/MenuBar/MenuBarController.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bc96828be1db9f30321213ee29c159a9397e502d",
+      "size": 10058,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/bc96828be1db9f30321213ee29c159a9397e502d"
+    },
+    {
+      "path": "DesktopPet/Playback",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "ac8026b2336e47f07c59a5cf3868d5743bce75a4",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/ac8026b2336e47f07c59a5cf3868d5743bce75a4"
+    },
+    {
+      "path": "DesktopPet/Playback/APNGDecoder.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "74eca95c0c91ba70a08ac3d3258dfbbfbefa1a22",
+      "size": 2320,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/74eca95c0c91ba70a08ac3d3258dfbbfbefa1a22"
+    },
+    {
+      "path": "DesktopPet/Playback/AnimationPlayer.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6599daab285171d692d4ee66b597e501a8501f9c",
+      "size": 6272,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/6599daab285171d692d4ee66b597e501a8501f9c"
+    },
+    {
+      "path": "DesktopPet/Playback/FrameSequence.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8985ca887f7bdcfb91586a32b61e29956d517aa0",
+      "size": 1233,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/8985ca887f7bdcfb91586a32b61e29956d517aa0"
+    },
+    {
+      "path": "DesktopPet/Playback/GIFDecoder.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0f5368583882ac524c8494ab164668fce7960da2",
+      "size": 3043,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/0f5368583882ac524c8494ab164668fce7960da2"
+    },
+    {
+      "path": "DesktopPet/Playback/PNGSequenceDecoder.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dad5728397b7ac384106c549a9f3ab9463e2333e",
+      "size": 1648,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/dad5728397b7ac384106c549a9f3ab9463e2333e"
+    },
+    {
+      "path": "DesktopPet/Playback/VideoPlayer.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ee31f934b2c2e7d6da0912ee319fedce0b55731a",
+      "size": 2710,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/ee31f934b2c2e7d6da0912ee319fedce0b55731a"
+    },
+    {
+      "path": "DesktopPet/Settings",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "bf58db9e669cbdb9d41f863be191774dd8e742d3",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/bf58db9e669cbdb9d41f863be191774dd8e742d3"
+    },
+    {
+      "path": "DesktopPet/Settings/AppSettings.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5e8aa34c5bc0b4a5cb63c0920306765b8d5e1a65",
+      "size": 3199,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/5e8aa34c5bc0b4a5cb63c0920306765b8d5e1a65"
+    },
+    {
+      "path": "DesktopPet/Settings/PetsStore.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e6c7673f445c56fed1e69b1fc94cdc056762ec91",
+      "size": 7905,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/e6c7673f445c56fed1e69b1fc94cdc056762ec91"
+    },
+    {
+      "path": "DesktopPet/Settings/SettingsView.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "82eef52540d068a47d1bc95da7db22d47d3e31b9",
+      "size": 5042,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/82eef52540d068a47d1bc95da7db22d47d3e31b9"
+    },
+    {
+      "path": "DesktopPet/Utilities",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c068a92dadbdf25d9590be60e70835e3bd2b5904",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/c068a92dadbdf25d9590be60e70835e3bd2b5904"
+    },
+    {
+      "path": "DesktopPet/Utilities/PlaceholderAnimation.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "451816e73fba284945f409bff1be9945ffce8aa1",
+      "size": 3123,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/451816e73fba284945f409bff1be9945ffce8aa1"
+    },
+    {
+      "path": "DesktopPet/Utilities/SecurityScopedAccess.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c3a11ebddd70f768a3c995ba77864e71a4bedd1e",
+      "size": 1214,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/c3a11ebddd70f768a3c995ba77864e71a4bedd1e"
+    },
+    {
+      "path": "DesktopPet/Window",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "aa338a1e036b73cb9f9a27aeab50ea1388ac0fc3",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/aa338a1e036b73cb9f9a27aeab50ea1388ac0fc3"
+    },
+    {
+      "path": "DesktopPet/Window/OverlayWindow.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0ab95ee1143151bd3dcb8b1dc2773bd989b3adf6",
+      "size": 2335,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/0ab95ee1143151bd3dcb8b1dc2773bd989b3adf6"
+    },
+    {
+      "path": "DesktopPet/Window/OverlayWindowController.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6ddc031ab367c7d2fe2b81292a3f04519d7f7eb1",
+      "size": 10477,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/6ddc031ab367c7d2fe2b81292a3f04519d7f7eb1"
+    },
+    {
+      "path": "DesktopPet/Window/PetView.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f396e8c1f986b2892152d2a87b336a9e55e4ad46",
+      "size": 4006,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/f396e8c1f986b2892152d2a87b336a9e55e4ad46"
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7eb0f485a5bff2779bfe9bb667b723360a9e42f5",
+      "size": 1065,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/7eb0f485a5bff2779bfe9bb667b723360a9e42f5"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "665538b7e8ce303b42ec514f32db3261024e93db",
+      "size": 12495,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/665538b7e8ce303b42ec514f32db3261024e93db"
+    },
+    {
+      "path": "Tests",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "bc2ace4becad43bb2ab549317922c27341cd707a",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/bc2ace4becad43bb2ab549317922c27341cd707a"
+    },
+    {
+      "path": "Tests/OverlayWindowControllerTests.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fd23305f1dc1dd2b2761d1f446d1184c30bbdda0",
+      "size": 1379,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/fd23305f1dc1dd2b2761d1f446d1184c30bbdda0"
+    },
+    {
+      "path": "Tests/PetsStoreTests.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b69b08282418d2ec52ba1b715fb70ae68b61c47c",
+      "size": 5090,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/b69b08282418d2ec52ba1b715fb70ae68b61c47c"
+    },
+    {
+      "path": "desktop-pet",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "2673b2fd7f9fbb1ae036436119e0bf82a88a1ab7",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/2673b2fd7f9fbb1ae036436119e0bf82a88a1ab7"
+    },
+    {
+      "path": "desktop-pet/Info.plist",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "35a3eb60c8fc1e8f2444dfea660b83daf287a517",
+      "size": 686,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/35a3eb60c8fc1e8f2444dfea660b83daf287a517"
+    },
+    {
+      "path": "docs",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "ce211d7b4b90d51c62861e53fa7e1ef249db837d",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/ce211d7b4b90d51c62861e53fa7e1ef249db837d"
+    },
+    {
+      "path": "docs/architecture.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5bec36d0b80aa82d874db61c644a7b8b348c79ff",
+      "size": 6019,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/5bec36d0b80aa82d874db61c644a7b8b348c79ff"
+    },
+    {
+      "path": "docs/build-and-run.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "10fe0e2ab863ff6ff4de37196d49478784271ccd",
+      "size": 3053,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/10fe0e2ab863ff6ff4de37196d49478784271ccd"
+    },
+    {
+      "path": "docs/changes",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "260c6415e70ca0c9c714894446f8f74ac12afbd7",
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/trees/260c6415e70ca0c9c714894446f8f74ac12afbd7"
+    },
+    {
+      "path": "docs/changes/2026-04-06-brew-quarantine-workaround.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "91871fe641dfa91763fb1e84f19d1d908049fe31",
+      "size": 1408,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/91871fe641dfa91763fb1e84f19d1d908049fe31"
+    },
+    {
+      "path": "docs/changes/2026-04-06-notarized-macos-release.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "981bc8868f68058456e9dac7d67796dbfa496cac",
+      "size": 1829,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/981bc8868f68058456e9dac7d67796dbfa496cac"
+    },
+    {
+      "path": "docs/changes/2026-04-06-persistence-followup-fix.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6f2baa144ab5c686e308a66bea7143ce7a9ffa72",
+      "size": 2390,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/6f2baa144ab5c686e308a66bea7143ce7a9ffa72"
+    },
+    {
+      "path": "docs/changes/2026-04-06-persistent-pet-store-and-multi-import.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "512197e5a21073f9370e251254542a4dc1743cd3",
+      "size": 2687,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/512197e5a21073f9370e251254542a4dc1743cd3"
+    },
+    {
+      "path": "docs/formats.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "18068b40eb6f2d677e18e0ae6df40c6691771c98",
+      "size": 2544,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/18068b40eb6f2d677e18e0ae6df40c6691771c98"
+    },
+    {
+      "path": "docs/performance.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2c349777dea69069154e86e78308a778418cfc7b",
+      "size": 3620,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/2c349777dea69069154e86e78308a778418cfc7b"
+    },
+    {
+      "path": "docs/troubleshooting.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6130f0b1d5dd8620f3a7b2908d12cb2403bcf58b",
+      "size": 4372,
+      "url": "https://api.github.com/repos/bssm-oss/desktop-pet/git/blobs/6130f0b1d5dd8620f3a7b2908d12cb2403bcf58b"
+    }
+  ],
+  "truncated": false
+}

@@ -1,0 +1,352 @@
+{
+  "sha": "1d3b65a7d873ffb1bff7727bcdb927eb19002702",
+  "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/trees/1d3b65a7d873ffb1bff7727bcdb927eb19002702",
+  "tree": [
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f9c30928add498a77a520ac23b469168493b511a",
+      "size": 2179,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/f9c30928add498a77a520ac23b469168493b511a"
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "size": 11357,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64"
+    },
+    {
+      "path": "PRIVACY.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a980d8ca9134cfe59f5c9800fb4325069de5ac30",
+      "size": 4648,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/a980d8ca9134cfe59f5c9800fb4325069de5ac30"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "884e2aed2f327a530b1cf5231168046c8f374dac",
+      "size": 5748,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/884e2aed2f327a530b1cf5231168046c8f374dac"
+    },
+    {
+      "path": "Resources",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d1189fef601f92790edf775ebd90f65d1e3f3622",
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/trees/d1189fef601f92790edf775ebd90f65d1e3f3622"
+    },
+    {
+      "path": "Resources/Snowfall-example.gif",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0d0144ce97886bbd0c7b21e963763f3ca593f7f6",
+      "size": 9487396,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/0d0144ce97886bbd0c7b21e963763f3ca593f7f6"
+    },
+    {
+      "path": "SnowfallApp.xcodeproj",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "4d3b714f4ff485c6d0dc28872d37faff7add6fd9",
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/trees/4d3b714f4ff485c6d0dc28872d37faff7add6fd9"
+    },
+    {
+      "path": "SnowfallApp.xcodeproj/project.pbxproj",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "80ac2d807146c513ba0f84eab09dd3b10f82a1d5",
+      "size": 14534,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/80ac2d807146c513ba0f84eab09dd3b10f82a1d5"
+    },
+    {
+      "path": "SnowfallApp.xcodeproj/project.xcworkspace",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d9c19cc17a1d6452956495c8f392c3673f08a9eb",
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/trees/d9c19cc17a1d6452956495c8f392c3673f08a9eb"
+    },
+    {
+      "path": "SnowfallApp.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "919434a6254f0e9651f402737811be6634a03e9c",
+      "size": 135,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/919434a6254f0e9651f402737811be6634a03e9c"
+    },
+    {
+      "path": "SnowfallApp.xcodeproj/xcshareddata",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "a74598e7a22048716cc02e88fc2d5d4fc871425e",
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/trees/a74598e7a22048716cc02e88fc2d5d4fc871425e"
+    },
+    {
+      "path": "SnowfallApp.xcodeproj/xcshareddata/xcschemes",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "56804cca093d50c070e35045e47b96530dcd295f",
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/trees/56804cca093d50c070e35045e47b96530dcd295f"
+    },
+    {
+      "path": "SnowfallApp.xcodeproj/xcshareddata/xcschemes/SnowfallApp.xcscheme",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "94df417faaab26d0b122d13abaacd854a47557b0",
+      "size": 2917,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/94df417faaab26d0b122d13abaacd854a47557b0"
+    },
+    {
+      "path": "SnowfallApp",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "dc0bf17b5577fc4c0966c5a6ff16eee69afded34",
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/trees/dc0bf17b5577fc4c0966c5a6ff16eee69afded34"
+    },
+    {
+      "path": "SnowfallApp/Info.plist",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "62d843b00a05b6cfbff7e9dbf1c1a7fc7a97ecc3",
+      "size": 334,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/62d843b00a05b6cfbff7e9dbf1c1a7fc7a97ecc3"
+    },
+    {
+      "path": "SnowfallApp/Preview Content",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7e0df99bd7a819d184beca3c06db266d033cc025",
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/trees/7e0df99bd7a819d184beca3c06db266d033cc025"
+    },
+    {
+      "path": "SnowfallApp/Preview Content/Preview Assets.xcassets",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "62cdbafc8b45291bf80fe22a2550934c91a39691",
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/trees/62cdbafc8b45291bf80fe22a2550934c91a39691"
+    },
+    {
+      "path": "SnowfallApp/Preview Content/Preview Assets.xcassets/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "73c00596a7fca3f3d4bdd64053b69d86745f9e10",
+      "size": 63,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/73c00596a7fca3f3d4bdd64053b69d86745f9e10"
+    },
+    {
+      "path": "SnowfallApp/Resources",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "5f3fd04fb58f8344610537732da6a6331fc2255c",
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/trees/5f3fd04fb58f8344610537732da6a6331fc2255c"
+    },
+    {
+      "path": "SnowfallApp/Resources/Assets.xcassets",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "6af7b1ef727577779a67f9b60859e34abfed305b",
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/trees/6af7b1ef727577779a67f9b60859e34abfed305b"
+    },
+    {
+      "path": "SnowfallApp/Resources/Assets.xcassets/AccentColor.colorset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "986bd324c26d854187559f27f8194c8afd1795ac",
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/trees/986bd324c26d854187559f27f8194c8afd1795ac"
+    },
+    {
+      "path": "SnowfallApp/Resources/Assets.xcassets/AccentColor.colorset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eb8789700816459c1e1480e0b34781d9fb78a1ca",
+      "size": 123,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/eb8789700816459c1e1480e0b34781d9fb78a1ca"
+    },
+    {
+      "path": "SnowfallApp/Resources/Assets.xcassets/AppIcon.appiconset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "0fe10f47ce873028de3329508274bd711393204b",
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/trees/0fe10f47ce873028de3329508274bd711393204b"
+    },
+    {
+      "path": "SnowfallApp/Resources/Assets.xcassets/AppIcon.appiconset/1024-mac.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2c8a268c2c5c9c5d73482c42f22e583b4290d5bf",
+      "size": 46290,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/2c8a268c2c5c9c5d73482c42f22e583b4290d5bf"
+    },
+    {
+      "path": "SnowfallApp/Resources/Assets.xcassets/AppIcon.appiconset/128-mac.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0e678b30731128be1e6d52a9d230731d1b81aac2",
+      "size": 3730,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/0e678b30731128be1e6d52a9d230731d1b81aac2"
+    },
+    {
+      "path": "SnowfallApp/Resources/Assets.xcassets/AppIcon.appiconset/16-mac.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8b32f2c992921a6591479a97d37d2231c9c419ef",
+      "size": 300,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/8b32f2c992921a6591479a97d37d2231c9c419ef"
+    },
+    {
+      "path": "SnowfallApp/Resources/Assets.xcassets/AppIcon.appiconset/256-mac.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "80b04cc4f9ca2c9114858eecc413a7344f5b679f",
+      "size": 7792,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/80b04cc4f9ca2c9114858eecc413a7344f5b679f"
+    },
+    {
+      "path": "SnowfallApp/Resources/Assets.xcassets/AppIcon.appiconset/32-mac.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1fd3381a516a0a80a0963f3b41525f2e5120cb46",
+      "size": 808,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/1fd3381a516a0a80a0963f3b41525f2e5120cb46"
+    },
+    {
+      "path": "SnowfallApp/Resources/Assets.xcassets/AppIcon.appiconset/512-mac.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b46c7e2f8bd69b517a0c0ae741249ceebfbdbcea",
+      "size": 18894,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/b46c7e2f8bd69b517a0c0ae741249ceebfbdbcea"
+    },
+    {
+      "path": "SnowfallApp/Resources/Assets.xcassets/AppIcon.appiconset/64-mac.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "50148723403d86c74ca1134caffa6d06f29a658b",
+      "size": 1754,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/50148723403d86c74ca1134caffa6d06f29a658b"
+    },
+    {
+      "path": "SnowfallApp/Resources/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5177872aa892ee9bb99f7ec11c9cffedba7bead5",
+      "size": 1371,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/5177872aa892ee9bb99f7ec11c9cffedba7bead5"
+    },
+    {
+      "path": "SnowfallApp/Resources/Assets.xcassets/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "73c00596a7fca3f3d4bdd64053b69d86745f9e10",
+      "size": 63,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/73c00596a7fca3f3d4bdd64053b69d86745f9e10"
+    },
+    {
+      "path": "SnowfallApp/Resources/Localizable.xcstrings",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f5632dc76582e6bda2ef5494a527f81d1db18ba0",
+      "size": 4568,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/f5632dc76582e6bda2ef5494a527f81d1db18ba0"
+    },
+    {
+      "path": "SnowfallApp/SnowfallApp.entitlements",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0c67376ebacb410fd873cac1d8d8dd431b262c02",
+      "size": 181,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/0c67376ebacb410fd873cac1d8d8dd431b262c02"
+    },
+    {
+      "path": "SnowfallApp/Sources",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "31a34693281f9e55661aca329ec1d2cbb102091c",
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/trees/31a34693281f9e55661aca329ec1d2cbb102091c"
+    },
+    {
+      "path": "SnowfallApp/Sources/Common",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "aa50e50e56a72f50358a6fd3f5fa9ce37cbb79ec",
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/trees/aa50e50e56a72f50358a6fd3f5fa9ce37cbb79ec"
+    },
+    {
+      "path": "SnowfallApp/Sources/Common/Settings.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5cbbd2420d648559a7a4436b3fce86b80072e8a8",
+      "size": 3190,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/5cbbd2420d648559a7a4436b3fce86b80072e8a8"
+    },
+    {
+      "path": "SnowfallApp/Sources/Common/SnowRenderer.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6f53f549c3a49230e0eb42a414ece71468e6f013",
+      "size": 9575,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/6f53f549c3a49230e0eb42a414ece71468e6f013"
+    },
+    {
+      "path": "SnowfallApp/Sources/Common/SnowShader.metal",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1cfccdf521109e667870444a02365b138add407e",
+      "size": 5208,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/1cfccdf521109e667870444a02365b138add407e"
+    },
+    {
+      "path": "SnowfallApp/Sources/Common/Snowflake.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7c97cf38ea99dfbdd715b6f75081c1d06a147275",
+      "size": 156,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/7c97cf38ea99dfbdd715b6f75081c1d06a147275"
+    },
+    {
+      "path": "SnowfallApp/Sources/Common/WindowInfo.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e0693c4ad455bb0c06d8a82533db9302323225f9",
+      "size": 1945,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/e0693c4ad455bb0c06d8a82533db9302323225f9"
+    },
+    {
+      "path": "SnowfallApp/Sources/SnowfallApp.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "89b3e032c4a4028f8110346f9d3943c6fc82ef83",
+      "size": 2174,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/89b3e032c4a4028f8110346f9d3943c6fc82ef83"
+    },
+    {
+      "path": "SnowfallApp/Sources/Views",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "526cb661dcb42adb448a997b01748ae0d9695be0",
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/trees/526cb661dcb42adb448a997b01748ae0d9695be0"
+    },
+    {
+      "path": "SnowfallApp/Sources/Views/MenuBarSettings.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6c5f67f55d2ae742f43a9aa3d14e1ec9e1e0a6f8",
+      "size": 6806,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/6c5f67f55d2ae742f43a9aa3d14e1ec9e1e0a6f8"
+    },
+    {
+      "path": "SnowfallApp/Sources/Views/MetalSnowViewController.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "86b1b0916e881ff6b5e1c866792481d0de3cdb02",
+      "size": 1914,
+      "url": "https://api.github.com/repos/BarredEwe/Snowfall/git/blobs/86b1b0916e881ff6b5e1c866792481d0de3cdb02"
+    }
+  ],
+  "truncated": false
+}

@@ -1,0 +1,505 @@
+{
+  "sha": "fd4a97b76ec2880744ba0d015493b017d035b8eb",
+  "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/trees/fd4a97b76ec2880744ba0d015493b017d035b8eb",
+  "tree": [
+    {
+      "path": ".cursorrules",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "556bf9915c9af0b98fd8ba6ebeaa1ed750bf98a8",
+      "size": 3239,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/556bf9915c9af0b98fd8ba6ebeaa1ed750bf98a8"
+    },
+    {
+      "path": ".github",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "1a318d5deb0250ca5aef91c61cca6d41ce8d1b0a",
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/trees/1a318d5deb0250ca5aef91c61cca6d41ce8d1b0a"
+    },
+    {
+      "path": ".github/workflows",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "01d1e512f61618f03f97e89d608eea9b299360ca",
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/trees/01d1e512f61618f03f97e89d608eea9b299360ca"
+    },
+    {
+      "path": ".github/workflows/build.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d95c76274558992cdd6e2e63048b99149f96ec75",
+      "size": 2053,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/d95c76274558992cdd6e2e63048b99149f96ec75"
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b3458c12985c59cdee03fe0a1edcfe202ff433a2",
+      "size": 531,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/b3458c12985c59cdee03fe0a1edcfe202ff433a2"
+    },
+    {
+      "path": ".vscode",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "ea8856c9b50c23d5afe628805aa0cd75356920b7",
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/trees/ea8856c9b50c23d5afe628805aa0cd75356920b7"
+    },
+    {
+      "path": ".vscode/settings.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9c580679f288fb88f585d25593f274f1f9b42490",
+      "size": 80,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/9c580679f288fb88f585d25593f274f1f9b42490"
+    },
+    {
+      "path": "Fluffel.xcodeproj",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "63fd4280fe44eb61e427845210ed4d3f1bd8478b",
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/trees/63fd4280fe44eb61e427845210ed4d3f1bd8478b"
+    },
+    {
+      "path": "Fluffel.xcodeproj/project.pbxproj",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5be6471c0b6d7b3a3b8bedc37b0784a9670e8741",
+      "size": 18473,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/5be6471c0b6d7b3a3b8bedc37b0784a9670e8741"
+    },
+    {
+      "path": "Fluffel.xcodeproj/project.xcworkspace",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d9c19cc17a1d6452956495c8f392c3673f08a9eb",
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/trees/d9c19cc17a1d6452956495c8f392c3673f08a9eb"
+    },
+    {
+      "path": "Fluffel.xcodeproj/project.xcworkspace/contents.xcworkspacedata",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "919434a6254f0e9651f402737811be6634a03e9c",
+      "size": 135,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/919434a6254f0e9651f402737811be6634a03e9c"
+    },
+    {
+      "path": "Fluffel",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "01762594bb7b76fecfdb2ffc77b309c483549307",
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/trees/01762594bb7b76fecfdb2ffc77b309c483549307"
+    },
+    {
+      "path": "Fluffel/AppDelegate.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a111de55af1f21bb93ec39555ad92f00ece1f447",
+      "size": 34105,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/a111de55af1f21bb93ec39555ad92f00ece1f447"
+    },
+    {
+      "path": "Fluffel/Assets.xcassets",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "86d4359b65e90c9f49bfebf34572c22d47d4e4cf",
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/trees/86d4359b65e90c9f49bfebf34572c22d47d4e4cf"
+    },
+    {
+      "path": "Fluffel/Assets.xcassets/AccentColor.colorset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "986bd324c26d854187559f27f8194c8afd1795ac",
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/trees/986bd324c26d854187559f27f8194c8afd1795ac"
+    },
+    {
+      "path": "Fluffel/Assets.xcassets/AccentColor.colorset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eb8789700816459c1e1480e0b34781d9fb78a1ca",
+      "size": 123,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/eb8789700816459c1e1480e0b34781d9fb78a1ca"
+    },
+    {
+      "path": "Fluffel/Assets.xcassets/AppIcon.appiconset",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c7f4c56df625ae53e59157ac409a640de447a4c0",
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/trees/c7f4c56df625ae53e59157ac409a640de447a4c0"
+    },
+    {
+      "path": "Fluffel/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3f00db43ec3c8b462759505d635dc5545d4e8e50",
+      "size": 904,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/3f00db43ec3c8b462759505d635dc5545d4e8e50"
+    },
+    {
+      "path": "Fluffel/Assets.xcassets/Contents.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "73c00596a7fca3f3d4bdd64053b69d86745f9e10",
+      "size": 63,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/73c00596a7fca3f3d4bdd64053b69d86745f9e10"
+    },
+    {
+      "path": "Fluffel/Assets.xcassets/Fluffel.icns",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d4f3bd0e1be518e2a7d92630ff71b88c48df42d0",
+      "size": 366667,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/d4f3bd0e1be518e2a7d92630ff71b88c48df42d0"
+    },
+    {
+      "path": "Fluffel/AudioCompatibility.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2c2bd6a4d460f1bfde04f109883ae8ec3bfc3eb7",
+      "size": 1537,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/2c2bd6a4d460f1bfde04f109883ae8ec3bfc3eb7"
+    },
+    {
+      "path": "Fluffel/Base.lproj",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "fdc594d2f5ee11148382a921d9e078d6d73f81cd",
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/trees/fdc594d2f5ee11148382a921d9e078d6d73f81cd"
+    },
+    {
+      "path": "Fluffel/Base.lproj/Main.storyboard",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0b530e83a114046884fa733922e1b8a5246470e6",
+      "size": 60757,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/0b530e83a114046884fa733922e1b8a5246470e6"
+    },
+    {
+      "path": "Fluffel/BubbleWindow.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0c9e9eb8464d22cd75c7ec9c1cfd6a179178f3df",
+      "size": 11114,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/0c9e9eb8464d22cd75c7ec9c1cfd6a179178f3df"
+    },
+    {
+      "path": "Fluffel/Fluffel.entitlements",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "40b639e46f55db7344e28e8e8bd661f77278e183",
+      "size": 420,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/40b639e46f55db7344e28e8e8bd661f77278e183"
+    },
+    {
+      "path": "Fluffel/Fluffel.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d987d04e75bced9b2ba9345347227f442501f39f",
+      "size": 13433,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/d987d04e75bced9b2ba9345347227f442501f39f"
+    },
+    {
+      "path": "Fluffel/FluffelDialogues.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3283cc7ff33742f6a97ffa8329dcc47e1265e5c8",
+      "size": 3843,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/3283cc7ff33742f6a97ffa8329dcc47e1265e5c8"
+    },
+    {
+      "path": "Fluffel/FluffelPixabayPlaylists.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c68aca66563d5e607879c010921064c15559c6e7",
+      "size": 13329,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/c68aca66563d5e607879c010921064c15559c6e7"
+    },
+    {
+      "path": "Fluffel/FluffelPixabayService.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "65adfdded002a5e1396b545db617b1493a1239ed",
+      "size": 17620,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/65adfdded002a5e1396b545db617b1493a1239ed"
+    },
+    {
+      "path": "Fluffel/FluffelPlaylistWindow.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "79a98f0231e2bdfd6a7f8552256ccc5c8a085b1d",
+      "size": 63488,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/79a98f0231e2bdfd6a7f8552256ccc5c8a085b1d"
+    },
+    {
+      "path": "Fluffel/FluffelScene.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ae11f6e45ea47de8e967cc832dbc329ed545a095",
+      "size": 30159,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/ae11f6e45ea47de8e967cc832dbc329ed545a095"
+    },
+    {
+      "path": "Fluffel/FluffelSpeakingDemo.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "439b556fc060dd3493e983fd18ca2235e80c39c4",
+      "size": 6224,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/439b556fc060dd3493e983fd18ca2235e80c39c4"
+    },
+    {
+      "path": "Fluffel/FluffelTTSService.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "79f92fad4ccaa99e9b28fd324cd15ff67ca82dea",
+      "size": 15441,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/79f92fad4ccaa99e9b28fd324cd15ff67ca82dea"
+    },
+    {
+      "path": "Fluffel/FluffelTypes.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eeacf772803a17a58e6930c04ca2ff230d6fab46",
+      "size": 1091,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/eeacf772803a17a58e6930c04ca2ff230d6fab46"
+    },
+    {
+      "path": "Fluffel/FluffelWindowController.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dccd0e4f3f390241ab9697b45012140e5ad85219",
+      "size": 16256,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/dccd0e4f3f390241ab9697b45012140e5ad85219"
+    },
+    {
+      "path": "Fluffel/Info.plist",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "992e0c69b28faf57384c6fb7e385d831c27eda6d",
+      "size": 1626,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/992e0c69b28faf57384c6fb7e385d831c27eda6d"
+    },
+    {
+      "path": "Fluffel/README_SPEAKING.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "06574a662c1d44967e288d11750320536d4b7daf",
+      "size": 2535,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/06574a662c1d44967e288d11750320536d4b7daf"
+    },
+    {
+      "path": "Fluffel/README_TTS.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d4855c2036f8a54a0d8ea8e842a579c43644382e",
+      "size": 3922,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/d4855c2036f8a54a0d8ea8e842a579c43644382e"
+    },
+    {
+      "path": "Fluffel/Resources",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7f82160db867262c0bb9b24fd3b05a9fb26ce6e2",
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/trees/7f82160db867262c0bb9b24fd3b05a9fb26ce6e2"
+    },
+    {
+      "path": "Fluffel/Resources/FluffelDialogues.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5429963f294df361c6c8dcddf82758a3bf3df426",
+      "size": 10429,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/5429963f294df361c6c8dcddf82758a3bf3df426"
+    },
+    {
+      "path": "Fluffel/Resources/playlists.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5dca0a5bcdb9fcac2c16be48f29b06af663e254e",
+      "size": 10124,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/5dca0a5bcdb9fcac2c16be48f29b06af663e254e"
+    },
+    {
+      "path": "Fluffel/Resources/sample_music.mp3",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "87585a6c7c8fce5ab0d545e761cd4b3414af5793",
+      "size": 12694,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/87585a6c7c8fce5ab0d545e761cd4b3414af5793"
+    },
+    {
+      "path": "Fluffel/ThemeBackgroundView.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e48927bac37f7e48fc30e65c1dbfc21271bc3f71",
+      "size": 20629,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/e48927bac37f7e48fc30e65c1dbfc21271bc3f71"
+    },
+    {
+      "path": "Fluffel/TransparentWindow.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ffda7606e82ea0db239539702dc705fa0a5e927f",
+      "size": 6421,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/ffda7606e82ea0db239539702dc705fa0a5e927f"
+    },
+    {
+      "path": "Fluffel/ViewController.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "51d71e2ab7271f3bf0e90bfa05cc313f215d2d5f",
+      "size": 3303,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/51d71e2ab7271f3bf0e90bfa05cc313f215d2d5f"
+    },
+    {
+      "path": "Fluffel/actions",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "3f5fe0ff24ac958033185583338cf3379f6e5131",
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/trees/3f5fe0ff24ac958033185583338cf3379f6e5131"
+    },
+    {
+      "path": "Fluffel/actions/FluffelAnimationActions.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0688bf5c2308029bb8f267ee3835f136a2266087",
+      "size": 1797,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/0688bf5c2308029bb8f267ee3835f136a2266087"
+    },
+    {
+      "path": "Fluffel/actions/FluffelBreathingAction.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d7e60a335384c7ec7c31b47ff655aa5eb22a88d8",
+      "size": 3009,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/d7e60a335384c7ec7c31b47ff655aa5eb22a88d8"
+    },
+    {
+      "path": "Fluffel/actions/FluffelFacialExpressions.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9d25987edd828a88f8c4f2e2ce0161d3039b0512",
+      "size": 4072,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/9d25987edd828a88f8c4f2e2ce0161d3039b0512"
+    },
+    {
+      "path": "Fluffel/actions/FluffelMovementActions.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7d0cef995b3441edb5cf70c5d8340beb235face6",
+      "size": 4024,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/7d0cef995b3441edb5cf70c5d8340beb235face6"
+    },
+    {
+      "path": "Fluffel/actions/FluffelMusicActions.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a0e35223b1ac27dc1d171ea1f690770b9d1cd0f3",
+      "size": 10193,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/a0e35223b1ac27dc1d171ea1f690770b9d1cd0f3"
+    },
+    {
+      "path": "Fluffel/actions/FluffelSpecialActions.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6b2fbb36f274d9d07eaeb8cd86cd445f3d327a24",
+      "size": 19795,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/6b2fbb36f274d9d07eaeb8cd86cd445f3d327a24"
+    },
+    {
+      "path": "Fluffel/actions/FluffelUtilityActions.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cb3084cdd0f4b0e0b2c9f188684405dbac2cfdcb",
+      "size": 2118,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/cb3084cdd0f4b0e0b2c9f188684405dbac2cfdcb"
+    },
+    {
+      "path": "Fluffel/icon.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "20febcee0f74e974a4221f031567e350f659db01",
+      "size": 29716,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/20febcee0f74e974a4221f031567e350f659db01"
+    },
+    {
+      "path": "Fluffel/preview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5399268820727185a99511bb8cb7f23ab3ded6be",
+      "size": 451922,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/5399268820727185a99511bb8cb7f23ab3ded6be"
+    },
+    {
+      "path": "FluffelTests",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "039d55c6ddc0730ae6d3b25d7b0f0701749abdbd",
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/trees/039d55c6ddc0730ae6d3b25d7b0f0701749abdbd"
+    },
+    {
+      "path": "FluffelTests/FluffelTests.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a0522379c644b83917b612c2ed07a65bca7a2b1b",
+      "size": 297,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/a0522379c644b83917b612c2ed07a65bca7a2b1b"
+    },
+    {
+      "path": "FluffelUITests",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "aaea657f77567fcbd1c4e6f718e617c95482fea4",
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/trees/aaea657f77567fcbd1c4e6f718e617c95482fea4"
+    },
+    {
+      "path": "FluffelUITests/FluffelUITests.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2d5ca486d17acc23418e7d0458beb2474cea79fd",
+      "size": 1403,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/2d5ca486d17acc23418e7d0458beb2474cea79fd"
+    },
+    {
+      "path": "FluffelUITests/FluffelUITestsLaunchTests.swift",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "84e7cde503540f464a041880679282e6988c9d77",
+      "size": 816,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/84e7cde503540f464a041880679282e6988c9d77"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e5470c36ca32bb63f1dd828bcfd7cee999015476",
+      "size": 866,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/e5470c36ca32bb63f1dd828bcfd7cee999015476"
+    },
+    {
+      "path": "make_iconset.sh",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "5b4d5a6fb1998c1787930ea537199d191762c230",
+      "size": 986,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/5b4d5a6fb1998c1787930ea537199d191762c230"
+    },
+    {
+      "path": "progress.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f9a9c42a7362377dde8ab6c449708aa812279d67",
+      "size": 1445,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/f9a9c42a7362377dde8ab6c449708aa812279d67"
+    },
+    {
+      "path": "requirements.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "686a2d68d341c0864dceeb86ae37d696ee2e19d1",
+      "size": 7377,
+      "url": "https://api.github.com/repos/JoeanSteinbock/Fluffel/git/blobs/686a2d68d341c0864dceeb86ae37d696ee2e19d1"
+    }
+  ],
+  "truncated": false
+}
