@@ -62,29 +62,6 @@ final class WinterSceneControllerTests: XCTestCase {
         XCTAssertEqual(controller.objectWindowCount, 0)
         XCTAssertFalse(controller.canCreate)
     }
-    func testSculptingLifecycleAndLimit() {
-        let controller = controller()
-        defer { controller.close() }
-        XCTAssertFalse(controller.startSculpting())
-        controller.isEnabled = true
-        XCTAssertTrue(controller.startSculpting())
-        XCTAssertTrue(controller.hasObjects, "Лепка поддерживает опрос опор без снегопада")
-        XCTAssertTrue(controller.needsUpdates)
-        controller.isSuppressed = true
-        XCTAssertFalse(controller.isSculpting, "Системный выбор окна отменяет лепку")
-        controller.isSuppressed = false
-        for cancel in [ { controller.clear() }, { controller.fit(to: CGRect(x: 0, y: 0, width: 800, height: 600)) },
-                        { controller.isActive = false }, { controller.isEnabled = false } ] {
-            controller.isEnabled = true
-            controller.isActive = true
-            XCTAssertTrue(controller.startSculpting())
-            cancel()
-            XCTAssertFalse(controller.isSculpting)
-        }
-        controller.isEnabled = true
-        for i in 0..<12 { controller.create(.small, at: CGPoint(x: i * 40, y: 100)) }
-        XCTAssertFalse(controller.startSculpting(), "Предпросмотр не обходит лимит игрушек")
-    }
     private func snowyController() -> (WinterSceneController, SnowSimulation, WindowUpdate) {
         _ = NSApplication.shared
         let simulation = SnowSimulation(width: 600, height: 400, snowfall: .off)
@@ -105,131 +82,155 @@ final class WinterSceneControllerTests: XCTestCase {
         return (controller, simulation, update)
     }
 
-    func testSculptingCommitsOneBallAndRejectsStaleCallbacks() throws {
-        let (controller, simulation, _) = snowyController()
-        defer { controller.close() }
-        XCTAssertTrue(controller.startSculpting())
-        let panel = try XCTUnwrap(controller.sculptingWindow)
-        let oldUp = try XCTUnwrap(panel.ended)
-        panel.began?(CGPoint(x: -440, y: 161))
-        panel.moved?(CGPoint(x: -300, y: 161))
-        XCTAssertTrue(controller.scene.objects.isEmpty, "Предпросмотр не создаёт игрушку")
-        let before = try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 160, y: 61))).layer.heights
-        oldUp(CGPoint(x: -300, y: 161))
-        XCTAssertFalse(controller.isSculpting)
-        XCTAssertEqual(controller.scene.objects.count, 1)
-        XCTAssertEqual(controller.scene.objects.first?.sizes, [.large])
-        let after = try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 160, y: 61))).layer.heights
-        XCTAssertNotEqual(before, after, "Отпускание снимает снег")
-        XCTAssertTrue(controller.startSculpting())
-        oldUp(CGPoint(x: -300, y: 161))
-        XCTAssertEqual(controller.scene.objects.count, 1, "Старое отпускание не создаёт второй шар")
-        XCTAssertTrue(controller.isSculpting, "Старый callback не закрывает новый режим")
+    private func frame(_ controller: WinterSceneController, _ simulation: SnowSimulation,
+                       x: CGFloat, y: CGFloat = 61, dt: TimeInterval = 1 / 60, buttons: Int = 0) {
+        controller.updateAutomaticSculpting(at: CGPoint(x: x - 600, y: y + 100), dt: dt, mouseButtons: buttons)
+        _ = simulation.step(dt: Float(dt), cursor: SIMD2(Float(x), Float(y)))
     }
 
-    func testSculptingProtectsThinSnowFromRegularCursorCarving() throws {
+    func testЛежащийСнегПоддерживаетКадрыАДругойРежимСохраняетРасчистку() {
+        let (controller, simulation, _) = snowyController()
+        defer { controller.close() }
+        XCTAssertTrue(controller.needsUpdates, "Снег без снегопада продолжает замечать указатель")
+        controller.isEnabled = false
+        simulation.mode = .autumn
+        frame(controller, simulation, x: 160)
+        frame(controller, simulation, x: 300)
+        XCTAssertTrue(simulation.cursorInteracts)
+        XCTAssertFalse(controller.isSculpting)
+        XCTAssertFalse(controller.needsUpdates)
+        let empty = self.controller()
+        defer { empty.close() }
+        empty.isEnabled = true
+        XCTAssertFalse(empty.needsUpdates, "Пустая сцена не требует постоянного опроса")
+    }
+
+    func testМедленноеДвижениеНачинаетЛепкуАКороткийПроходНеСоздаётШар() {
+        let (controller, simulation, _) = snowyController()
+        defer { controller.close() }
+        frame(controller, simulation, x: 160)
+        frame(controller, simulation, x: 160.25)
+        XCTAssertTrue(controller.isSculpting, "Для движения не требуется минимальная скорость")
+        frame(controller, simulation, x: 160.25, y: 250)
+        XCTAssertTrue(controller.scene.objects.isEmpty, "Одной колонки недостаточно для шара")
+    }
+
+    func testНеподвижныйУказательНеНачинаетЛепкуИТонкийСнегСохраняется() throws {
         let (controller, simulation, _) = snowyController()
         defer { controller.close() }
         let layer = try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 160, y: 61))).layer
         layer.replace(heights: layer.heights.map { min($0, 0.5) })
         layer.refreshTop()
-        XCTAssertTrue(controller.startSculpting())
-        _ = simulation.step(dt: 1 / 60, cursor: SIMD2(160, 61))
-        XCTAssertNotNil(simulation.sculptingSource(at: CGPoint(x: 160, y: 61)),
-                        "Обычная расчистка курсором не уничтожает сугроб перед нажатием в режиме лепки")
-        let panel = try XCTUnwrap(controller.sculptingWindow)
-        panel.began?(CGPoint(x: -440, y: 161))
-        panel.moved?(CGPoint(x: -200, y: 161))
-        _ = simulation.step(dt: 1 / 60, cursor: SIMD2(400, 61))
-        panel.ended?(CGPoint(x: -200, y: 161))
-        XCTAssertEqual(controller.scene.objects.count, 1, "Движение мышью до отпускания не расчищает собранные участки")
-        XCTAssertEqual(controller.scene.objects.first?.sizes, [.medium])
-        XCTAssertNotNil(simulation.sculptingSource(at: CGPoint(x: 450, y: 61)))
-        _ = simulation.step(dt: 1 / 60, cursor: SIMD2(450, 61))
-        _ = simulation.step(dt: 1 / 60, cursor: SIMD2(454, 61))
-        XCTAssertNil(simulation.sculptingSource(at: CGPoint(x: 454, y: 61)),
-                     "После завершения обычная расчистка курсором снова работает")
-    }
-
-    func testChangedTrackedSupportCancelsBeforeSimulationReceivesUpdate() throws {
-        let (controller, _, _) = snowyController()
-        defer { controller.close() }
-        controller.startSculpting()
-        let panel = try XCTUnwrap(controller.sculptingWindow)
-        panel.began?(CGPoint(x: -440, y: 161))
-        panel.moved?(CGPoint(x: -300, y: 161))
-        let up = try XCTUnwrap(panel.ended)
-        controller.updateWindows(WindowUpdate(surfaces: [], interval: 0.1, parked: [], elsewhere: [], sliding: false, slideVelocity: 0))
-        XCTAssertFalse(controller.isSculpting, "Исчезновение опоры сразу отменяет жест")
-        up(CGPoint(x: -300, y: 161))
-        XCTAssertTrue(controller.scene.objects.isEmpty, "Старый снимок симуляции не подтверждает пропавшую опору")
-    }
-
-    func testEmptyClickCancellationAndInsufficientSnowLeaveNoBall() throws {
-        let (controller, simulation, _) = snowyController()
-        defer { controller.close() }
-        let source = try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 160, y: 61)))
-        let before = source.layer.heights
-        controller.startSculpting()
-        controller.sculptingWindow?.began?(CGPoint(x: -500, y: 400))
-        XCTAssertFalse(controller.isSculpting)
-        controller.startSculpting()
-        let panel = try XCTUnwrap(controller.sculptingWindow)
-        panel.began?(CGPoint(x: -440, y: 161))
-        panel.ended?(CGPoint(x: -440, y: 161))
+        let before = layer.heights
+        for _ in 0..<30 { frame(controller, simulation, x: 160) }
         XCTAssertFalse(controller.isSculpting)
         XCTAssertTrue(controller.scene.objects.isEmpty)
-        XCTAssertEqual(source.layer.heights, before, "Отмена и короткий жест не меняют сугроб")
+        XCTAssertEqual(try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 160, y: 61))).heights[40], 0.5, accuracy: 0.001, "Курсор не уничтожает тонкий сугроб перед началом прохода")
+        frame(controller, simulation, x: 400)
+        XCTAssertTrue(controller.isSculpting)
+        XCTAssertEqual(try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 300, y: 61))).heights[100], 0.5, accuracy: 0.001, "Предпросмотр не снимает снег")
+        frame(controller, simulation, x: 400, dt: 0.36)
+        XCTAssertEqual(controller.scene.objects.first?.sizes, [.medium])
+        XCTAssertNotEqual(layer.heights, before)
     }
 
-    func testCancelledDraftPreservesSnowAndRejectsDelayedRelease() throws {
-        for reason in ["escape", "resignKey", "suppression", "mode", "close"] {
+    func testПаузаПодтверждаетРазмерИБлокируетНовыйШарДоВыхода() {
+        for (distance, size) in [(CGFloat(24), WinterBallSize.small), (CGFloat(60), .medium)] {
             let (controller, simulation, _) = snowyController()
             defer { controller.close() }
-            let source = try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 160, y: 61)))
-            let before = source.layer.heights
-            XCTAssertTrue(controller.startSculpting())
-            let panel = try XCTUnwrap(controller.sculptingWindow)
-            let release = try XCTUnwrap(panel.ended)
-            panel.began?(CGPoint(x: -440, y: 161))
-            panel.moved?(CGPoint(x: -300, y: 161))
-            switch reason {
-            case "escape": panel.cancelOperation(nil)
-            case "resignKey": panel.resignKey()
-            case "suppression": controller.isSuppressed = true
-            case "mode": controller.isEnabled = false
-            default: controller.close()
-            }
-            release(CGPoint(x: -300, y: 161))
-            XCTAssertFalse(controller.isSculpting, "Отмена завершает жест: \(reason)")
-            XCTAssertNil(controller.sculptingWindow)
-            XCTAssertTrue(controller.scene.objects.isEmpty, "Позднее отпускание не подтверждает отменённый жест: \(reason)")
-            XCTAssertEqual(source.layer.heights, before, "Отмена сохраняет снег: \(reason)")
-            XCTAssertTrue(simulation.cursorInteracts, "Отмена возвращает обычную расчистку: \(reason)")
-            XCTAssertFalse(controller.isRunning, "Пустая сцена освобождает таймер: \(reason)")
-            XCTAssertNil(panel.began)
-            XCTAssertNil(panel.moved)
-            XCTAssertNil(panel.ended)
-            XCTAssertNil(panel.cancelled)
+            frame(controller, simulation, x: 160)
+            frame(controller, simulation, x: 160 + distance)
+            frame(controller, simulation, x: 160 + distance, dt: 0.34)
+            XCTAssertTrue(controller.scene.objects.isEmpty)
+            frame(controller, simulation, x: 160 + distance, dt: 0.02)
+            XCTAssertEqual(controller.scene.objects.first?.sizes, [size])
+            frame(controller, simulation, x: 320)
+            frame(controller, simulation, x: 400, dt: 0.4)
+            XCTAssertEqual(controller.scene.objects.count, 1)
+            frame(controller, simulation, x: 400, y: 250)
+            frame(controller, simulation, x: 320)
+            frame(controller, simulation, x: 400)
+            frame(controller, simulation, x: 400, dt: 0.36)
+            XCTAssertEqual(controller.scene.objects.count, 2, "Выход разрешает новый проход")
         }
     }
 
-    func testClosingArmedControllerPreventsReopeningAndLateInput() throws {
+    func testМаксимумСоздаетОдинБольшойШарБезПовторногоНасыщения() {
         let (controller, simulation, _) = snowyController()
-        XCTAssertTrue(controller.startSculpting())
-        let panel = try XCTUnwrap(controller.sculptingWindow)
-        let begin = try XCTUnwrap(panel.began)
-        let move = try XCTUnwrap(panel.moved)
-        let release = try XCTUnwrap(panel.ended)
-        controller.close()
-        controller.close()
-        begin(CGPoint(x: -440, y: 161))
-        move(CGPoint(x: -300, y: 161))
-        release(CGPoint(x: -300, y: 161))
-        XCTAssertFalse(controller.startSculpting(), "Закрытая сцена не возобновляет захват")
-        XCTAssertTrue(controller.scene.objects.isEmpty, "События после закрытия не создают игрушки")
-        XCTAssertNil(controller.sculptingWindow)
-        XCTAssertFalse(controller.isRunning)
+        defer { controller.close() }
+        frame(controller, simulation, x: 160)
+        frame(controller, simulation, x: 300)
+        XCTAssertEqual(controller.scene.objects.first?.sizes, [.large])
+        for x in [160, 400, 200, 450] { frame(controller, simulation, x: CGFloat(x)) }
+        XCTAssertEqual(controller.scene.objects.count, 1)
+    }
+
+    func testВыходПодтверждаетАПовторныеКолонкиНеУвеличиваютЗапас() {
+        let (controller, simulation, _) = snowyController()
+        defer { controller.close() }
+        frame(controller, simulation, x: 160)
+        for x in [184, 160, 184, 160, 184] { frame(controller, simulation, x: CGFloat(x)) }
+        frame(controller, simulation, x: 184, y: 250)
+        XCTAssertEqual(controller.scene.objects.first?.sizes, [.small])
+    }
+
+    func testКнопкиОтменяютЧерновикИСохраняютПеретаскиваниеИгрушек() throws {
+        let (controller, simulation, _) = snowyController()
+        defer { controller.close() }
+        let layer = try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 160, y: 61))).layer
+        frame(controller, simulation, x: 160)
+        frame(controller, simulation, x: 220)
+        let before = layer.heights
+        controller.updateAutomaticSculpting(at: CGPoint(x: -380, y: 161), dt: 0.4, mouseButtons: 1)
+        XCTAssertFalse(controller.isSculpting)
+        XCTAssertTrue(controller.scene.objects.isEmpty)
+        XCTAssertEqual(layer.heights, before)
         XCTAssertTrue(simulation.cursorInteracts)
+        let id = try XCTUnwrap(controller.create(.small, at: CGPoint(x: 100, y: 150)))
+        controller.scene.beginDragging(id, at: CGPoint(x: 100, y: 150))
+        controller.scene.drag(id, to: CGPoint(x: 140, y: 180), dt: 0.1)
+        XCTAssertEqual(controller.scene.objects.first?.center, CGPoint(x: 140, y: 180))
+    }
+
+    func testИзменениеОпорыОтменяетЧерновикБезСнятияСнега() throws {
+        let (controller, simulation, _) = snowyController()
+        defer { controller.close() }
+        let layer = try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 160, y: 61))).layer
+        frame(controller, simulation, x: 160)
+        frame(controller, simulation, x: 220)
+        let before = layer.heights
+        controller.updateWindows(WindowUpdate(surfaces: [], interval: 0.1, parked: [], elsewhere: [], sliding: false, slideVelocity: 0))
+        XCTAssertFalse(controller.isSculpting)
+        XCTAssertTrue(controller.scene.objects.isEmpty)
+        XCTAssertEqual(layer.heights, before)
+    }
+
+    func testЖизненныйЦиклОтменяетЧерновикИЛимитНеОбходится() throws {
+        for reason in ["clear", "fit", "pause", "mode", "suppression", "close"] {
+            let (controller, simulation, _) = snowyController()
+            defer { controller.close() }
+            let layer = try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 160, y: 61))).layer
+            frame(controller, simulation, x: 160)
+            frame(controller, simulation, x: 220)
+            let before = layer.heights
+            switch reason {
+            case "clear": controller.clear()
+            case "fit": controller.fit(to: CGRect(x: -600, y: 100, width: 600, height: 400))
+            case "pause": controller.isActive = false
+            case "mode": controller.isEnabled = false
+            case "suppression": controller.isSuppressed = true
+            default: controller.close()
+            }
+            XCTAssertFalse(controller.isSculpting, reason)
+            XCTAssertTrue(controller.scene.objects.isEmpty, reason)
+            XCTAssertEqual(layer.heights, before, reason)
+        }
+        let (controller, simulation, _) = snowyController()
+        defer { controller.close() }
+        for i in 0..<12 { controller.create(.small, at: CGPoint(x: i * 40, y: 150)) }
+        frame(controller, simulation, x: 160)
+        frame(controller, simulation, x: 300)
+        XCTAssertFalse(controller.isSculpting)
+        XCTAssertEqual(controller.scene.objects.count, 12)
     }
 }

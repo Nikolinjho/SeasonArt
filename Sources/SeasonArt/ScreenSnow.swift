@@ -125,6 +125,11 @@ final class ScreenSnow {
             let mouse = NSEvent.mouseLocation
             return SIMD2(Float(mouse.x - window.frame.minX), Float(mouse.y - window.frame.minY))
         }
+        renderer.automaticSculpting = { [unowned self] cursor, dt in
+            winter.updateAutomaticSculpting(
+                at: CGPoint(x: CGFloat(cursor.x) + window.frame.minX, y: CGFloat(cursor.y) + window.frame.minY),
+                dt: dt, mouseButtons: Int(NSEvent.pressedMouseButtons))
+        }
         renderer.windowSurfaces = { [unowned self] now in
             // Behind the windows the snow still settles on them: what lies on a window's top edge is above it, in
             // plain view.

@@ -15,11 +15,13 @@ final class WinterSceneController {
     private var syncing = false
     private var closed = false
     private(set) var plow: WinterPlowPass?
-    private(set) var sculptingWindow: SnowSculptingWindow?
+    private(set) var sculptingPreview: SnowSculptingPreviewWindow?
     private var sculptingGesture: SnowSculptingGesture?
-    private var sculptingID: UUID?
+    private var lastPointer: CGPoint?
+    private var stationaryTime: TimeInterval = 0
+    private var waitsForExit = false
     private var trackedSurfaces: [WindowSurface] = []
-    var isSculpting: Bool { sculptingID != nil }
+    var isSculpting: Bool { sculptingGesture != nil }
     var changed: () -> Void = {}
 
     var isEnabled = false { didSet { refresh() } }
@@ -29,7 +31,7 @@ final class WinterSceneController {
         didSet {
             for window in windows.values { window.showsInScreenshots = showsInScreenshots }
             plowWindow?.showsInScreenshots = showsInScreenshots
-            sculptingWindow?.showsInScreenshots = showsInScreenshots
+            sculptingPreview?.showsInScreenshots = showsInScreenshots
         }
     }
     var canCreate: Bool { !closed && isEnabled && isActive && !isSuppressed && scene.objects.count < 12 }
@@ -37,7 +39,7 @@ final class WinterSceneController {
     var objectWindowCount: Int { windows.count }
     var isRunning: Bool { timer != nil }
     var hasObjects: Bool { !scene.objects.isEmpty || plow != nil || isSculpting }
-    var needsUpdates: Bool { !closed && isEnabled && isActive && !isSuppressed && hasObjects }
+    var needsUpdates: Bool { !closed && isEnabled && isActive && !isSuppressed && (hasObjects || simulation.hasSnow) }
 
     init(screenFrame: CGRect, simulation: SnowSimulation, presentsWindows: Bool = true) {
         self.screenFrame = screenFrame
@@ -56,75 +58,87 @@ final class WinterSceneController {
         return id
     }
 
-    @discardableResult
-    func startSculpting() -> Bool {
-        cancelSculpting()
-        guard canCreate else { return false }
-        let token = UUID()
-        sculptingID = token
-        simulation.cursorInteracts = false
-        let panel = SnowSculptingWindow(screenFrame: screenFrame)
-        panel.showsInScreenshots = showsInScreenshots
-        panel.began = { [weak self] point in
-            guard let self, sculptingID == token else { return }
-            beginSculpting(at: point)
-        }
-        panel.moved = { [weak self] point in
-            guard let self, sculptingID == token else { return }
-            continueSculpting(at: point)
-        }
-        panel.ended = { [weak self] point in
-            guard let self, sculptingID == token else { return }
-            finishSculpting(at: point)
-        }
-        panel.cancelled = { [weak self] in
-            guard let self, sculptingID == token else { return }
+    /// Вызывается до шага симуляции, чтобы обычная расчистка не забирала снег черновика.
+    func updateAutomaticSculpting(at point: CGPoint, dt: TimeInterval, mouseButtons: Int) {
+        guard !closed, isEnabled, isActive, !isSuppressed else {
             cancelSculpting()
+            return
         }
-        sculptingWindow = panel
-        refresh()
-        changed()
-        if presentsWindows { panel.present() }
-        return true
+        guard mouseButtons == 0 else {
+            cancelSculpting()
+            return
+        }
+        simulation.cursorInteracts = false
+        let point = local(point)
+        let previous = lastPointer
+        lastPointer = point
+        let moved = previous.map { $0 != point } ?? false
+        if let gesture = sculptingGesture, !simulation.isSculptingSourceValid(gesture.source) {
+            cancelSculpting()
+            simulation.cursorInteracts = false
+            lastPointer = point
+            return
+        }
+        guard moved || isSculpting else { return }
+        // При движении внутри снимка не копируем весь слой на каждом кадре.
+        let source: SculptingSource?
+        if let gesture = sculptingGesture, gesture.source.column(at: point) != nil {
+            source = gesture.source
+        } else {
+            source = simulation.sculptingSource(at: point)
+        }
+        guard let source else {
+            finishSculpting(waitForExit: false)
+            waitsForExit = false
+            stationaryTime = 0
+            return
+        }
+        guard canCreate, !waitsForExit else { return }
+        if let gesture = sculptingGesture, gesture.source.layer !== source.layer {
+            finishSculpting(waitForExit: false)
+            return
+        }
+        if moved {
+            stationaryTime = 0
+            if sculptingGesture == nil {
+                // Начальная колонка тоже принадлежит проходу, если указатель уже был на этой опоре.
+                let start = previous.flatMap { source.column(at: $0) != nil ? $0 : nil } ?? point
+                sculptingGesture = SnowSculptingGesture(source: source, at: start)
+            }
+            sculptingGesture?.include(point)
+            if sculptingGesture?.size == .large {
+                finishSculpting(waitForExit: true)
+            } else if let gesture = sculptingGesture {
+                if sculptingPreview == nil {
+                    sculptingPreview = SnowSculptingPreviewWindow()
+                    sculptingPreview?.showsInScreenshots = showsInScreenshots
+                }
+                sculptingPreview?.display(gesture, screenFrame: screenFrame)
+                if presentsWindows { sculptingPreview?.orderFrontRegardless() }
+            }
+        } else if isSculpting {
+            stationaryTime += dt.isFinite ? max(0, dt) : 0
+            if stationaryTime >= 0.35 { finishSculpting(waitForExit: true) }
+        }
     }
 
     func cancelSculpting() {
-        guard isSculpting else { return }
-        sculptingID = nil
-        simulation.cursorInteracts = true
         sculptingGesture = nil
-        let panel = sculptingWindow
-        sculptingWindow = nil
-        panel?.close()
-        refresh()
-        changed()
+        sculptingPreview?.close()
+        sculptingPreview = nil
+        lastPointer = nil
+        stationaryTime = 0
+        waitsForExit = false
+        simulation.cursorInteracts = true
     }
 
-    private func beginSculpting(at point: CGPoint) {
-        guard canCreate, let source = simulation.sculptingSource(at: local(point)) else {
-            cancelSculpting()
-            return
-        }
-        sculptingGesture = SnowSculptingGesture(source: source, at: local(point))
-        sculptingWindow?.display(sculptingGesture)
-    }
-
-    private func continueSculpting(at point: CGPoint) {
-        guard let gesture = sculptingGesture else { return }
-        guard canCreate, simulation.isSculptingSourceValid(gesture.source) else {
-            cancelSculpting()
-            return
-        }
-        sculptingGesture?.include(local(point))
-        sculptingWindow?.display(sculptingGesture)
-    }
-
-    private func finishSculpting(at point: CGPoint) {
-        continueSculpting(at: point)
-        guard isSculpting else { return }
+    private func finishSculpting(waitForExit: Bool) {
         let gesture = sculptingGesture
-        // Сначала отцепляем обработчики: повторный mouseUp не подтверждает тот же снег.
-        cancelSculpting()
+        sculptingGesture = nil
+        sculptingPreview?.close()
+        sculptingPreview = nil
+        stationaryTime = 0
+        waitsForExit = waitForExit
         guard canCreate, let gesture, let ball = simulation.commitSculpting(gesture) else { return }
         create(ball.size, at: ball.center)
     }

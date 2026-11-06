@@ -47,6 +47,7 @@ enum RendererError: Error {
 
 final class Renderer: NSObject, MTKViewDelegate {
     var keepsUpdating: () -> Bool = { false }
+    var automaticSculpting: (SIMD2<Float>, TimeInterval) -> Void = { _, _ in }
     var cursorLocation: () -> SIMD2<Float> = { SIMD2(-10_000, -10_000) }
     var windowSurfaces: (CFTimeInterval) -> WindowUpdate? = { _ in nil }
     /// Frames per second while the snow is being disturbed: the display's highest rate, up to 120 on ProMotion screens.
@@ -206,6 +207,7 @@ final class Renderer: NSObject, MTKViewDelegate {
             if update.slideVelocity != 0 { simulation.spaceSlid(velocity: update.slideVelocity) }
         }
         let cursor = cursorLocation()
+        automaticSculpting(cursor, TimeInterval(dt))
         let changed = simulation.step(dt: dt, cursor: cursor)
         // The frame shown last stays up, as it would anyway with nothing to draw, without ticking over in vain.
         if !changed && simulation.isEmpty && !keepsUpdating() {
