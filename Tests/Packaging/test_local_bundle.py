@@ -115,6 +115,17 @@ exit 99
                                   capture_output=True, text=True)
         self.assertEqual(verified.returncode, 0, verified.stderr)
 
+    def test_bundled_wallpaper_survives_packaging(self):
+        """Зимняя иллюстрация входит в бандл без изменения исходных байтов."""
+        if not (ROOT / "build/SeasonArt.app").exists() and os.environ.get("SEASONART_REQUIRE_BUNDLE") != "1":
+            self.skipTest("Для проверки сборки запусти Scripts/build.sh")
+        source = ROOT / "Resources/Wallpapers/winter-lake-v1.png"
+        bundled = ROOT / "build/SeasonArt.app/Contents/Resources/Wallpapers/winter-lake-v1.png"
+        self.assertTrue(source.is_file(), "Исходное изображение должно существовать")
+        self.assertTrue(bundled.is_file(), "Галерея должна работать из установленного приложения")
+        self.assertEqual(bundled.read_bytes(), source.read_bytes())
+        self.assertEqual(source.read_bytes()[:8], b"\x89PNG\r\n\x1a\n")
+
 
 if __name__ == "__main__":
     unittest.main()

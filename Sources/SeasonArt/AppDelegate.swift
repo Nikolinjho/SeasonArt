@@ -56,6 +56,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var welcome: WelcomeController?
     private let power = PowerMonitor()
     private let wallpaper = WallpaperController()
+    private let wallpaperGallery = WallpaperGalleryController()
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         // Повторная проверка после регистрации процесса выбирает одну копию до создания оверлеев.
@@ -187,6 +188,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         fullScreenItem = add("Поверх полноэкранных приложений", #selector(toggleFullScreen), to: menu)
         screenshotsItem = add("Показывать на снимках экрана", #selector(toggleScreenshots), to: menu)
         menu.addItem(.separator())
+        add("Сезонные обои…", #selector(showWallpaperGallery), to: menu)
         add("Выбрать обои…", #selector(chooseWallpaper), to: menu)
         loginItem = add("Запускать при входе", #selector(toggleOpenAtLogin), to: menu)
         add("О SeasonArt", #selector(showAbout), to: menu)
@@ -293,6 +295,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func chooseWallpaper() {
         wallpaper.chooseWallpaper()
+    }
+
+    @objc private func showWallpaperGallery() {
+        wallpaperGallery.show()
     }
 
     @objc private func toggleOpenAtLogin() {
