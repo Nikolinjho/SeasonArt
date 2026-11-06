@@ -45,6 +45,12 @@ struct WindowSurface: Equatable {
 
 /// Polls the on-screen window list: a few times a second when nothing moves, every frame while something does.
 final class WindowTracker {
+    private let windowListProvider: (() -> CFArray?)?
+
+    init(windowListProvider: (() -> CFArray?)? = nil) {
+        self.windowListProvider = windowListProvider
+    }
+
     /// The display tracked, in the window list's global coordinates: origin at the top left of the primary display.
     var screen: CGRect = .zero
     var display: CGDirectDisplayID?
@@ -441,7 +447,7 @@ final class WindowTracker {
 
     private func query(now: CFTimeInterval) -> [WindowSurface] {
         guard screen.width > 0 else { return [] }
-        let list = Self.windowList(now: now)
+        let list = windowListProvider.map { ListedWindow.all(in: $0()) } ?? Self.windowList(now: now)
         currentSpaceRead = false
         raised = raised.filter { now - $0.value.at < 2 }
         learnRadii(of: list)
@@ -510,14 +516,15 @@ final class WindowTracker {
             }
 
             let frame = CGRect(x: bounds.minX - screen.minX, y: screen.maxY - bounds.maxY, width: bounds.width, height: bounds.height)
-            let roomAbove = bounds.minY - screen.minY >= menuBarHeight + 6 && frame.maxY < screen.height
+            // Развёрнутое окно сохраняет верхний край под строкой меню и тоже принимает частицы.
+            // У настоящего fullscreen верхняя граница совпадает с краем экрана и остаётся исключённой.
+            let roomAbove = bounds.minY - screen.minY >= menuBarHeight && frame.maxY < screen.height
             let onScreen = frame.maxX > 0 && frame.minX < screen.width && frame.maxY > 0
-            let fills = fillsScreen(bounds)
 
             if layer < dockLevel && !fading { windows.append(frame) }
             if layer == 0 && !fading && id != 0 { frames[id] = frame }
             let coverOnly = coverOnlyOwners.contains(owner) && !shelf
-            if roomAbove && onScreen && !fills && !coverOnly && !fading && bounds.width >= 80 && bounds.height >= 40, id != 0,
+            if roomAbove && onScreen && !coverOnly && !fading && bounds.width >= 80 && bounds.height >= 40, id != 0,
                shelf || !isCard(id, bounds, into: &checked) {
                 // Search bars like Spotlight are capsules: low and wide, with fully rounded ends.
                 let capsule = !shelf && (owner.lowercased().contains("spotlight") || (bounds.height <= 90 && bounds.width >= bounds.height * 3))
