@@ -486,6 +486,12 @@ final class WindowTracker {
             let fading = alpha < 0.98 && alpha < (alphas[id] ?? 0) - 0.01
 
             let owner = entry.owner ?? ""
+            // Панель выреза Oasis имеет большой прозрачный холст для анимаций.
+            // Его рамка не отражает видимую форму и не должна маскировать частицы.
+            if owner == "Oasis", layer == NSWindow.Level.statusBar.rawValue + 1,
+               bounds.minY <= screen.minY, bounds.maxY > screen.minY {
+                continue
+            }
             let shelf = owner == "Dock" && layer == dockLevel
             if shelf {
                 if fullScreenInView {

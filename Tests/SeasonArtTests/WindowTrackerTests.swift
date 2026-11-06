@@ -54,4 +54,26 @@ final class WindowTrackerTests: XCTestCase {
         let back = try XCTUnwrap(result.first { $0.id == backID })
         XCTAssertFalse(back.blockers.isEmpty, "Окно сзади сохраняет маску перекрытия")
     }
+
+    func testTransparentNotchPanelDoesNotHideWindowLedge() throws {
+        let panel = entry(frontID + 1, CGRect(x: 384, y: 0, width: 960, height: 360)).mutableCopy() as! NSMutableDictionary
+        panel[kCGWindowOwnerName] = "Oasis"
+        panel[kCGWindowLayer] = NSNumber(value: NSWindow.Level.statusBar.rawValue + 1)
+        let surface = try XCTUnwrap(surfaces([
+            panel, entry(frontID, CGRect(x: 500, y: 180, width: 600, height: 400))
+        ]).first { $0.id == frontID })
+        XCTAssertTrue(surface.blockers.isEmpty,
+                      "Прозрачная область панели выреза не перекрывает верхний край обычного окна")
+        XCTAssertTrue(surface.cover.isEmpty,
+                      "Прозрачная панель не скрывает дождь на поверхности окна")
+    }
+
+    func testOrdinaryOasisWindowStillBlocksWindowsBehindIt() throws {
+        let settings = entry(frontID + 1, CGRect(x: 384, y: 90, width: 960, height: 792)).mutableCopy() as! NSMutableDictionary
+        settings[kCGWindowOwnerName] = "Oasis"
+        let surface = try XCTUnwrap(surfaces([
+            settings, entry(frontID, CGRect(x: 500, y: 180, width: 600, height: 400))
+        ]).first { $0.id == frontID })
+        XCTAssertFalse(surface.blockers.isEmpty, "Обычное окно Oasis сохраняет перекрытие")
+    }
 }
