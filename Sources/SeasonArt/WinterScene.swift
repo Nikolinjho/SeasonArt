@@ -32,10 +32,20 @@ struct WinterObject: Identifiable {
     var isSnowman: Bool { sizes == [.large, .medium, .small] }
 }
 
+/// Удар до остановки игрушки, с массой относительно маленького шара.
+struct WinterImpact {
+    let support: CGWindowID?
+    let x: CGFloat
+    let radius: CGFloat
+    let mass: CGFloat
+    let velocity: CGVector
+}
+
 final class WinterScene {
     private(set) var objects: [WinterObject] = []
     /// Абсолютная высота снега. nil использует геометрию опоры или землю.
     var surfaceHeight: (_ id: CGWindowID?, _ x: CGFloat) -> CGFloat? = { _, _ in nil }
+    var didLand: (WinterImpact) -> Void = { _ in }
     var isMoving: Bool {
         objects.contains { !$0.parked && ($0.isDragged || !resting.contains($0.id)) }
     }
@@ -220,7 +230,10 @@ final class WinterScene {
     }
 
     private func land(_ object: inout WinterObject, on support: CGWindowID?, at y: CGFloat) {
-        object.center.y = y + object.sizes[0].radius
+        didLand(WinterImpact(support: support, x: object.center.x, radius: object.sizes[0].radius,
+                             mass: object.sizes.reduce(0) { $0 + pow($1.radius / WinterBallSize.small.radius, 3) },
+                             velocity: object.velocity))
+        object.center.y = (surfaceHeight(support, object.center.x) ?? y) + object.sizes[0].radius
         object.support = support
         object.velocity = .zero
         resting.insert(object.id)

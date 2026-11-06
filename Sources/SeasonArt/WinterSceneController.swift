@@ -47,6 +47,7 @@ final class WinterSceneController {
         self.presentsWindows = presentsWindows
         scene = WinterScene(width: screenFrame.width, height: screenFrame.height)
         scene.surfaceHeight = { [weak simulation] id, x in simulation?.winterSurfaceY(at: x, on: id) }
+        scene.didLand = { [weak simulation] impact in simulation?.displaceSnow(for: impact) }
     }
 
     @discardableResult

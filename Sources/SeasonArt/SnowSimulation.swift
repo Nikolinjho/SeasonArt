@@ -715,6 +715,69 @@ final class SnowSimulation {
         return CGFloat(layer.surface(column))
     }
 
+    /// Проминает видимый снег выбранной опоры и сохраняет снятую массу рядом или в частицах.
+    func displaceSnow(for impact: WinterImpact) {
+        guard mode == .snow, impact.x.isFinite, impact.radius.isFinite, impact.mass.isFinite,
+              impact.velocity.dx.isFinite, impact.velocity.dy.isFinite,
+              impact.radius > 0, impact.radius <= 200, impact.mass > 0, impact.mass <= 100,
+              abs(impact.velocity.dx) <= 10_000, impact.velocity.dy < 0,
+              impact.velocity.dy >= -10_000 else { return }
+        let layer: SnowLayer
+        if let id = impact.support {
+            guard let ledge = ledges[id], layers.contains(where: { $0 === ledge }) else { return }
+            layer = ledge
+        } else {
+            layer = ground
+        }
+        guard impact.x >= CGFloat(layer.base.x), impact.x < CGFloat(layer.base.x + layer.width),
+              let center = layer.index(at: Float(impact.x)) else { return }
+        let visible = sculptingVisibility(of: layer)
+        guard visible[center], layer.heights[center] > 0 else { return }
+        let radius = Float(impact.radius)
+        let x = Float(impact.x)
+        let strength = min(1, Float(-impact.velocity.dy) / 800) * min(2, Float(impact.mass).squareRoot())
+        let reach = radius * 1.6
+        // Перекрытие обрывает область, чтобы снег не проходил сквозь скрытые колонки.
+        var low = center
+        var high = center
+        while low > 0 && visible[low - 1] && x - layer.centerX(low - 1) <= reach { low -= 1 }
+        while high + 1 < layer.count && visible[high + 1] && layer.centerX(high + 1) - x <= reach { high += 1 }
+        let sides = (low...high).filter { abs(layer.centerX($0) - x) >= radius * 0.65 }
+        let room = maxGrains - grains.count
+        guard !sides.isEmpty || room > 0 else { return }
+        var removed: Float = 0
+        let top = layer.surface(center)
+        for i in low...high {
+            let distance = abs(layer.centerX(i) - x)
+            guard distance < radius * 0.65 else { continue }
+            let amount = min(layer.heights[i], radius * 0.3 * strength * (1 - distance / (radius * 0.65)))
+            layer.set(i, layer.heights[i] - amount)
+            removed += amount * layer.columnWidth
+        }
+        guard removed > 0 else { return }
+        let airborne = room > 0 ? removed * (sides.isEmpty ? 1 : 0.25) : 0
+        let settled = removed - airborne
+        if !sides.isEmpty {
+            let share = settled / Float(sides.count) / layer.columnWidth
+            for i in sides { layer.set(i, layer.heights[i] + share) }
+        }
+        if airborne > 0 {
+            let count = min(room, 8)
+            let share = airborne / Float(count)
+            for i in 0..<count {
+                let direction: Float = i % 2 == 0 ? -1 : 1
+                grains.append(Grain(
+                    position: SIMD2(layer.centerX(direction < 0 ? low : high), top + 1),
+                    velocity: SIMD2(direction * (50 + 110 * strength) + Float(impact.velocity.dx) * 0.2,
+                                    40 + 100 * strength),
+                    area: share, size: min(5, max(1.1, share.squareRoot()))))
+            }
+        }
+        layer.refreshTop()
+        heightsChanged = true
+        stirred()
+    }
+
     /// Отвал переносит массу влево и выбрасывает четверть снятого снега частицами.
     @discardableResult
     func plowDock(id: CGWindowID, fromX: CGFloat, toX: CGFloat) -> Float {

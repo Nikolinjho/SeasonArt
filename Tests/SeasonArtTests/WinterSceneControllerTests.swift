@@ -9,6 +9,23 @@ final class WinterSceneControllerTests: XCTestCase {
                                      simulation: SnowSimulation(width: 800, height: 600, snowfall: .off),
                                      presentsWindows: false)
     }
+    func testПадениеПроминаетСнегИОбновляетВысотуОпоры() throws {
+        let (controller, simulation, _) = snowyController()
+        defer { controller.close() }
+        let layer = try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 240, y: 61))).layer
+        layer.replace(heights: layer.heights.map { _ in 20 })
+        layer.refreshTop()
+        let before = layer.heights
+        _ = controller.create(.large, at: CGPoint(x: 240, y: 300))
+        for _ in 0..<120 { controller.scene.step(dt: 1 / 60) }
+        XCTAssertLessThan(layer.heights[80], before[80], "Удар проминает центр сугроба")
+        XCTAssertEqual(controller.scene.objects[0].frame.minY,
+                       try XCTUnwrap(simulation.winterSurfaceY(at: 240, on: 42)), accuracy: 0.001)
+        let settled = layer.heights
+        for _ in 0..<120 { controller.scene.step(dt: 1 / 60) }
+        XCTAssertEqual(layer.heights, settled, "Покой не повторяет удар")
+    }
+
     func testModeLimitAndClearManageAllOwnedWindows() {
         let controller = controller()
         defer { controller.close() }
