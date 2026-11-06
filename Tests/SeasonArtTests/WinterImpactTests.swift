@@ -77,6 +77,20 @@ final class WinterImpactTests: XCTestCase {
         XCTAssertLessThan(velocities[1], velocities[2])
     }
 
+    func testСнеговикПроминаетБольшеСнегаЧемБольшойШарПриРавнойСкорости() throws {
+        var volumes: [Float] = []
+        for mass: CGFloat in [8, 8 + 3.375 + 1] {
+            let (simulation, layer) = try fixture()
+            layer.replace(heights: layer.heights.map { _ in 100 })
+            let before = layer.heights
+            impact(simulation, radius: 28, mass: mass, speed: 600)
+            volumes.append(zip(before, layer.heights).reduce(0) {
+                $0 + max(0, $1.0 - $1.1) * layer.columnWidth
+            })
+        }
+        XCTAssertGreaterThan(volumes[1], volumes[0], "Состав снеговика усиливает проминание при том же радиусе основания")
+    }
+
     func testНеверныеКоординатыПустотаИСнятаяОпораНеМеняютСнег() throws {
         let (simulation, layer) = try fixture(support: 42, dock: true)
         let before = layer.heights

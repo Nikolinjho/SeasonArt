@@ -735,7 +735,7 @@ final class SnowSimulation {
         guard visible[center], layer.heights[center] > 0 else { return }
         let radius = Float(impact.radius)
         let x = Float(impact.x)
-        let strength = min(1, Float(-impact.velocity.dy) / 800) * min(2, Float(impact.mass).squareRoot())
+        let strength = min(1, Float(-impact.velocity.dy) / 800) * min(4, Float(impact.mass).squareRoot())
         let reach = radius * 1.6
         // Перекрытие обрывает область, чтобы снег не проходил сквозь скрытые колонки.
         var low = center
