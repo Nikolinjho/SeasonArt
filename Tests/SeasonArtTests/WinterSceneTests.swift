@@ -115,7 +115,8 @@ final class WinterSceneTests: XCTestCase {
         let scene = WinterScene(width: 800, height: 600)
         let base = try XCTUnwrap(scene.create(.large, at: CGPoint(x: 200, y: 28)))
         settle(scene)
-        for (size, y) in [(WinterBallSize.medium, CGFloat(77)), (.small, CGFloat(112))] {
+        for size in [WinterBallSize.medium, .small] {
+            let y = try XCTUnwrap(scene.objects.first).frame.maxY + size.radius
             let id = try XCTUnwrap(scene.create(size, at: CGPoint(x: 400, y: 400)))
             scene.beginDragging(id, at: CGPoint(x: 400, y: 400))
             scene.drag(id, to: CGPoint(x: 200, y: y), dt: 0.1)
@@ -249,6 +250,26 @@ final class WinterSceneTests: XCTestCase {
         XCTAssertEqual(details.buttons[2].width, b.buttons[2].width)
         XCTAssertTrue(details.eyes.allSatisfy { mixed.ballFrames[2].contains($0) })
         XCTAssertTrue(details.buttons.prefix(2).allSatisfy { mixed.ballFrames[1].contains($0) })
+    }
+
+    func testМаленькиеШарыЧерезЗазорНеПритягиваются() throws {
+        let scene = WinterScene(width: 800, height: 600)
+        _ = scene.create(radius: 6, at: CGPoint(x: 200, y: 6))
+        let id = try XCTUnwrap(scene.create(radius: 6, at: CGPoint(x: 200, y: 33)))
+        scene.beginDragging(id, at: CGPoint(x: 200, y: 33))
+        scene.endDragging(id)
+        XCTAssertEqual(scene.objects.count, 2, "Зазор больше диаметра маленького шара не считается контактом")
+    }
+
+    func testКонтактРазрешаетПерекрытиеГотовогоСтыкаКрупныхШаров() throws {
+        let scene = WinterScene(width: 800, height: 600)
+        _ = scene.create(radius: 36, at: CGPoint(x: 200, y: 36))
+        let point = CGPoint(x: 200, y: 72 + 36 - 36 * 0.3)
+        let id = try XCTUnwrap(scene.create(radius: 36, at: point))
+        scene.beginDragging(id, at: point)
+        scene.endDragging(id)
+        XCTAssertEqual(scene.objects.count, 1)
+        XCTAssertEqual(scene.objects[0].radii, [36, 36])
     }
 
 }

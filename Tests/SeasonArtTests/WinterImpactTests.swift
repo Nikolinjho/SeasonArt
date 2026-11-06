@@ -205,7 +205,8 @@ final class WinterImpactTests: XCTestCase {
         XCTAssertEqual(events.count, 1)
         XCTAssertLessThan(events[0].velocity.dy, 0)
         XCTAssertEqual(scene.objects[0].frame.minY, 20)
-        for (size, y) in [(WinterBallSize.medium, CGFloat(97)), (.small, CGFloat(132))] {
+        for size in [WinterBallSize.medium, .small] {
+            let y = try XCTUnwrap(scene.objects.first).frame.maxY + size.radius
             let id = try XCTUnwrap(scene.create(size, at: CGPoint(x: 400, y: 400)))
             scene.beginDragging(id, at: CGPoint(x: 400, y: 400))
             scene.drag(id, to: CGPoint(x: 240, y: y), dt: 1)

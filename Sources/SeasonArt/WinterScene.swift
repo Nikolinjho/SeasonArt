@@ -175,8 +175,13 @@ final class WinterScene {
         let candidates = objects.indices.filter { candidate in
             let base = objects[candidate]
             let canStack = (1...2).contains(base.radii.count)
+            let contactRadius = min(radius, base.radii.last ?? radius)
+            let tolerance = min(8, max(2, contactRadius * 0.35))
+            let gap = held.frame.minY - base.frame.maxY
+            // Допускаем касание и перекрытие готового стыка, но не притягиваем маленькие шары издалека.
+            let hasContact = gap <= tolerance && gap >= -contactRadius * 0.3 - tolerance
             return candidate != index && canStack && !base.parked && !base.isDragged
-                && abs(held.frame.minY - base.frame.maxY) <= 16
+                && hasContact
                 && abs(held.center.x - base.center.x) <= min(radius, base.radii.last!) * 0.9
         }
         guard let base = candidates.min(by: {
