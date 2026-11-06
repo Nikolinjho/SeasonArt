@@ -52,6 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var winterBallItems: [NSMenuItem] = []
     private var winterClearItem: NSMenuItem!
     private var winterPlowItem: NSMenuItem!
+    private var winterSculptingItem: NSMenuItem!
     private var observers: [NSObjectProtocol] = []
     private var screensAsleep = false
     private let screenshots = ScreenshotWatch()
@@ -205,6 +206,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             ball.tag = size.rawValue
             winterBallItems.append(ball)
         }
+        winterSculptingItem = add("Лепить снежок…", #selector(startSnowSculpting), to: winterMenu)
         winterMenu.addItem(.separator())
         winterPlowItem = add("Убрать снег трактором", #selector(startWinterPlow), to: winterMenu)
         winterClearItem = add("Убрать зимние игрушки", #selector(clearWinterObjects), to: winterMenu)
@@ -256,6 +258,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         winterItem.isHidden = mode != .snow
         let winter = screenAtPointer()?.winter
         for item in winterBallItems { item.isEnabled = winter?.canCreate ?? false }
+        winterSculptingItem.isEnabled = winter?.canCreate ?? false
         winterClearItem.isEnabled = screens.contains { $0.winter.hasObjects }
         winterPlowItem.isEnabled = winter?.canPlow ?? false
         winterPlowItem.title = winter?.canPlow == true ? "Убрать снег трактором" : "Трактор: нет доступной полки Dock или идёт уборка"
@@ -365,6 +368,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let point = CGPoint(x: NSEvent.mouseLocation.x - frame.minX,
                             y: screen.screen.visibleFrame.minY - frame.minY + 160 + size.radius)
         screen.winter.create(size, at: point)
+    }
+
+    @objc private func startSnowSculpting() {
+        guard let screen = screenAtPointer() else { return }
+        for other in screens { other.winter.cancelSculpting() }
+        screen.winter.startSculpting()
     }
 
     @objc private func clearWinterObjects() {

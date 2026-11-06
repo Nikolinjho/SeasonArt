@@ -15,6 +15,11 @@ final class WinterSceneController {
     private var syncing = false
     private var closed = false
     private(set) var plow: WinterPlowPass?
+    private(set) var sculptingWindow: SnowSculptingWindow?
+    private var sculptingGesture: SnowSculptingGesture?
+    private var sculptingID: UUID?
+    private var trackedSurfaces: [WindowSurface] = []
+    var isSculpting: Bool { sculptingID != nil }
     var changed: () -> Void = {}
 
     var isEnabled = false { didSet { refresh() } }
@@ -24,13 +29,14 @@ final class WinterSceneController {
         didSet {
             for window in windows.values { window.showsInScreenshots = showsInScreenshots }
             plowWindow?.showsInScreenshots = showsInScreenshots
+            sculptingWindow?.showsInScreenshots = showsInScreenshots
         }
     }
-    var canCreate: Bool { !closed && isEnabled && isActive && scene.objects.count < 12 }
+    var canCreate: Bool { !closed && isEnabled && isActive && !isSuppressed && scene.objects.count < 12 }
     var canPlow: Bool { !closed && isEnabled && isActive && shelf != nil && plow == nil }
     var objectWindowCount: Int { windows.count }
     var isRunning: Bool { timer != nil }
-    var hasObjects: Bool { !scene.objects.isEmpty || plow != nil }
+    var hasObjects: Bool { !scene.objects.isEmpty || plow != nil || isSculpting }
     var needsUpdates: Bool { !closed && isEnabled && isActive && !isSuppressed && hasObjects }
 
     init(screenFrame: CGRect, simulation: SnowSimulation, presentsWindows: Bool = true) {
@@ -50,7 +56,83 @@ final class WinterSceneController {
         return id
     }
 
+    @discardableResult
+    func startSculpting() -> Bool {
+        cancelSculpting()
+        guard canCreate else { return false }
+        let token = UUID()
+        sculptingID = token
+        let panel = SnowSculptingWindow(screenFrame: screenFrame)
+        panel.showsInScreenshots = showsInScreenshots
+        panel.began = { [weak self] point in
+            guard let self, sculptingID == token else { return }
+            beginSculpting(at: point)
+        }
+        panel.moved = { [weak self] point in
+            guard let self, sculptingID == token else { return }
+            continueSculpting(at: point)
+        }
+        panel.ended = { [weak self] point in
+            guard let self, sculptingID == token else { return }
+            finishSculpting(at: point)
+        }
+        panel.cancelled = { [weak self] in
+            guard let self, sculptingID == token else { return }
+            cancelSculpting()
+        }
+        sculptingWindow = panel
+        refresh()
+        changed()
+        if presentsWindows { panel.present() }
+        return true
+    }
+
+    func cancelSculpting() {
+        guard isSculpting else { return }
+        sculptingID = nil
+        sculptingGesture = nil
+        let panel = sculptingWindow
+        sculptingWindow = nil
+        panel?.close()
+        refresh()
+        changed()
+    }
+
+    private func beginSculpting(at point: CGPoint) {
+        guard canCreate, let source = simulation.sculptingSource(at: local(point)) else {
+            cancelSculpting()
+            return
+        }
+        sculptingGesture = SnowSculptingGesture(source: source, at: local(point))
+        sculptingWindow?.display(sculptingGesture)
+    }
+
+    private func continueSculpting(at point: CGPoint) {
+        guard let gesture = sculptingGesture else { return }
+        guard canCreate, simulation.isSculptingSourceValid(gesture.source) else {
+            cancelSculpting()
+            return
+        }
+        sculptingGesture?.include(local(point))
+        sculptingWindow?.display(sculptingGesture)
+    }
+
+    private func finishSculpting(at point: CGPoint) {
+        continueSculpting(at: point)
+        guard isSculpting else { return }
+        let gesture = sculptingGesture
+        // Сначала отцепляем обработчики: повторный mouseUp не подтверждает тот же снег.
+        cancelSculpting()
+        guard canCreate, let gesture, let ball = simulation.commitSculpting(gesture) else { return }
+        create(ball.size, at: ball.center)
+    }
+
     func updateWindows(_ update: WindowUpdate) {
+        // Tracker сообщает изменения раньше симуляции. Не подтверждаем устаревший снимок даже между кадрами.
+        if sculptingGesture != nil, update.sliding || trackedSurfaces != update.surfaces {
+            cancelSculpting()
+        }
+        trackedSurfaces = update.surfaces
         shelf = update.surfaces.first { WinterPlowPass(surface: $0) != nil }
         if let pass = plow, shelf?.id != pass.surfaceID || shelf?.frame != pass.shelf {
             plow = nil
@@ -71,6 +153,7 @@ final class WinterSceneController {
     }
 
     func clear() {
+        cancelSculpting()
         scene.removeAll()
         plow = nil
         refresh()
@@ -78,6 +161,7 @@ final class WinterSceneController {
     }
 
     func fit(to frame: CGRect) {
+        cancelSculpting()
         screenFrame = frame
         scene.resize(width: frame.width, height: frame.height)
         refresh()
@@ -85,6 +169,7 @@ final class WinterSceneController {
 
     func close() {
         guard !closed else { return }
+        cancelSculpting()
         closed = true
         scene.removeAll()
         plow = nil
@@ -106,6 +191,7 @@ final class WinterSceneController {
         syncing = true
         defer { syncing = false }
         let visible = isEnabled && isActive && !isSuppressed
+        if !visible || !canCreate { cancelSculpting() }
         let ids = Set(scene.objects.map(\.id))
         for id in Array(windows.keys) where !ids.contains(id) { windows.removeValue(forKey: id)?.close() }
         for object in scene.objects {
@@ -178,6 +264,9 @@ final class WinterSceneController {
     }
 
     private func tick() {
+        if let gesture = sculptingGesture, !simulation.isSculptingSourceValid(gesture.source) {
+            cancelSculpting()
+        }
         let now = CACurrentMediaTime()
         let dt = min(max(now - lastFrame, 0), 1.0 / 30)
         lastFrame = now
