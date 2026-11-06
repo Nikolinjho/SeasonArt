@@ -194,4 +194,50 @@ final class WinterMotionTests: XCTestCase {
         XCTAssertGreaterThan(scene.objects[0].velocity.dy, 0)
     }
 
+    func testПоследовательныйОченьБыстрыйЖестСохраняетБросок() throws {
+        let scene = WinterScene(width: 2000, height: 1000)
+        let id = try XCTUnwrap(scene.create(.small, at: CGPoint(x: 200, y: 300)))
+        scene.beginDragging(id, at: CGPoint(x: 200, y: 300))
+        for x in [250, 300, 350, 400] {
+            scene.drag(id, to: CGPoint(x: x, y: 300), dt: 1 / 120)
+        }
+        scene.endDragging(id)
+        XCTAssertEqual(scene.objects[0].velocity.dx, 900, accuracy: 0.001)
+    }
+
+    func testОченьБыстрыйЖестОколоСтопкиНеСклеивается() throws {
+        for samples in [1, 4] {
+            let scene = WinterScene(width: 2000, height: 1000)
+            _ = scene.create(.large, at: CGPoint(x: 500, y: 28))
+            let start = CGPoint(x: 500 - samples * 50, y: 70)
+            let id = try XCTUnwrap(scene.create(.small, at: start))
+            scene.beginDragging(id, at: start)
+            for i in 1...samples {
+                scene.drag(id, to: CGPoint(x: start.x + CGFloat(i * 50), y: 70), dt: 1 / 120)
+            }
+            scene.endDragging(id)
+            XCTAssertEqual(scene.objects.count, 2)
+        }
+    }
+
+    func testПослеОтскокаСDockУдарПоЗемлеСохраняется() throws {
+        let scene = WinterScene(width: 2000, height: 1000)
+        let surface = WindowSurface(id: 1, frame: CGRect(x: 100, y: 200, width: 200, height: 100),
+                                    blockers: [], cover: [], cornerRadius: 0, cornerExponent: 2.5, isDock: true)
+        scene.updateWindows(WindowUpdate(surfaces: [surface], interval: 0.1, parked: [], elsewhere: [], sliding: false, slideVelocity: 0))
+        var impacts: [WinterImpact] = []
+        scene.didLand = { impacts.append($0) }
+        let start = CGPoint(x: 100, y: 394)
+        let id = try XCTUnwrap(scene.create(.small, at: start))
+        scene.beginDragging(id, at: start)
+        scene.drag(id, to: CGPoint(x: 180, y: 314), dt: 0.1)
+        scene.endDragging(id)
+        for _ in 0..<600 { scene.step(dt: 1 / 120) }
+        XCTAssertEqual(impacts.count, 2)
+        XCTAssertEqual(impacts.first?.support, 1)
+        XCTAssertNil(impacts.last?.support)
+        XCTAssertLessThan(try XCTUnwrap(impacts.last).velocity.dy, -500)
+        XCTAssertFalse(scene.isMoving)
+    }
+
 }

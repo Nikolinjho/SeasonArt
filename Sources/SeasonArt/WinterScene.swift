@@ -106,12 +106,23 @@ struct WinterImpact {
 private enum WinterMotion {
     static let history: TimeInterval = 0.12
     static let maximumSpeed: CGFloat = 900
+    static let outlierSpeedRatio: CGFloat = 3
+    static let coherentDirection: CGFloat = 0.95
     static let placementSpeed: CGFloat = 85
     static let gravity: CGFloat = 1200
     static let friction: CGFloat = 2.8
     static let sleepSpeed: CGFloat = 2
     static let bounceThreshold: CGFloat = 220
     static let restitution: CGFloat = 0.17
+}
+
+private enum WinterContact: Equatable {
+    case ground
+    case window(CGWindowID)
+
+    init(support: CGWindowID?) {
+        self = support.map { .window($0) } ?? .ground
+    }
 }
 
 final class WinterScene {
@@ -129,10 +140,11 @@ final class WinterScene {
     private var visibleSupports: Set<CGWindowID> = []
     private var resting: Set<UUID> = []
     private var pushed: Set<UUID> = []
-    private var bouncing: Set<UUID> = []
+    private var bouncing: [UUID: WinterContact] = [:]
     private var dragOffset: CGPoint = .zero
     private var captured: UUID?
     private var dragHistory: [(duration: TimeInterval, velocity: CGVector)] = []
+    private var fastDragSample: (duration: TimeInterval, velocity: CGVector)?
 
     init(width: CGFloat, height: CGFloat) {
         self.width = max(0, width)
@@ -161,13 +173,14 @@ final class WinterScene {
         guard let index = objects.firstIndex(where: { $0.id == id }) else { return }
         captured = id
         dragHistory.removeAll()
+        fastDragSample = nil
         dragOffset = CGPoint(x: objects[index].center.x - point.x, y: objects[index].center.y - point.y)
         objects[index].isDragged = true
         objects[index].support = nil
         objects[index].velocity = .zero
         resting.remove(id)
         pushed.remove(id)
-        bouncing.remove(id)
+        bouncing.removeValue(forKey: id)
     }
 
     func drag(_ id: UUID, to point: CGPoint, dt: TimeInterval) {
@@ -178,14 +191,42 @@ final class WinterScene {
         clamp(&objects[index])
         let dx = objects[index].center.x - previous.x
         let dy = objects[index].center.y - previous.y
-        // Разрыв потока событий не превращаем в бросок через весь экран.
-        guard dt.isFinite, dt > 0, hypot(dx, dy) <= WinterMotion.maximumSpeed * CGFloat(dt) * 3 else {
+        guard dt.isFinite, dt > 0 else {
             dragHistory.removeAll()
+            fastDragSample = nil
             objects[index].velocity = .zero
             return
         }
-        appendDragSample(duration: dt, velocity: CGVector(dx: dx / dt, dy: dy / dt))
+        let velocity = CGVector(dx: dx / dt, dy: dy / dt)
+        let speed = hypot(velocity.dx, velocity.dy)
+        guard speed.isFinite else {
+            dragHistory.removeAll()
+            fastDragSample = nil
+            objects[index].velocity = .zero
+            return
+        }
+        if speed > WinterMotion.maximumSpeed * WinterMotion.outlierSpeedRatio {
+            // Одиночный скачок ждёт подтверждения соседним сегментом того же движения.
+            let previous = fastDragSample
+            fastDragSample = (dt, velocity)
+            if let previous, isCoherent(previous.velocity, with: velocity) {
+                if dragHistory.isEmpty { appendDragSample(duration: previous.duration, velocity: previous.velocity) }
+                appendDragSample(duration: dt, velocity: velocity)
+            } else {
+                dragHistory.removeAll()
+            }
+        } else {
+            fastDragSample = nil
+            appendDragSample(duration: dt, velocity: velocity)
+        }
         objects[index].velocity = releaseVelocity
+    }
+
+    private func isCoherent(_ previous: CGVector, with current: CGVector) -> Bool {
+        let a = hypot(previous.dx, previous.dy)
+        let b = hypot(current.dx, current.dy)
+        let alignment = (previous.dx / a) * (current.dx / b) + (previous.dy / a) * (current.dy / b)
+        return alignment >= WinterMotion.coherentDirection && min(a, b) / max(a, b) >= 0.5
     }
 
     private func appendDragSample(duration: TimeInterval, velocity: CGVector) {
@@ -218,19 +259,22 @@ final class WinterScene {
         guard captured == id, let index = objects.firstIndex(where: { $0.id == id }) else { return }
         captured = nil
         dragHistory.removeAll()
+        fastDragSample = nil
         objects[index].isDragged = false
         objects[index].velocity = .zero
     }
 
     func endDragging(_ id: UUID, idleTime: TimeInterval = 0) {
         guard captured == id, let index = objects.firstIndex(where: { $0.id == id }) else { return }
+        let hasPendingMotion = fastDragSample != nil && !(idleTime.isFinite && idleTime >= WinterMotion.history)
         if idleTime.isFinite, idleTime > 0 { appendDragSample(duration: idleTime, velocity: .zero) }
         objects[index].velocity = releaseVelocity
         captured = nil
         dragHistory.removeAll()
+        fastDragSample = nil
         objects[index].isDragged = false
         let held = objects[index]
-        guard held.radii.count == 1, let radius = held.radii.first,
+        guard !hasPendingMotion, held.radii.count == 1, let radius = held.radii.first,
               hypot(held.velocity.dx, held.velocity.dy) <= WinterMotion.placementSpeed else { return }
         let candidates = objects.indices.filter { candidate in
             let base = objects[candidate]
@@ -329,7 +373,7 @@ final class WinterScene {
         objects.removeAll { removed.contains($0.id) }
         resting.subtract(removed)
         pushed.subtract(removed)
-        bouncing.subtract(removed)
+        for id in removed { bouncing.removeValue(forKey: id) }
     }
 
     func resize(width: CGFloat, height: CGFloat) {
@@ -351,6 +395,7 @@ final class WinterScene {
         captured = nil
         dragOffset = .zero
         dragHistory.removeAll()
+        fastDragSample = nil
     }
 
     func shoveObjects(in rect: CGRect, by dx: CGFloat) {
@@ -364,7 +409,7 @@ final class WinterScene {
         let removed = objects.filter { pushed.contains($0.id) && ($0.frame.maxX < 0 || $0.frame.minX > width) }.map(\.id)
         objects.removeAll { removed.contains($0.id) }
         pushed.subtract(removed)
-        bouncing.subtract(removed)
+        for id in removed { bouncing.removeValue(forKey: id) }
         resting.subtract(removed)
     }
 
@@ -378,7 +423,8 @@ final class WinterScene {
     }
 
     private func land(_ object: inout WinterObject, on support: CGWindowID?, at y: CGFloat) {
-        if !bouncing.contains(object.id) {
+        let contact = WinterContact(support: support)
+        if bouncing[object.id] != contact {
             didLand(WinterImpact(support: support, x: object.center.x, radius: object.radii[0],
                              mass: object.radii.reduce(0) { $0 + pow($1 / WinterBallSize.small.radius, 3) },
                              velocity: object.velocity))
@@ -387,12 +433,12 @@ final class WinterScene {
         object.support = support
         let rebound = -object.velocity.dy * WinterMotion.restitution
         if object.velocity.dy < -WinterMotion.bounceThreshold {
-            bouncing.insert(object.id)
+            bouncing[object.id] = contact
             object.velocity.dy = rebound
             object.support = nil
             resting.remove(object.id)
         } else {
-            bouncing.remove(object.id)
+            bouncing.removeValue(forKey: object.id)
             object.velocity.dy = 0
             if abs(object.velocity.dx) < WinterMotion.sleepSpeed { object.velocity.dx = 0 }
             resting.insert(object.id)
