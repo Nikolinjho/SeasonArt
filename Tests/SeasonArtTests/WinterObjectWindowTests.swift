@@ -56,7 +56,7 @@ final class WinterObjectWindowTests: XCTestCase {
         XCTAssertEqual(window.frame, model.frame.offsetBy(dx: screen.minX, dy: screen.minY))
         model.sizes = [.large, .medium, .small]
         window.display(object: model, screenFrame: screen)
-        XCTAssertEqual(window.frame.height, 126, "Снеговик вмещает все три шара")
+        XCTAssertEqual(window.frame.height, 116, "Окно вмещает три слегка утопленных друг в друга шара")
         XCTAssertEqual(view.object.id, model.id, "Обновление сохраняет идентификатор модели")
         XCTAssertTrue(view.object.isSnowman)
     }

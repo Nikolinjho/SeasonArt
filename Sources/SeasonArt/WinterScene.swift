@@ -23,10 +23,23 @@ struct WinterObject: Identifiable {
     var parked: Bool
     var isDragged: Bool
 
+    /// Локальные границы шаров: стык перекрывает 15% диаметра меньшего из соседей.
+    var ballFrames: [CGRect] {
+        let widest = sizes.map(\.radius).max() ?? 0
+        var bottom: CGFloat = 0
+        return sizes.enumerated().map { index, size in
+            if index > 0 { bottom -= min(sizes[index - 1].radius, size.radius) * 0.3 }
+            let rect = CGRect(x: widest - size.radius, y: bottom,
+                              width: size.radius * 2, height: size.radius * 2)
+            bottom = rect.maxY
+            return rect
+        }
+    }
+
     var frame: CGRect {
         let radius = sizes.map(\.radius).max() ?? 0
         return CGRect(x: center.x - radius, y: center.y - (sizes.first?.radius ?? 0),
-                      width: radius * 2, height: sizes.reduce(0) { $0 + $1.radius * 2 })
+                      width: radius * 2, height: ballFrames.last?.maxY ?? 0)
     }
 
     var isSnowman: Bool { sizes == [.large, .medium, .small] }

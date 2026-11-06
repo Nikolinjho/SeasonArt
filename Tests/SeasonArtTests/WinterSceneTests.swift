@@ -125,7 +125,8 @@ final class WinterSceneTests: XCTestCase {
         XCTAssertEqual(scene.objects[0].id, base)
         XCTAssertEqual(scene.objects[0].sizes, [.large, .medium, .small])
         XCTAssertTrue(scene.objects[0].isSnowman)
-        XCTAssertEqual(scene.objects[0].frame, CGRect(x: 172, y: 0, width: 56, height: 126))
+        XCTAssertEqual(scene.objects[0].frame, CGRect(x: 172, y: 0, width: 56, height: 115.5),
+                       "Шары слегка перекрываются в местах соединения, основание остаётся на опоре")
     }
 
     func testWrongOrderAndDistantBallsDoNotMerge() throws {
