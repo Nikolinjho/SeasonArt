@@ -661,7 +661,20 @@ final class SnowSimulation {
         return SculptedBall(size: size, center: center, collectedArea: area)
     }
 
-    private func sculptingVisibility(of layer: SnowLayer) -> [Bool] {
+    /// Даже тонкий доступный слой поддерживает опрос указателя без снегопада.
+    var hasSculptableSnow: Bool {
+        guard mode == .snow else { return false }
+        return layers.contains { layer in
+            guard layer.top > 0 else { return false }
+            let blockers = sculptingBlockers(of: layer)
+            return layer.heights.indices.contains { index in
+                layer.heights[index].isFinite && layer.heights[index] > 0
+                    && isSculptingColumnVisible(index, on: layer, blockers: blockers)
+            }
+        }
+    }
+
+    private func sculptingBlockers(of layer: SnowLayer) -> [SIMD4<Float>] {
         var blockers = layer.occluders
         if layer === ground {
             blockers += windowFrames
@@ -669,15 +682,22 @@ final class SnowSimulation {
                 SIMD4($0.origin.x, $0.origin.y - $0.face, $0.origin.x + $0.width, $0.origin.y)
             }
         }
-        return layer.heights.indices.map { index in
-            guard layer.visible[index] else { return false }
-            let x = layer.centerX(index)
-            let floor = layer.floor(index)
-            let top = layer.surface(index)
-            return x >= 0 && x <= width && !blockers.contains {
-                x >= $0.x && x < $0.z && top >= $0.y && floor < $0.w
-            }
+        return blockers
+    }
+
+    private func isSculptingColumnVisible(_ index: Int, on layer: SnowLayer, blockers: [SIMD4<Float>]) -> Bool {
+        guard layer.visible[index] else { return false }
+        let x = layer.centerX(index)
+        let floor = layer.floor(index)
+        let top = layer.surface(index)
+        return x >= 0 && x <= width && !blockers.contains {
+            x >= $0.x && x < $0.z && top >= $0.y && floor < $0.w
         }
+    }
+
+    private func sculptingVisibility(of layer: SnowLayer) -> [Bool] {
+        let blockers = sculptingBlockers(of: layer)
+        return layer.heights.indices.map { isSculptingColumnVisible($0, on: layer, blockers: blockers) }
     }
 
     /// Абсолютная высота поверхности для зимней игрушки на конкретной опоре.

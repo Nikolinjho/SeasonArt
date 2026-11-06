@@ -205,6 +205,89 @@ final class WinterSceneControllerTests: XCTestCase {
         XCTAssertEqual(layer.heights, before)
     }
 
+    func testКликПослеПаузыИМаксимумаНеСнимаетБлокировкуДоВыхода() {
+        for maximum in [false, true] {
+            let (controller, simulation, _) = snowyController()
+            defer { controller.close() }
+            frame(controller, simulation, x: 160)
+            frame(controller, simulation, x: maximum ? 300 : 220)
+            if !maximum { frame(controller, simulation, x: 220, dt: 0.36) }
+            XCTAssertEqual(controller.scene.objects.count, 1)
+            frame(controller, simulation, x: 320, buttons: 1)
+            frame(controller, simulation, x: 340)
+            frame(controller, simulation, x: 420)
+            frame(controller, simulation, x: 420, dt: 0.36)
+            XCTAssertFalse(controller.isSculpting)
+            XCTAssertEqual(controller.scene.objects.count, 1, "Нажатие и отпускание не заменяют выход со снега")
+            frame(controller, simulation, x: 420, y: 250)
+            frame(controller, simulation, x: 340)
+            frame(controller, simulation, x: 420)
+            frame(controller, simulation, x: 420, dt: 0.36)
+            XCTAssertEqual(controller.scene.objects.count, 2, "Выход разрешает следующий проход")
+        }
+    }
+
+    func testТонкийДоступныйСнегПоддерживаетКадрыБезСнегопада() throws {
+        _ = NSApplication.shared
+        let simulation = SnowSimulation(width: 600, height: 400, snowfall: .off)
+        simulation.thaws = false
+        simulation.scatter((0..<2_000).map { i in
+            ScatterPiece(position: SIMD2(100 + Float(i % 180) * 2, 100),
+                         velocity: SIMD2(0, -200), color: SIMD3(repeating: 1))
+        })
+        for _ in 0..<180 { _ = simulation.step(dt: 1 / 60, cursor: SIMD2(-1_000, -1_000)) }
+        let layer = try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 160, y: 1))).layer
+        let controller = WinterSceneController(screenFrame: CGRect(x: 0, y: 0, width: 600, height: 400),
+                                               simulation: simulation, presentsWindows: false)
+        defer { controller.close() }
+        controller.isEnabled = true
+        for height: Float in [0.2, 0.5] {
+            layer.replace(heights: layer.heights.map { _ in height })
+            layer.refreshTop()
+            XCTAssertFalse(simulation.hasSnow, "Общий порог остальных режимов остаётся прежним")
+            XCTAssertNotNil(simulation.sculptingSource(at: CGPoint(x: 160, y: 0.1)))
+            XCTAssertTrue(controller.needsUpdates, "Любой доступный снег продолжает замечать указатель: \(height)")
+        }
+        layer.replace(heights: layer.heights.map { _ in 0 })
+        layer.refreshTop()
+        XCTAssertFalse(controller.needsUpdates, "Пустой слой не поддерживает постоянный опрос")
+    }
+
+    func testПереходНаДругуюОпоруЗавершаетПервыйПроходИНовыйТребуетДвижения() {
+        _ = NSApplication.shared
+        let simulation = SnowSimulation(width: 600, height: 400, snowfall: .off)
+        simulation.thaws = false
+        let supports = [
+            WindowSurface(id: 51, frame: CGRect(x: 80, y: 0, width: 200, height: 60),
+                          blockers: [], cover: [], cornerRadius: 0, cornerExponent: 2.5, isDock: true),
+            WindowSurface(id: 52, frame: CGRect(x: 320, y: 0, width: 220, height: 120),
+                          blockers: [], cover: [], cornerRadius: 0, cornerExponent: 2.5, isDock: true)
+        ]
+        simulation.updateWindows(supports, interval: 1 / 60)
+        simulation.scatter((0..<4_000).map { i in
+            ScatterPiece(position: SIMD2(100 + Float(i % 200) * 2, 180),
+                         velocity: SIMD2(0, -200), color: SIMD3(repeating: 1))
+        })
+        for _ in 0..<180 { _ = simulation.step(dt: 1 / 60, cursor: SIMD2(-1_000, -1_000)) }
+        let controller = WinterSceneController(screenFrame: CGRect(x: -600, y: 100, width: 600, height: 400),
+                                               simulation: simulation, presentsWindows: false)
+        defer { controller.close() }
+        controller.isEnabled = true
+        controller.updateWindows(WindowUpdate(surfaces: supports, interval: 0.1, parked: [], elsewhere: [], sliding: false, slideVelocity: 0))
+        frame(controller, simulation, x: 160)
+        frame(controller, simulation, x: 220)
+        XCTAssertTrue(controller.isSculpting)
+        frame(controller, simulation, x: 360, y: 121)
+        XCTAssertEqual(controller.scene.objects.count, 1)
+        XCTAssertFalse(controller.isSculpting, "Переход не начинает второй проход тем же кадром")
+        frame(controller, simulation, x: 360, y: 121, dt: 0.4)
+        XCTAssertFalse(controller.isSculpting, "Неподвижный указатель на другой опоре не начинает проход")
+        frame(controller, simulation, x: 420, y: 121)
+        XCTAssertTrue(controller.isSculpting)
+        frame(controller, simulation, x: 420, y: 250)
+        XCTAssertEqual(controller.scene.objects.count, 2)
+    }
+
     func testЖизненныйЦиклОтменяетЧерновикИЛимитНеОбходится() throws {
         for reason in ["clear", "fit", "pause", "mode", "suppression", "close"] {
             let (controller, simulation, _) = snowyController()

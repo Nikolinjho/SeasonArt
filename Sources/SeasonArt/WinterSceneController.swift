@@ -39,7 +39,7 @@ final class WinterSceneController {
     var objectWindowCount: Int { windows.count }
     var isRunning: Bool { timer != nil }
     var hasObjects: Bool { !scene.objects.isEmpty || plow != nil || isSculpting }
-    var needsUpdates: Bool { !closed && isEnabled && isActive && !isSuppressed && (hasObjects || simulation.hasSnow) }
+    var needsUpdates: Bool { !closed && isEnabled && isActive && !isSuppressed && (hasObjects || simulation.hasSculptableSnow) }
 
     init(screenFrame: CGRect, simulation: SnowSimulation, presentsWindows: Bool = true) {
         self.screenFrame = screenFrame
@@ -65,7 +65,9 @@ final class WinterSceneController {
             return
         }
         guard mouseButtons == 0 else {
+            let stillWaitsForExit = waitsForExit && simulation.sculptingSource(at: local(point)) != nil
             cancelSculpting()
+            waitsForExit = stillWaitsForExit
             return
         }
         simulation.cursorInteracts = false
