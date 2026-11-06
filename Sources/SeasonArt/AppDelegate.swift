@@ -48,6 +48,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var screenshotsItem: NSMenuItem!
     private var deepInteractionItem: NSMenuItem!
     private var loginItem: NSMenuItem!
+    private var winterItem: NSMenuItem!
+    private var winterBallItems: [NSMenuItem] = []
+    private var winterClearItem: NSMenuItem!
+    private var winterPlowItem: NSMenuItem!
     private var observers: [NSObjectProtocol] = []
     private var screensAsleep = false
     private let screenshots = ScreenshotWatch()
@@ -194,6 +198,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         add("О SeasonArt", #selector(showAbout), to: menu)
         menu.addItem(withTitle: "Выйти из SeasonArt", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
 
+        let winterMenu = NSMenu()
+        winterMenu.autoenablesItems = false
+        for (size, title) in [(WinterBallSize.large, "Большой снежный шар"), (.medium, "Средний снежный шар"), (.small, "Маленький снежный шар")] {
+            let ball = add(title, #selector(createWinterBall), to: winterMenu)
+            ball.tag = size.rawValue
+            winterBallItems.append(ball)
+        }
+        winterMenu.addItem(.separator())
+        winterPlowItem = add("Убрать снег трактором", #selector(startWinterPlow), to: winterMenu)
+        winterClearItem = add("Убрать зимние игрушки", #selector(clearWinterObjects), to: winterMenu)
+        winterItem = NSMenuItem(title: "Зимние игрушки", action: nil, keyEquivalent: "")
+        winterItem.submenu = winterMenu
+        menu.insertItem(winterItem, at: menu.items.firstIndex(of: behindWindowsItem) ?? menu.items.count)
+
         item.menu = menu
         return item
     }
@@ -235,6 +253,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         fullScreenItem.state = Preferences.showOverFullScreen ? .on : .off
         fullScreenItem.isEnabled = !behindWindows
         screenshotsItem.state = Preferences.showInScreenshots ? .on : .off
+        winterItem.isHidden = mode != .snow
+        let winter = screenAtPointer()?.winter
+        for item in winterBallItems { item.isEnabled = winter?.canCreate ?? false }
+        winterClearItem.isEnabled = screens.contains { $0.winter.hasObjects }
+        winterPlowItem.isEnabled = winter?.canPlow ?? false
+        winterPlowItem.title = winter?.canPlow == true ? "Убрать снег трактором" : "Трактор: нет доступной полки Dock или идёт уборка"
         loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
     }
 
@@ -290,6 +314,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         for snow in screens {
             snow.window.showsInScreenshots = Preferences.showInScreenshots
             snow.dock.window.showsInScreenshots = Preferences.showInScreenshots
+            snow.winter.showsInScreenshots = Preferences.showInScreenshots
         }
     }
 
@@ -323,8 +348,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         updateStatusIcon()
         let direction = screens.first?.simulation.breezeDirection ?? -1
         let calm = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
-        for snow in screens { snow.simulation.switchMode(to: mode, direction: direction, calm: calm) }
+        for snow in screens {
+            snow.winter.isEnabled = mode == .snow
+            snow.simulation.switchMode(to: mode, direction: direction, calm: calm)
+        }
     }
+
+    private func screenAtPointer() -> ScreenSnow? {
+        let point = NSEvent.mouseLocation
+        return screens.first { $0.screen.frame.contains(point) } ?? screens.first
+    }
+
+    @objc private func createWinterBall(_ sender: NSMenuItem) {
+        guard let size = WinterBallSize(rawValue: sender.tag), let screen = screenAtPointer() else { return }
+        let frame = screen.screen.frame
+        let point = CGPoint(x: NSEvent.mouseLocation.x - frame.minX,
+                            y: screen.screen.visibleFrame.minY - frame.minY + 160 + size.radius)
+        screen.winter.create(size, at: point)
+    }
+
+    @objc private func clearWinterObjects() {
+        for screen in screens { screen.winter.clear() }
+    }
+
+    @objc private func startWinterPlow() { screenAtPointer()?.winter.startPlow() }
 
     @objc private func choosePerformance(_ sender: NSMenuItem) {
         Preferences.maxPerformance = sender === maxPerformanceItem

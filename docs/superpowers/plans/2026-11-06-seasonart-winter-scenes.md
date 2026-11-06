@@ -180,7 +180,7 @@ simulation.updateWindows([dock], interval: 0.1)
 
 **Steps:**
 
-Связать модель с окнами по UUID, callbacks захвата с beginDragging/drag/endDragging, surfaceHeight с узким API SnowSimulation. Таймер нужен для физики игрушек, список окон поступает из renderer.windowSurfaces. Состояние режима, активности и aside имеет приоритет над показом окон.
+Связать модель с окнами по UUID, callbacks захвата с beginDragging/drag/endDragging, surfaceHeight с узким API SnowSimulation. Таймер нужен для физики игрушек, список окон поступает из renderer.windowSurfaces. Состояние режима, паузы и aside имеет приоритет над показом окон.
 
 ```swift
 if let update { winter.updateWindows(update) }

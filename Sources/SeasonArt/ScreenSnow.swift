@@ -7,6 +7,7 @@ final class ScreenSnow {
     let window: OverlayWindow
     let dock: DockOverlay
     let simulation: SnowSimulation
+    let winter: WinterSceneController
     private let view: MTKView
     private let renderer: Renderer
     private let tracker = WindowTracker()
@@ -86,7 +87,7 @@ final class ScreenSnow {
     }
     var mode: Mode {
         get { simulation.mode }
-        set { simulation.mode = newValue }
+        set { simulation.mode = newValue; winter.isEnabled = newValue == .snow }
     }
 
     init?(screen: NSScreen, device: MTLDevice, snowOnWindows: @escaping () -> Bool) {
@@ -108,6 +109,8 @@ final class ScreenSnow {
         self.displayID = displayID
         self.screen = screen
         self.simulation = simulation
+        winter = WinterSceneController(screenFrame: screen.frame, simulation: simulation)
+        winter.showsInScreenshots = Preferences.showInScreenshots
         self.renderer = renderer
         window = OverlayWindow(screen: screen)
         window.behindWindows = Preferences.behindWindows
@@ -126,8 +129,9 @@ final class ScreenSnow {
             // Behind the windows the snow still settles on them: what lies on a window's top edge is above it, in
             // plain view.
             let onWindows = snowOnWindows()
-            let update = onWindows ? tracker.poll(now: now, eager: NSEvent.pressedMouseButtons != 0) : nil
-            watchForFullScreen(now: now, tracked: onWindows)
+            let update = tracker.poll(now: now, eager: NSEvent.pressedMouseButtons != 0)
+            if let update { winter.updateWindows(update) }
+            watchForFullScreen(now: now, tracked: true)
             guard onWindows else { return nil }
             simulation.windowFrames = tracker.covers.map { SIMD4(Float($0.minX), Float($0.minY), Float($0.maxX), Float($0.maxY)) }
             return update
@@ -141,6 +145,11 @@ final class ScreenSnow {
             renderer.releaseFrames(of: view)
         }
         simulation.stirred = { [unowned self] in wake() }
+        winter.changed = { [weak self] in
+            self?.tracker.reset()
+            self?.wake()
+        }
+        renderer.keepsUpdating = { [weak winter] in winter?.needsUpdates ?? false }
         renderer.interactiveFrameRate = Self.interactiveFrameRate(of: screen)
         measure()
         view.delegate = renderer
@@ -151,6 +160,7 @@ final class ScreenSnow {
 
     func fit(to screen: NSScreen) {
         self.screen = screen
+        winter.fit(to: screen.frame)
         window.setFrame(screen.frame, display: true)
         dock.fit(to: screen)
         Renderer.fitDrawable(of: view)
@@ -179,6 +189,7 @@ final class ScreenSnow {
     func setActive(_ active: Bool, asleep: Bool) {
         self.asleep = asleep
         self.active = active
+        winter.isActive = active && !asleep && window.alphaValue > 0.001
         if asleep { renderer.releaseFrames(of: view) }
         guard view.isPaused == active else { return }
         if active { Renderer.fitDrawable(of: view) }
@@ -389,6 +400,7 @@ final class ScreenSnow {
 
     /// Out of the screenshot tool's way, or back in place.
     func stepAside(_ aside: Bool) {
+        winter.isSuppressed = aside
         if aside {
             window.orderOut(nil)
             dock.window.orderOut(nil)
@@ -408,6 +420,7 @@ final class ScreenSnow {
         view.isPaused = true
         view.delegate = nil
         window.orderOut(nil)
+        winter.close()
         dock.close()
     }
 
