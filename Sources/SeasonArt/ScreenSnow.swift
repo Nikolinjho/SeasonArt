@@ -189,7 +189,8 @@ final class ScreenSnow {
     func setActive(_ active: Bool, asleep: Bool) {
         self.asleep = asleep
         self.active = active
-        winter.isActive = active && !asleep && window.alphaValue > 0.001
+        // Альфа в начале fade-in ещё равна нулю: состояние сцены не должно от неё зависеть.
+        winter.isActive = active && !asleep && (!covered || leaving)
         if asleep { renderer.releaseFrames(of: view) }
         guard view.isPaused == active else { return }
         if active { Renderer.fitDrawable(of: view) }
