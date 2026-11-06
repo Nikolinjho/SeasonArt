@@ -1,5 +1,8 @@
 # SeasonArt Local MVP Implementation Plan
 
+Статус: локальный MVP реализован и принят в доступном окружении. Актуальные результаты: [журнал приёмки](../../verification/local-run.md). Сон исключён из приёмки по прямому решению пользователя, второй физический монитор недоступен. Функциональный системный выбор окна проверен через включённый Cmd+Shift+5, сочетание Cmd+Shift+4 отключено в macOS. Состояния задач сохранены в соседнем `.tasks.json`.
+
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-extended-cc:subagent-driven-development (recommended) or superpowers-extended-cc:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Подготовить SeasonArt для личного локального использования Никитой: сезонные эффекты на окнах, управление из строки меню, собственные обои и независимая установка.
