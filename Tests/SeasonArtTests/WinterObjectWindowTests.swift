@@ -11,7 +11,7 @@ final class WinterObjectWindowTests: XCTestCase {
     }
 
     private func object(sizes: [WinterBallSize] = [.large], center: CGPoint = CGPoint(x: 200, y: 100)) -> WinterObject {
-        WinterObject(id: UUID(), sizes: sizes, center: center, velocity: .zero,
+        WinterObject(id: UUID(), radii: sizes.map(\.radius), center: center, velocity: .zero,
                      support: nil, parked: false, isDragged: false)
     }
 
@@ -54,7 +54,7 @@ final class WinterObjectWindowTests: XCTestCase {
         window.display(object: model, screenFrame: screen)
         XCTAssertTrue(window.contentView === view, "Движение сохраняет представление объекта")
         XCTAssertEqual(window.frame, model.frame.offsetBy(dx: screen.minX, dy: screen.minY))
-        model.sizes = [.large, .medium, .small]
+        model.radii = [28, 21, 14]
         window.display(object: model, screenFrame: screen)
         XCTAssertEqual(window.frame.height, 116, "Окно вмещает три слегка утопленных друг в друга шара")
         XCTAssertEqual(view.object.id, model.id, "Обновление сохраняет идентификатор модели")

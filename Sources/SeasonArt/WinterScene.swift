@@ -13,10 +13,19 @@ enum WinterBallSize: Int, CaseIterable {
     }
 }
 
+enum WinterBallGeometry {
+    static let minimumRadius: CGFloat = 6
+    static let maximumRadius: CGFloat = 36
+
+    static func isValid(_ radius: CGFloat) -> Bool {
+        radius.isFinite && (minimumRadius...maximumRadius).contains(radius)
+    }
+}
+
 struct WinterObject: Identifiable {
     let id: UUID
     /// Состав снизу вверх. center задаёт центр нижнего шара.
-    var sizes: [WinterBallSize]
+    var radii: [CGFloat]
     var center: CGPoint
     var velocity: CGVector
     var support: CGWindowID?
@@ -25,24 +34,62 @@ struct WinterObject: Identifiable {
 
     /// Локальные границы шаров: стык перекрывает 15% диаметра меньшего из соседей.
     var ballFrames: [CGRect] {
-        let widest = sizes.map(\.radius).max() ?? 0
+        let widest = radii.max() ?? 0
         var bottom: CGFloat = 0
-        return sizes.enumerated().map { index, size in
-            if index > 0 { bottom -= min(sizes[index - 1].radius, size.radius) * 0.3 }
-            let rect = CGRect(x: widest - size.radius, y: bottom,
-                              width: size.radius * 2, height: size.radius * 2)
+        return radii.enumerated().map { index, radius in
+            if index > 0 { bottom -= min(radii[index - 1], radius) * 0.3 }
+            let rect = CGRect(x: widest - radius, y: bottom,
+                              width: radius * 2, height: radius * 2)
             bottom = rect.maxY
             return rect
         }
     }
 
     var frame: CGRect {
-        let radius = sizes.map(\.radius).max() ?? 0
-        return CGRect(x: center.x - radius, y: center.y - (sizes.first?.radius ?? 0),
+        let radius = radii.max() ?? 0
+        return CGRect(x: center.x - radius, y: center.y - (radii.first ?? 0),
                       width: radius * 2, height: ballFrames.last?.maxY ?? 0)
     }
 
-    var isSnowman: Bool { sizes == [.large, .medium, .small] }
+    var isSnowman: Bool { radii.count == 3 }
+}
+
+/// Геометрия украшений использует радиус соответствующего шара.
+struct WinterDecoration {
+    let eyes: [CGRect]
+    let buttons: [CGRect]
+    let nose: [CGPoint]
+    let scarf: [CGRect]
+}
+
+extension WinterObject {
+    var decoration: WinterDecoration? {
+        guard isSnowman else { return nil }
+        let frames = ballFrames
+        let x = frames[0].midX
+        let base = frames[0]
+        let torso = frames[1]
+        let head = frames[2]
+        let headScale = radii[2] / 14
+        let torsoScale = radii[1] / 21
+        let baseScale = radii[0] / 28
+        let neckScale = min(radii[1], radii[2]) / 14
+        func dot(x: CGFloat, y: CGFloat, scale: CGFloat) -> CGRect {
+            CGRect(x: x - 1.8 * scale, y: y - 1.8 * scale, width: 3.6 * scale, height: 3.6 * scale)
+        }
+        return WinterDecoration(
+            eyes: [-5, 5].map { dot(x: x + CGFloat($0) * headScale, y: head.midY + 3 * headScale, scale: headScale) },
+            buttons: [dot(x: x, y: torso.midY + 10 * torsoScale, scale: torsoScale),
+                      dot(x: x, y: torso.midY - 3 * torsoScale, scale: torsoScale),
+                      dot(x: x, y: base.midY + 11 * baseScale, scale: baseScale)],
+            nose: [CGPoint(x: x - headScale, y: head.midY - headScale),
+                   CGPoint(x: x + 12 * headScale, y: head.midY - 4 * headScale),
+                   CGPoint(x: x - headScale, y: head.midY - 6 * headScale)],
+            scarf: [CGRect(x: x - 14 * neckScale, y: head.minY - 2 * neckScale,
+                           width: 28 * neckScale, height: 6 * neckScale),
+                    CGRect(x: x + 6 * neckScale, y: head.minY - 18 * torsoScale,
+                           width: 6 * neckScale, height: 20 * torsoScale)])
+    }
 }
 
 /// Удар до остановки игрушки, с массой относительно маленького шара.
@@ -79,8 +126,14 @@ final class WinterScene {
 
     @discardableResult
     func create(_ size: WinterBallSize, at point: CGPoint) -> UUID? {
-        guard objects.count < 12 else { return nil }
-        var object = WinterObject(id: UUID(), sizes: [size], center: point, velocity: .zero,
+        return create(radius: size.radius, at: point)
+    }
+
+    @discardableResult
+    func create(radius: CGFloat, at point: CGPoint) -> UUID? {
+        guard objects.count < 12, WinterBallGeometry.isValid(radius),
+              point.x.isFinite, point.y.isFinite else { return nil }
+        var object = WinterObject(id: UUID(), radii: [radius], center: point, velocity: .zero,
                                   support: nil, parked: false, isDragged: false)
         clamp(&object)
         objects.append(object)
@@ -118,19 +171,18 @@ final class WinterScene {
         captured = nil
         objects[index].isDragged = false
         let held = objects[index]
-        guard held.sizes.count == 1, let size = held.sizes.first else { return }
+        guard held.radii.count == 1, let radius = held.radii.first else { return }
         let candidates = objects.indices.filter { candidate in
             let base = objects[candidate]
-            let ordered = (base.sizes == [.large] && size == .medium)
-                || (base.sizes == [.large, .medium] && size == .small)
-            return candidate != index && ordered && !base.parked && !base.isDragged
+            let canStack = (1...2).contains(base.radii.count)
+            return candidate != index && canStack && !base.parked && !base.isDragged
                 && abs(held.frame.minY - base.frame.maxY) <= 16
-                && abs(held.center.x - base.center.x) <= min(size.radius, base.sizes.last!.radius) * 0.9
+                && abs(held.center.x - base.center.x) <= min(radius, base.radii.last!) * 0.9
         }
         guard let base = candidates.min(by: {
             abs(objects[$0].center.x - held.center.x) < abs(objects[$1].center.x - held.center.x)
         }) else { return }
-        objects[base].sizes.append(size)
+        objects[base].radii.append(radius)
         resting.remove(id)
         objects.remove(at: index)
     }
@@ -167,7 +219,7 @@ final class WinterScene {
                 if let support = objects[index].support, let surface = surfaces[support] {
                     fit(&objects[index], on: surface)
                 } else {
-                    objects[index].center.y = ground(at: objects[index].center.x) + objects[index].sizes[0].radius
+                    objects[index].center.y = ground(at: objects[index].center.x) + objects[index].radii[0]
                 }
                 if resting.contains(objects[index].id) { continue }
             }
@@ -243,10 +295,10 @@ final class WinterScene {
     }
 
     private func land(_ object: inout WinterObject, on support: CGWindowID?, at y: CGFloat) {
-        didLand(WinterImpact(support: support, x: object.center.x, radius: object.sizes[0].radius,
-                             mass: object.sizes.reduce(0) { $0 + pow($1.radius / WinterBallSize.small.radius, 3) },
+        didLand(WinterImpact(support: support, x: object.center.x, radius: object.radii[0],
+                             mass: object.radii.reduce(0) { $0 + pow($1 / WinterBallSize.small.radius, 3) },
                              velocity: object.velocity))
-        object.center.y = (surfaceHeight(support, object.center.x) ?? y) + object.sizes[0].radius
+        object.center.y = (surfaceHeight(support, object.center.x) ?? y) + object.radii[0]
         object.support = support
         object.velocity = .zero
         resting.insert(object.id)
@@ -260,7 +312,7 @@ final class WinterScene {
         object.center.x = min(max(object.center.x, low), high)
         guard let y = supportHeight(surface, at: object.center.x), y >= 0,
               y + object.frame.height <= height else { detach(&object); return }
-        object.center.y = y + object.sizes[0].radius
+        object.center.y = y + object.radii[0]
     }
 
     private func detach(_ object: inout WinterObject) {
@@ -275,7 +327,7 @@ final class WinterScene {
 
     private func clamp(_ object: inout WinterObject) {
         clampX(&object)
-        let radius = object.sizes[0].radius
+        let radius = object.radii[0]
         object.center.y = min(max(object.center.y, radius), max(radius, height - object.frame.height + radius))
     }
 }

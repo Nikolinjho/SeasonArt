@@ -222,4 +222,20 @@ final class WinterImpactTests: XCTestCase {
         XCTAssertGreaterThan(events[1].mass, events[0].mass)
         XCTAssertEqual(events[1].radius, 28)
     }
+    func testУдарПродолжаетРастиДоМассыТрёхМаксимальныхШаров() throws {
+        var volumes: [Float] = []
+        let ballMass = pow(CGFloat(36) / 14, 3)
+        for mass in [ballMass, ballMass * 2, ballMass * 3] {
+            let (simulation, layer) = try fixture()
+            layer.replace(heights: layer.heights.map { _ in 100 })
+            let before = layer.heights
+            impact(simulation, radius: 36, mass: mass, speed: 600)
+            volumes.append(zip(before, layer.heights).reduce(0) { $0 + max(0, $1.0 - $1.1) })
+            XCTAssertEqual(area(layer) + particles(simulation).reduce(0) { $0 + $1.area },
+                           before.reduce(0, +) * layer.columnWidth, accuracy: 0.1)
+        }
+        XCTAssertLessThan(volumes[0], volumes[1])
+        XCTAssertLessThan(volumes[1], volumes[2], "Новая верхняя масса не упирается в старый предел силы")
+    }
+
 }

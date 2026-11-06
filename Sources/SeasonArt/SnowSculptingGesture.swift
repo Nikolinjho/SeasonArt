@@ -41,7 +41,7 @@ struct SculptingSource {
 }
 
 struct SculptedBall {
-    let size: WinterBallSize
+    let radius: CGFloat
     let center: CGPoint
     let collectedArea: CGFloat
 }
@@ -68,19 +68,18 @@ struct SnowSculptingGesture {
         include(point)
     }
 
-    var size: WinterBallSize? {
-        Self.size(for: collectedArea)
-    }
+    var radius: CGFloat? { Self.radius(for: collectedArea) }
+    var isFull: Bool { collectedArea >= Self.largeArea }
 
-    static func size(for area: CGFloat) -> WinterBallSize? {
-        guard area.isFinite else { return nil }
-        if area >= largeArea { return .large }
-        if area >= mediumArea { return .medium }
-        return area >= smallArea ? .small : nil
+    static func radius(for area: CGFloat) -> CGFloat? {
+        guard area.isFinite, area >= smallArea else { return nil }
+        let progress = min(1, (area - smallArea) / (largeArea - smallArea))
+        return WinterBallGeometry.minimumRadius
+            + progress * (WinterBallGeometry.maximumRadius - WinterBallGeometry.minimumRadius)
     }
 
     var center: CGPoint {
-        CGPoint(x: collectedPoint.x, y: collectedPoint.y + (size?.radius ?? WinterBallSize.small.radius))
+        CGPoint(x: collectedPoint.x, y: collectedPoint.y + (radius ?? WinterBallGeometry.minimumRadius))
     }
 
     mutating func include(_ point: CGPoint) {

@@ -13,7 +13,7 @@ final class WinterObjectView: NSView {
     required init?(coder: NSCoder) { nil }
 
     func display(object: WinterObject) {
-        let changed = self.object.sizes != object.sizes
+        let changed = self.object.radii != object.radii
         self.object = object
         if changed { needsDisplay = true }
     }
@@ -50,26 +50,21 @@ final class WinterObjectView: NSView {
             ball.lineWidth = 0.8
             ball.stroke()
         }
-        guard object.isSnowman else { return }
-        let x = bounds.midX
-        let base = frames[0]
-        let torso = frames[1]
-        let head = frames[2]
+        guard let decoration = object.decoration else { return }
         NSColor(calibratedWhite: 0.14, alpha: 1).setFill()
-        for point in [CGPoint(x: x - 5, y: head.midY + 3), CGPoint(x: x + 5, y: head.midY + 3),
-                      CGPoint(x: x, y: torso.midY + 10), CGPoint(x: x, y: torso.midY - 3),
-                      CGPoint(x: x, y: base.midY + 11)] {
-            NSBezierPath(ovalIn: CGRect(x: point.x - 1.8, y: point.y - 1.8, width: 3.6, height: 3.6)).fill()
+        for rect in decoration.eyes + decoration.buttons {
+            NSBezierPath(ovalIn: rect).fill()
         }
         NSColor.systemOrange.setFill()
         let carrot = NSBezierPath()
-        carrot.move(to: CGPoint(x: x - 1, y: head.midY - 1))
-        carrot.line(to: CGPoint(x: x + 12, y: head.midY - 4))
-        carrot.line(to: CGPoint(x: x - 1, y: head.midY - 6))
+        for (index, point) in decoration.nose.enumerated() {
+            if index == 0 { carrot.move(to: point) } else { carrot.line(to: point) }
+        }
         carrot.close()
         carrot.fill()
         NSColor(calibratedRed: 0.76, green: 0.08, blue: 0.13, alpha: 1).setFill()
-        NSBezierPath(roundedRect: CGRect(x: x - 14, y: head.minY - 2, width: 28, height: 6), xRadius: 2, yRadius: 2).fill()
-        NSBezierPath(roundedRect: CGRect(x: x + 6, y: head.minY - 18, width: 6, height: 20), xRadius: 1, yRadius: 1).fill()
+        for rect in decoration.scarf {
+            NSBezierPath(roundedRect: rect, xRadius: rect.height * 0.1, yRadius: rect.height * 0.1).fill()
+        }
     }
 }

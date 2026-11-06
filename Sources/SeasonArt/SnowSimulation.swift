@@ -639,7 +639,7 @@ final class SnowSimulation {
 
     /// Сначала проверяет весь черновик, затем снимает снег одной атомарной операцией.
     func commitSculpting(_ gesture: SnowSculptingGesture) -> SculptedBall? {
-        guard isSculptingSourceValid(gesture.source), gesture.size != nil else { return nil }
+        guard isSculptingSourceValid(gesture.source), gesture.radius != nil else { return nil }
         let layer = gesture.source.layer
         var area: CGFloat = 0
         var removals: [(Int, Float)] = []
@@ -652,13 +652,13 @@ final class SnowSimulation {
             removals.append((index, Float(amount)))
             area += amount * CGFloat(layer.columnWidth)
         }
-        guard let size = SnowSculptingGesture.size(for: area) else { return nil }
+        guard let radius = SnowSculptingGesture.radius(for: area) else { return nil }
         for (index, amount) in removals { layer.set(index, layer.heights[index] - amount) }
         layer.refreshTop()
         heightsChanged = true
         stirred()
-        let center = CGPoint(x: gesture.center.x, y: gesture.center.y - (gesture.size?.radius ?? size.radius) + size.radius)
-        return SculptedBall(size: size, center: center, collectedArea: area)
+        let center = CGPoint(x: gesture.center.x, y: gesture.center.y - (gesture.radius ?? radius) + radius)
+        return SculptedBall(radius: radius, center: center, collectedArea: area)
     }
 
     /// Даже тонкий доступный слой поддерживает опрос указателя без снегопада.
@@ -735,7 +735,8 @@ final class SnowSimulation {
         guard visible[center], layer.heights[center] > 0 else { return }
         let radius = Float(impact.radius)
         let x = Float(impact.x)
-        let strength = min(1, Float(-impact.velocity.dy) / 800) * min(4, Float(impact.mass).squareRoot())
+        // Кубический корень сохраняет рост силы для всей допустимой массы, включая три шара радиуса 36.
+        let strength = min(1, Float(-impact.velocity.dy) / 800) * pow(Float(impact.mass), 1 / 3)
         let reach = radius * 1.6
         // Перекрытие обрывает область, чтобы снег не проходил сквозь скрытые колонки.
         var low = center

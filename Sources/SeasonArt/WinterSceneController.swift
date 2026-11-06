@@ -109,7 +109,7 @@ final class WinterSceneController {
                 sculptingGesture = SnowSculptingGesture(source: source, at: start)
             }
             sculptingGesture?.include(point)
-            if sculptingGesture?.size == .large {
+            if sculptingGesture?.isFull == true {
                 finishSculpting(waitForExit: true)
             } else if let gesture = sculptingGesture {
                 if sculptingPreview == nil {
@@ -143,7 +143,9 @@ final class WinterSceneController {
         stationaryTime = 0
         waitsForExit = waitForExit
         guard canCreate, let gesture, let ball = simulation.commitSculpting(gesture) else { return }
-        create(ball.size, at: ball.center)
+        scene.create(radius: ball.radius, at: ball.center)
+        refresh()
+        changed()
     }
 
     func updateWindows(_ update: WindowUpdate) {

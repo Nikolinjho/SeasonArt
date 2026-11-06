@@ -20,18 +20,18 @@ final class SnowSculptingTests: XCTestCase {
     func testUniqueColumnsAndSizeBoundaries() {
         let source = layer()
         var gesture = draft(source, end: 17)
-        XCTAssertNil(gesture.size, "Девяти колонок недостаточно для маленького шара")
+        XCTAssertNil(gesture.radius, "Девяти колонок недостаточно для маленького шара")
         gesture.include(CGPoint(x: 19, y: 1))
         XCTAssertEqual(gesture.collectedArea, 40)
-        XCTAssertEqual(gesture.size, .small)
+        XCTAssertEqual(gesture.radius, 6)
         gesture.include(CGPoint(x: 47, y: 1))
-        XCTAssertEqual(gesture.size, .small, "До порога среднего шара остаются четыре пункта площади")
+        XCTAssertEqual(gesture.radius, SnowSculptingGesture.radius(for: 96))
         gesture.include(CGPoint(x: 49, y: 1))
-        XCTAssertEqual(gesture.size, .medium)
+        XCTAssertEqual(gesture.radius, SnowSculptingGesture.radius(for: gesture.collectedArea))
         gesture.include(CGPoint(x: 107, y: 1))
-        XCTAssertEqual(gesture.size, .medium)
+        XCTAssertEqual(gesture.radius, SnowSculptingGesture.radius(for: gesture.collectedArea))
         gesture.include(CGPoint(x: 109, y: 1))
-        XCTAssertEqual(gesture.size, .large)
+        XCTAssertEqual(gesture.radius, 36)
         gesture.include(CGPoint(x: 319, y: 1))
         gesture.include(CGPoint(x: 1, y: 1))
         XCTAssertEqual(gesture.collectedArea, 220, "Повторный проход и длинный жест не увеличивают лимит")
@@ -63,7 +63,7 @@ final class SnowSculptingTests: XCTestCase {
         var gesture = SnowSculptingGesture(source: source, at: CGPoint(x: 1e100, y: 1))
         gesture.include(CGPoint(x: -1e100, y: 1))
         XCTAssertEqual(gesture.collectedArea, 0, "Непредставимые события мыши не пересекают сугроб")
-        XCTAssertNil(gesture.size)
+        XCTAssertNil(gesture.radius)
     }
 
     func testThinSnowAndHiddenColumnsRestrictCollection() {
@@ -71,7 +71,7 @@ final class SnowSculptingTests: XCTestCase {
         thin.updateVisibility(screenWidth: 200, blockers: [SIMD4(0, 0, 100, 20)])
         let gesture = draft(thin, end: 199)
         XCTAssertEqual(gesture.collectedArea, 50, "Скрытая половина не участвует, тонкий снег не умножается до двух пунктов")
-        XCTAssertEqual(gesture.size, .small)
+        XCTAssertEqual(gesture.radius, SnowSculptingGesture.radius(for: 50))
     }
 
     private func surface(x: CGFloat = 80, blockers: [CGRect] = [], dock: Bool = true) -> WindowSurface {
@@ -115,7 +115,7 @@ final class SnowSculptingTests: XCTestCase {
         let draft = try gesture(simulation)
         XCTAssertEqual(values(simulation), before, "До отпускания сугроб не меняется")
         let result = try XCTUnwrap(simulation.commitSculpting(draft))
-        XCTAssertEqual(result.size, .large)
+        XCTAssertEqual(result.radius, 36)
         XCTAssertTrue(result.center.x.isFinite && result.center.y.isFinite)
         XCTAssertEqual(result.collectedArea, 220, accuracy: 0.001)
         let after = values(simulation)
@@ -127,11 +127,13 @@ final class SnowSculptingTests: XCTestCase {
     func testReducedLiveSnowCreatesSmallerBallWithActualArea() throws {
         let simulation = simulation()
         let draft = try gesture(simulation)
-        XCTAssertEqual(draft.size, .large)
+        XCTAssertEqual(draft.radius, 36)
         _ = simulation.plowDock(id: 42, fromX: 150, toX: 210)
         let before = values(simulation)
         let result = try XCTUnwrap(simulation.commitSculpting(draft))
-        XCTAssertEqual(result.size, .medium, "После уменьшения запаса создаётся шар по реальному количеству снега")
+        XCTAssertEqual(result.radius, SnowSculptingGesture.radius(for: result.collectedArea))
+        XCTAssertLessThan(result.radius, try XCTUnwrap(draft.radius))
+        XCTAssertEqual(result.center.y - result.radius, draft.center.y - (try XCTUnwrap(draft.radius)), accuracy: 0.001)
         XCTAssertGreaterThanOrEqual(result.collectedArea, SnowSculptingGesture.mediumArea)
         XCTAssertLessThan(result.collectedArea, SnowSculptingGesture.largeArea)
         let after = values(simulation)
@@ -165,15 +167,19 @@ final class SnowSculptingTests: XCTestCase {
         }
     }
 
-    func testExactAreaThresholdsRejectNonFiniteValues() {
-        XCTAssertNil(SnowSculptingGesture.size(for: 39.999))
-        XCTAssertEqual(SnowSculptingGesture.size(for: 40), .small)
-        XCTAssertEqual(SnowSculptingGesture.size(for: 99.999), .small)
-        XCTAssertEqual(SnowSculptingGesture.size(for: 100), .medium)
-        XCTAssertEqual(SnowSculptingGesture.size(for: 219.999), .medium)
-        XCTAssertEqual(SnowSculptingGesture.size(for: 220), .large)
-        XCTAssertNil(SnowSculptingGesture.size(for: .nan))
-        XCTAssertNil(SnowSculptingGesture.size(for: .infinity))
+    func testРадиусРастётНепрерывноИОграничен() throws {
+        XCTAssertNil(SnowSculptingGesture.radius(for: 39.999))
+        XCTAssertEqual(SnowSculptingGesture.radius(for: 40), 6)
+        XCTAssertEqual(SnowSculptingGesture.radius(for: 220), 36)
+        XCTAssertEqual(SnowSculptingGesture.radius(for: 999), 36)
+        for area: CGFloat in [41, 75.5, 100, 140.25, 219] {
+            let radius = try XCTUnwrap(SnowSculptingGesture.radius(for: area))
+            let next = try XCTUnwrap(SnowSculptingGesture.radius(for: area + 0.001))
+            XCTAssertGreaterThan(next, radius)
+            XCTAssertLessThan(next - radius, 0.001, "Порог не меняет размер скачком")
+        }
+        XCTAssertNil(SnowSculptingGesture.radius(for: .nan))
+        XCTAssertNil(SnowSculptingGesture.radius(for: .infinity))
     }
 
     func testGroundHiddenByWindowOrDockCannotBeSculpted() throws {

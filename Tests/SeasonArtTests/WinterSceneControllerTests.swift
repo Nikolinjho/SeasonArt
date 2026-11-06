@@ -147,12 +147,12 @@ final class WinterSceneControllerTests: XCTestCase {
         XCTAssertTrue(controller.isSculpting)
         XCTAssertEqual(try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 300, y: 61))).heights[100], 0.5, accuracy: 0.001, "Предпросмотр не снимает снег")
         frame(controller, simulation, x: 400, dt: 0.36)
-        XCTAssertEqual(controller.scene.objects.first?.sizes, [.medium])
+        XCTAssertEqual(controller.scene.objects.first?.radii, [SnowSculptingGesture.radius(for: 121)!])
         XCTAssertNotEqual(layer.heights, before)
     }
 
     func testПаузаПодтверждаетРазмерИБлокируетНовыйШарДоВыхода() {
-        for (distance, size) in [(CGFloat(24), WinterBallSize.small), (CGFloat(60), .medium)] {
+        for distance: CGFloat in [24, 60, 83] {
             let (controller, simulation, _) = snowyController()
             defer { controller.close() }
             frame(controller, simulation, x: 160)
@@ -160,7 +160,7 @@ final class WinterSceneControllerTests: XCTestCase {
             frame(controller, simulation, x: 160 + distance, dt: 0.34)
             XCTAssertTrue(controller.scene.objects.isEmpty)
             frame(controller, simulation, x: 160 + distance, dt: 0.02)
-            XCTAssertEqual(controller.scene.objects.first?.sizes, [size])
+            XCTAssertEqual(controller.scene.objects.first?.radii, [SnowSculptingGesture.radius(for: (floor(distance / 2) + 1) * 4)!])
             frame(controller, simulation, x: 320)
             frame(controller, simulation, x: 400, dt: 0.4)
             XCTAssertEqual(controller.scene.objects.count, 1)
@@ -177,7 +177,7 @@ final class WinterSceneControllerTests: XCTestCase {
         defer { controller.close() }
         frame(controller, simulation, x: 160)
         frame(controller, simulation, x: 300)
-        XCTAssertEqual(controller.scene.objects.first?.sizes, [.large])
+        XCTAssertEqual(controller.scene.objects.first?.radii, [36])
         for x in [160, 400, 200, 450] { frame(controller, simulation, x: CGFloat(x)) }
         XCTAssertEqual(controller.scene.objects.count, 1)
     }
@@ -188,7 +188,7 @@ final class WinterSceneControllerTests: XCTestCase {
         frame(controller, simulation, x: 160)
         for x in [184, 160, 184, 160, 184] { frame(controller, simulation, x: CGFloat(x)) }
         frame(controller, simulation, x: 184, y: 250)
-        XCTAssertEqual(controller.scene.objects.first?.sizes, [.small])
+        XCTAssertEqual(controller.scene.objects.first?.radii, [SnowSculptingGesture.radius(for: 52)!])
     }
 
     func testКнопкиОтменяютЧерновикИСохраняютПеретаскиваниеИгрушек() throws {

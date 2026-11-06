@@ -123,23 +123,23 @@ final class WinterSceneTests: XCTestCase {
         }
         XCTAssertEqual(scene.objects.count, 1, "Сборка удаляет отдельные шары")
         XCTAssertEqual(scene.objects[0].id, base)
-        XCTAssertEqual(scene.objects[0].sizes, [.large, .medium, .small])
+        XCTAssertEqual(scene.objects[0].radii, [28, 21, 14])
         XCTAssertTrue(scene.objects[0].isSnowman)
         XCTAssertEqual(scene.objects[0].frame, CGRect(x: 172, y: 0, width: 56, height: 115.5),
                        "Шары слегка перекрываются в местах соединения, основание остаётся на опоре")
     }
 
-    func testWrongOrderAndDistantBallsDoNotMerge() throws {
+    func testМаленькийШарНаБольшомОбразуетСтопку() throws {
         let scene = WinterScene(width: 800, height: 600)
         _ = scene.create(.large, at: CGPoint(x: 200, y: 28))
         let id = try XCTUnwrap(scene.create(.small, at: CGPoint(x: 200, y: 70)))
         scene.beginDragging(id, at: CGPoint(x: 200, y: 70))
         scene.endDragging(id)
-        XCTAssertEqual(scene.objects.count, 2, "Маленький шар не ставится прямо на большой")
+        XCTAssertEqual(scene.objects.count, 1, "Любые два размера образуют стопку")
         let medium = try XCTUnwrap(scene.create(.medium, at: CGPoint(x: 240, y: 77)))
         scene.beginDragging(medium, at: CGPoint(x: 240, y: 77))
         scene.endDragging(medium)
-        XCTAssertEqual(scene.objects.count, 3, "Слишком далёкий шар не притягивается к стеку")
+        XCTAssertEqual(scene.objects.count, 2, "Слишком далёкий шар не притягивается к стеку")
     }
 
     func testDragOffsetHeldGravityAndThrowCap() throws {
@@ -183,4 +183,72 @@ final class WinterSceneTests: XCTestCase {
         XCTAssertEqual(scene.objects.count, 1, "Отвал удаляет только полностью вытолкнутые объекты")
         XCTAssertEqual(scene.objects[0].center.x, 400)
     }
+    func testФактическиеРадиусыИНекорректнаяГеометрия() throws {
+        let scene = WinterScene(width: 800, height: 600)
+        for radius: CGFloat in [6, 9.25, 18.5, 29.75, 36] {
+            XCTAssertNotNil(scene.create(radius: radius, at: CGPoint(x: 200, y: 200)))
+            XCTAssertEqual(scene.objects.last?.radii, [radius])
+            XCTAssertEqual(scene.objects.last?.frame.width, radius * 2)
+        }
+        for radius: CGFloat in [0, -1, 5.99, 36.01, .nan, .infinity] {
+            XCTAssertNil(scene.create(radius: radius, at: .zero))
+        }
+        XCTAssertNil(scene.create(radius: 14, at: CGPoint(x: CGFloat.nan, y: 20)))
+        XCTAssertEqual(WinterBallSize.allCases.map(\.radius), [14, 21, 28])
+    }
+
+    func testЛюбыеТриРадиусаСохраняютОснованиеИПерекрытие() throws {
+        for radii: [CGFloat] in [[6, 17.25, 36], [14, 14, 14], [36, 9.5, 23.75], [36, 36, 36]] {
+            let scene = WinterScene(width: 800, height: 600)
+            let base = try XCTUnwrap(scene.create(radius: radii[0], at: CGPoint(x: 200, y: radii[0])))
+            settle(scene)
+            for radius in radii.dropFirst() {
+                let top = try XCTUnwrap(scene.objects.first).frame.maxY
+                let id = try XCTUnwrap(scene.create(radius: radius, at: CGPoint(x: 200, y: top + radius)))
+                scene.beginDragging(id, at: CGPoint(x: 200, y: top + radius))
+                scene.endDragging(id)
+                XCTAssertEqual(scene.objects.count, 1)
+                XCTAssertEqual(scene.objects[0].isSnowman, scene.objects[0].radii.count == 3)
+            }
+            let object = try XCTUnwrap(scene.objects.first)
+            XCTAssertEqual(object.id, base)
+            XCTAssertEqual(object.radii, radii)
+            XCTAssertEqual(object.frame.minY, 0)
+            XCTAssertEqual(object.frame.width, try XCTUnwrap(radii.max()) * 2)
+            for index in 1..<3 {
+                XCTAssertEqual(object.ballFrames[index - 1].maxY - object.ballFrames[index].minY,
+                               min(radii[index - 1], radii[index]) * 0.3, accuracy: 0.0001)
+            }
+        }
+    }
+
+    func testНетКонтактаПоВертикалиШарыНеСоединяются() throws {
+        let scene = WinterScene(width: 800, height: 600)
+        _ = scene.create(radius: 9.5, at: CGPoint(x: 200, y: 9.5))
+        let id = try XCTUnwrap(scene.create(radius: 31.25, at: CGPoint(x: 200, y: 100)))
+        scene.beginDragging(id, at: CGPoint(x: 200, y: 100))
+        scene.endDragging(id)
+        XCTAssertEqual(scene.objects.count, 2)
+    }
+
+    func testУкрашенияМасштабируютсяПоСвоимШарам() throws {
+        let small = WinterObject(id: UUID(), radii: [6, 6, 6], center: CGPoint(x: 100, y: 6),
+                                 velocity: .zero, support: nil, parked: false, isDragged: false)
+        let large = WinterObject(id: UUID(), radii: [36, 36, 36], center: CGPoint(x: 100, y: 36),
+                                 velocity: .zero, support: nil, parked: false, isDragged: false)
+        let a = try XCTUnwrap(small.decoration)
+        let b = try XCTUnwrap(large.decoration)
+        XCTAssertEqual(b.eyes[0].width / a.eyes[0].width, 6, accuracy: 0.001)
+        XCTAssertEqual(b.buttons[0].width / a.buttons[0].width, 6, accuracy: 0.001)
+        XCTAssertEqual(b.scarf[0].width / a.scarf[0].width, 6, accuracy: 0.001)
+        let mixed = WinterObject(id: UUID(), radii: [36, 6, 18], center: CGPoint(x: 100, y: 36),
+                                 velocity: .zero, support: nil, parked: false, isDragged: false)
+        let details = try XCTUnwrap(mixed.decoration)
+        XCTAssertEqual(details.eyes[0].width / a.eyes[0].width, 3, accuracy: 0.001)
+        XCTAssertEqual(details.buttons[0].width, a.buttons[0].width)
+        XCTAssertEqual(details.buttons[2].width, b.buttons[2].width)
+        XCTAssertTrue(details.eyes.allSatisfy { mixed.ballFrames[2].contains($0) })
+        XCTAssertTrue(details.buttons.prefix(2).allSatisfy { mixed.ballFrames[1].contains($0) })
+    }
+
 }

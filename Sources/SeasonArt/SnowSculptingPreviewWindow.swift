@@ -23,7 +23,7 @@ final class SnowSculptingPreviewWindow: NSPanel {
     }
 
     func display(_ gesture: SnowSculptingGesture, screenFrame: CGRect) {
-        let radius = gesture.size?.radius ?? 8
+        let radius = gesture.radius ?? WinterBallGeometry.minimumRadius
         let center = CGPoint(x: gesture.lastPoint.x + screenFrame.minX,
                              y: gesture.center.y + screenFrame.minY)
         setFrame(CGRect(x: center.x - radius - 2, y: center.y - radius - 2,
