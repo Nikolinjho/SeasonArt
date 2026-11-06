@@ -3,6 +3,25 @@ import MetalKit
 import ServiceManagement
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+    enum StartupError {
+        case metalUnavailable
+        case scenesUnavailable
+    }
+
+    static func startupErrorAlert(_ error: StartupError) -> NSAlert {
+        let alert = NSAlert()
+        alert.alertStyle = .critical
+        alert.messageText = "Не удалось запустить SeasonArt"
+        switch error {
+        case .metalUnavailable:
+            alert.informativeText = "Metal недоступен на этом Mac. Для отображения эффектов нужна поддержка Metal."
+        case .scenesUnavailable:
+            alert.informativeText = "Не удалось создать эффекты для подключённых экранов. Попробуйте запустить SeasonArt ещё раз."
+        }
+        alert.addButton(withTitle: "Закрыть")
+        return alert
+    }
+
     private var device: MTLDevice!
     private var screens: [ScreenSnow] = []
     private var snowfall = Snowfall.steady
@@ -38,9 +57,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let power = PowerMonitor()
     private let wallpaper = WallpaperController()
 
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        // Повторная проверка после регистрации процесса выбирает одну копию до создания оверлеев.
+        if !StartupGuard.shouldLaunch() { NSApp.terminate(nil) }
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         Preferences.registerDefaults()
         guard let device = MTLCreateSystemDefaultDevice() else {
+            NSApp.activate()
+            Self.startupErrorAlert(.metalUnavailable).runModal()
             NSApp.terminate(nil)
             return
         }
@@ -53,6 +79,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         snowfallHeld = !Preferences.welcomed
         syncScreens()
         guard !screens.isEmpty else {
+            NSApp.activate()
+            Self.startupErrorAlert(.scenesUnavailable).runModal()
             NSApp.terminate(nil)
             return
         }
