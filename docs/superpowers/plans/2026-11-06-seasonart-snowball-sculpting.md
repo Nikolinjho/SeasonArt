@@ -10,10 +10,12 @@
 
 Спецификация: ../specs/2026-11-06-seasonart-snowball-sculpting-design.md. Исполнение уже разрешено пользователем, дополнительные подтверждения этапов не нужны. Статусы задач ведутся здесь.
 
+Статус на 2026-11-06 22:41 MSK: задачи 1–3 завершены. Полный Swift-набор: 92 теста без ошибок, обязательная упаковка: 19 тестов, OK. Нативные результаты и ограничения записаны в docs/verification/snowball-sculpting.md. Исходные настройки восстановлены, тестовые окна закрыты.
+
 ## Task 1: Жест и локальный сбор снега
 
-- [ ] Написать тесты чистой модели и SnowSimulation, получить RED, затем реализацию и GREEN.
-- [ ] Создать Sources/SeasonArt/SnowSculptingGesture.swift и Tests/SeasonArtTests/SnowSculptingTests.swift. Расширить SnowSimulation только узкими операциями чтения и подтверждения.
+- [x] Написать тесты чистой модели и SnowSimulation, получить RED, затем реализацию и GREEN.
+- [x] Создать Sources/SeasonArt/SnowSculptingGesture.swift и Tests/SeasonArtTests/SnowSculptingTests.swift. Расширить SnowSimulation только узкими операциями чтения и подтверждения.
 
 Контракты: `simulation.sculptingSource(at: CGPoint) -> SculptingSource?`, `SnowSculptingGesture(source:at:)`, `gesture.include(CGPoint)`, `gesture.size: WinterBallSize?`, `simulation.commitSculpting(gesture) -> SculptedBall?`. Результат содержит size и center. Снимок содержит идентичность слоя, геометрию и видимые колонки. Количество снятого снега ограничено 220 pt², пороги размеров 40/100/220 pt², не больше 2 pt высоты с колонки. До отпускания снег не изменяется.
 
@@ -28,8 +30,8 @@ Verify: `swift test --filter SnowSculptingTests`, затем полный `swift
 
 ## Task 2: Одноразовая панель, контроллер и меню
 
-- [ ] Написать поведенческие тесты, получить RED, реализовать и получить GREEN.
-- [ ] Создать Sources/SeasonArt/SnowSculptingWindow.swift и Tests/SeasonArtTests/SnowSculptingWindowTests.swift. Расширить WinterSceneController, AppDelegate и контроллерные тесты.
+- [x] Написать поведенческие тесты, получить RED, реализовать и получить GREEN.
+- [x] Создать Sources/SeasonArt/SnowSculptingWindow.swift и Tests/SeasonArtTests/SnowSculptingWindowTests.swift. Расширить WinterSceneController, AppDelegate и контроллерные тесты.
 
 Панель получает координаты в глобальной системе и передаёт контроллеру. Она может стать key для Esc, не main, пропускает клавиатурные команды кроме отмены без перенаправления в чужие приложения. Отображает читаемую подсказку и предварительный размер. Таймер ожидания 15 секунд отменяется при начале жеста. Закрытие идемпотентно и освобождает захват. Закрытая панель и её callbacks не создают игрушку.
 
@@ -49,11 +51,11 @@ Verify: полный `swift test`. Коммит `feat: add one-shot snowball scu
 
 ## Task 3: Нативная проверка и установка
 
-- [ ] Проверить полный Swift-набор и 19 обязательных packaging-тестов на неизменяемых исходниках.
-- [ ] Собрать с Oasis Dev, установить с резервной копией, сверить подпись и SHA-256.
-- [ ] Нативно создать шар из настоящего снега, проверить Esc и клик вне сугроба, ввод текста после завершения, переключение режима, fullscreen и системный выбор окна.
-- [ ] Проверить таймер отмены и отсутствие панелей после выхода/перезапуска. Вернуть временные настройки.
-- [ ] Обновить README и docs/verification/snowball-sculpting.md, сохранить результаты и ограничения.
+- [x] Проверить полный Swift-набор и 19 обязательных packaging-тестов на неизменяемых исходниках.
+- [x] Собрать с Oasis Dev, установить с резервной копией, сверить подпись и SHA-256.
+- [x] Нативно создать шар из настоящего снега, проверить Esc и клик вне сугроба, ввод текста после завершения, переключение режима, fullscreen и системный выбор окна.
+- [x] Проверить таймер отмены и отсутствие панелей после выхода/перезапуска. Вернуть временные настройки.
+- [x] Обновить README и docs/verification/snowball-sculpting.md, сохранить результаты и ограничения.
 
 ```bash
 swift test
