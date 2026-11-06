@@ -102,7 +102,7 @@ final class ScreenSnow {
         do {
             renderer = try Renderer(device: device, pixelFormat: .bgra8Unorm, simulation: simulation)
         } catch {
-            NSLog("Snowhush: Metal setup failed: \(error)")
+            NSLog("SeasonArt: Metal setup failed: \(error)")
             return nil
         }
         self.displayID = displayID

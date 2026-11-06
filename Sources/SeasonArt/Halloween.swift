@@ -4,7 +4,7 @@ import AppKit
 /// turned on from the menu.
 enum Halloween {
     /// Whether it is Halloween, wanted or not.
-    /// Lets it be previewed on any day: defaults write com.mbezruchko.Snowhush previewHalloween -bool true
+    /// Предпросмотр в любой день: defaults write dev.nikoko.SeasonArt previewHalloween -bool true
     static func isSeason(at date: Date = Date()) -> Bool {
         if UserDefaults.standard.bool(forKey: "previewHalloween") { return true }
         let parts = Calendar.current.dateComponents([.month, .day, .hour], from: date)
@@ -70,7 +70,7 @@ enum Halloween {
             return true
         }
         image.isTemplate = true
-        image.accessibilityDescription = "Snowhush"
+        image.accessibilityDescription = "SeasonArt"
         return image
     }()
 }

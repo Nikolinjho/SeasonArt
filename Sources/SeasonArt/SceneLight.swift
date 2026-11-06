@@ -53,7 +53,7 @@ final class SceneLight {
     }
 
     private static func hour(at date: Date) -> Float {
-        // Lets the look at another time of day be previewed: defaults write com.mbezruchko.Snowhush previewHour -float 19
+        // Предпросмотр другого времени суток: defaults write dev.nikoko.SeasonArt previewHour -float 19
         if UserDefaults.standard.object(forKey: "previewHour") != nil {
             return UserDefaults.standard.float(forKey: "previewHour")
         }

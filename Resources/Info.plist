@@ -5,23 +5,21 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Snowhush</string>
+	<string>SeasonArt</string>
 	<key>CFBundleExecutable</key>
-	<string>Snowhush</string>
-	<key>CFBundleIconFile</key>
-	<string>AppIcon</string>
+	<string>SeasonArt</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.mbezruchko.Snowhush</string>
+	<string>dev.nikoko.SeasonArt</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Snowhush</string>
+	<string>SeasonArt</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.8.0</string>
+	<string>0.1.0</string>
 	<key>CFBundleVersion</key>
-	<string>34</string>
+	<string>1</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.lifestyle</string>
 	<key>LSMinimumSystemVersion</key>
@@ -32,11 +30,5 @@
 	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2026 Mykhailo Bezruchko</string>
-	<key>SUEnableAutomaticChecks</key>
-	<true/>
-	<key>SUFeedURL</key>
-	<string>https://github.com/mbezruchko/Snowhush/releases/latest/download/appcast.xml</string>
-	<key>SUPublicEDKey</key>
-	<string>/KbuA1HrrJLBf08pYzI8VbEPqYsbLAwDSLEF9bWlBqY=</string>
 </dict>
 </plist>

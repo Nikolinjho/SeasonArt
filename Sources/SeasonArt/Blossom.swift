@@ -24,7 +24,7 @@ enum Blossom {
             return true
         }
         image.isTemplate = true
-        image.accessibilityDescription = "Snowhush"
+        image.accessibilityDescription = "SeasonArt"
         return image
     }()
 }

@@ -1,9 +1,8 @@
 import AppKit
 import MetalKit
 import ServiceManagement
-import Sparkle
 
-final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUStandardUserDriverDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var device: MTLDevice!
     private var screens: [ScreenSnow] = []
     private var snowfall = Snowfall.steady
@@ -36,16 +35,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
     private let screenshots = ScreenshotWatch()
     private var screenLocked = false
     private var sessionInactive = false
-    private var updater: SPUStandardUpdaterController!
     private var welcome: WelcomeController?
     private let power = PowerMonitor()
     private var halloweenTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        if AppMover.moveIfNeeded() {
-            NSApp.terminate(nil)
-            return
-        }
         Preferences.registerDefaults()
         guard let device = MTLCreateSystemDefaultDevice() else {
             NSApp.terminate(nil)
@@ -64,7 +58,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
             return
         }
 
-        updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: self)
         statusItem = makeStatusItem()
         updateStatusIcon()
         refreshHalloween()
@@ -77,9 +70,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in self?.showWelcome() }
         }
     }
-
-    // A menu bar app has no Dock icon to badge, so update reminders are left to Sparkle's own gentle alerts.
-    var supportsGentleScheduledUpdateReminders: Bool { true }
 
     // MARK: - Displays
 
@@ -174,10 +164,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
         screenshotsItem = add("Show in Screenshots", #selector(toggleScreenshots), to: menu)
         menu.addItem(.separator())
         loginItem = add("Open at Login", #selector(toggleOpenAtLogin), to: menu)
-        let updates = menu.addItem(withTitle: "Check for Updates…", action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)), keyEquivalent: "")
-        updates.target = updater
-        add("Support Snowhush…", #selector(openSponsors), to: menu)
-        menu.addItem(withTitle: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        menu.addItem(withTitle: "Quit SeasonArt", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
 
         item.menu = menu
         return item
@@ -280,10 +267,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
         }
     }
 
-    @objc private func openSponsors() {
-        NSWorkspace.shared.open(URL(string: "https://github.com/sponsors/mbezruchko")!)
-    }
-
     @objc private func toggleOpenAtLogin() {
         let service = SMAppService.mainApp
         do {
@@ -293,7 +276,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
                 try service.register()
             }
         } catch {
-            NSLog("Snowhush: login item change failed: \(error)")
+            NSLog("SeasonArt: login item change failed: \(error)")
         }
     }
 
@@ -326,7 +309,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
 
     private static func icon(halloween: Bool, dimmed: Bool) -> NSImage? {
         let image = halloween ? Halloween.icon : Preferences.mode == .blossom ? Blossom.icon
-            : NSImage(systemSymbolName: Self.symbol[Preferences.mode] ?? "snowflake", accessibilityDescription: "Snowhush")
+            : NSImage(systemSymbolName: Self.symbol[Preferences.mode] ?? "snowflake", accessibilityDescription: "SeasonArt")
         guard dimmed, let image else { return image }
         // Dimmed by hand: the button's appearsDisabled also disables the slider in its menu, so Off could not be left.
         let faded = NSImage(size: image.size, flipped: false) { rect in

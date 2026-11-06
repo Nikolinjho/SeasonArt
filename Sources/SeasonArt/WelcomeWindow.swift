@@ -258,7 +258,7 @@ private final class WelcomeView: NSView {
             ]
         ))
 
-        let body = NSTextField(wrappingLabelWithString: "Snowhush lives in the menu bar. Click the snowflake to change the snowfall, let the drift melt, or keep the snow behind your windows. Sweep it aside with your cursor.")
+        let body = NSTextField(wrappingLabelWithString: "SeasonArt lives in the menu bar. Click the snowflake to change the snowfall, let the drift melt, or keep the snow behind your windows. Sweep it aside with your cursor.")
         body.attributedStringValue = NSAttributedString(string: body.stringValue, attributes: [
             .font: NSFont.systemFont(ofSize: 13.5),
             .foregroundColor: muted,
