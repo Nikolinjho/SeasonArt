@@ -93,6 +93,24 @@ final class WinterSceneTests: XCTestCase {
         XCTAssertNil(scene.objects[0].support, "Опора вне границ экрана отпускает шар")
     }
 
+    func testHeightResizeDetachesSupportThatCannotKeepObjectVisible() {
+        for supportY: CGFloat in [220, 300] {
+            let scene = WinterScene(width: 800, height: 600)
+            scene.updateWindows(update([surface(y: supportY)]))
+            _ = scene.create(.large, at: CGPoint(x: 200, y: 500))
+            settle(scene)
+            XCTAssertEqual(scene.objects[0].support, 1)
+            scene.resize(width: 800, height: 250)
+            XCTAssertNil(scene.objects[0].support, "Опора без места для фигуры отпускает шар")
+            XCTAssertTrue(scene.isMoving, "После уменьшения высоты шар продолжает падение")
+            XCTAssertLessThanOrEqual(scene.objects[0].frame.maxY, 250, "Шар остаётся в видимой области")
+            scene.updateWindows(update([surface(y: supportY)]))
+            settle(scene)
+            XCTAssertNil(scene.objects[0].support, "Недоступная по высоте опора не захватывает шар повторно")
+            XCTAssertEqual(scene.objects[0].frame.minY, 0, accuracy: 0.01)
+        }
+    }
+
     func testOrderedAssemblyKeepsBaseIdentityAndFrame() throws {
         let scene = WinterScene(width: 800, height: 600)
         let base = try XCTUnwrap(scene.create(.large, at: CGPoint(x: 200, y: 28)))

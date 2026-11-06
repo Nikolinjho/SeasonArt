@@ -160,7 +160,9 @@ final class WinterScene {
                 let radius = objects[index].frame.width / 2
                 guard visibleSupports.contains(surface.id),
                       max(radius, surface.frame.minX + radius) <= min(width - radius, surface.frame.maxX - radius),
-                      let y = supportHeight(surface, at: x), y <= beforeBottom + 0.01, y >= afterBottom else { return nil }
+                      let y = supportHeight(surface, at: x), y >= 0,
+                      y + objects[index].frame.height <= height,
+                      y <= beforeBottom + 0.01, y >= afterBottom else { return nil }
                 return (surface.id, y)
             }
             if let landing = candidates.max(by: { $0.1 < $1.1 }) {
@@ -230,7 +232,8 @@ final class WinterScene {
         let high = min(width - radius, surface.frame.maxX - radius)
         guard low <= high else { detach(&object); return }
         object.center.x = min(max(object.center.x, low), high)
-        guard let y = supportHeight(surface, at: object.center.x) else { detach(&object); return }
+        guard let y = supportHeight(surface, at: object.center.x), y >= 0,
+              y + object.frame.height <= height else { detach(&object); return }
         object.center.y = y + object.sizes[0].radius
     }
 
