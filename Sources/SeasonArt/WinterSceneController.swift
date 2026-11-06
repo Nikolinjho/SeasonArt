@@ -106,12 +106,12 @@ final class WinterSceneController {
             if sculptingGesture == nil {
                 // Начальная колонка тоже принадлежит проходу, если указатель уже был на этой опоре.
                 let start = previous.flatMap { source.column(at: $0) != nil ? $0 : nil } ?? point
-                sculptingGesture = SnowSculptingGesture(source: source, at: start)
+                sculptingGesture = SnowSculptingGesture(source: source, at: start, paced: true)
             }
-            sculptingGesture?.include(point)
+            sculptingGesture?.include(point, dt: dt)
             if sculptingGesture?.isFull == true {
                 finishSculpting(waitForExit: true)
-            } else if let gesture = sculptingGesture {
+            } else if let gesture = sculptingGesture, gesture.radius != nil {
                 if sculptingPreview == nil {
                     sculptingPreview = SnowSculptingPreviewWindow()
                     sculptingPreview?.showsInScreenshots = showsInScreenshots
@@ -141,8 +141,9 @@ final class WinterSceneController {
         sculptingPreview?.close()
         sculptingPreview = nil
         stationaryTime = 0
-        waitsForExit = waitForExit
+        waitsForExit = false
         guard canCreate, let gesture, let ball = simulation.commitSculpting(gesture) else { return }
+        waitsForExit = waitForExit
         scene.create(radius: ball.radius, at: ball.center)
         refresh()
         changed()

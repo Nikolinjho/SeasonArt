@@ -17,6 +17,24 @@ final class SnowSculptingTests: XCTestCase {
         return gesture
     }
 
+    func testТемпНеУчитываетОстановкуНекорректноеВремяИВходНаОпору() {
+        let source = SculptingSource(layer: layer())
+        var gesture = SnowSculptingGesture(source: source, at: CGPoint(x: 1, y: 1), paced: true)
+        gesture.include(CGPoint(x: 319, y: 1), dt: 20)
+        XCTAssertNil(gesture.radius, "Один длинный кадр учитывает максимум 0.05 секунды")
+        for dt in [Double.nan, .infinity, -1, 0] {
+            gesture.include(CGPoint(x: gesture.lastPoint.x == 1 ? 319 : 1, y: 1), dt: dt)
+        }
+        for _ in 0..<10 { gesture.include(gesture.lastPoint, dt: 1) }
+        XCTAssertNil(gesture.radius)
+        gesture.include(CGPoint(x: 400, y: 1), dt: 1)
+        gesture.include(CGPoint(x: 1, y: 1), dt: 1)
+        XCTAssertNil(gesture.radius, "Вход извне не прибавляет время движения по снегу")
+        for i in 0..<4 { gesture.include(CGPoint(x: i.isMultiple(of: 2) ? 319 : 1, y: 1), dt: 0.05) }
+        XCTAssertEqual(gesture.radius, 6)
+        XCTAssertFalse(gesture.isFull)
+    }
+
     func testUniqueColumnsAndSizeBoundaries() {
         let source = layer()
         var gesture = draft(source, end: 17)

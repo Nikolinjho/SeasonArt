@@ -60,16 +60,27 @@ struct SnowSculptingGesture {
     private var visited = Set<Int>()
     private var previous: CGPoint?
     private var collectedPoint: CGPoint
+    private let paced: Bool
+    private var movingTime: TimeInterval = 0
 
-    init(source: SculptingSource, at point: CGPoint) {
+    init(source: SculptingSource, at point: CGPoint, paced: Bool = false) {
+        self.paced = paced
         self.source = source
         lastPoint = .zero
         collectedPoint = .zero
         include(point)
     }
 
-    var radius: CGFloat? { Self.radius(for: collectedArea) }
-    var isFull: Bool { collectedArea >= Self.largeArea }
+    /// Время ограничивает видимую массу, а уникальные колонки — доступный запас снега.
+    var effectiveArea: CGFloat {
+        guard paced else { return collectedArea }
+        guard movingTime + 1e-9 >= 0.25 else { return 0 }
+        let progress = CGFloat(min(1, max(0, (movingTime - 0.25) / 1.5)))
+        return min(collectedArea, Self.smallArea + progress * (Self.largeArea - Self.smallArea))
+    }
+
+    var radius: CGFloat? { Self.radius(for: effectiveArea) }
+    var isFull: Bool { effectiveArea >= Self.largeArea - 1e-9 }
 
     static func radius(for area: CGFloat) -> CGFloat? {
         guard area.isFinite, area >= smallArea else { return nil }
@@ -82,11 +93,16 @@ struct SnowSculptingGesture {
         CGPoint(x: collectedPoint.x, y: collectedPoint.y + (radius ?? WinterBallGeometry.minimumRadius))
     }
 
-    mutating func include(_ point: CGPoint) {
+    mutating func include(_ point: CGPoint, dt: TimeInterval = 0) {
         // События AppKit лежат в пределах экранов. Отсекаем нереальные координаты до интерполяции.
         guard point.x.isFinite, point.y.isFinite, abs(point.x) <= 1_000_000, abs(point.y) <= 1_000_000 else {
             previous = nil
             return
+        }
+        if let previous, previous != point,
+           source.column(at: previous) != nil, source.column(at: point) != nil,
+           dt.isFinite, dt > 0 {
+            movingTime += min(dt, 0.05)
         }
         lastPoint = point
         defer { previous = point }

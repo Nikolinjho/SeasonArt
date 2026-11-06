@@ -649,7 +649,7 @@ final class SnowSimulation {
             let height = layer.heights[index]
             guard height.isFinite, height > 0 else { continue }
             let limit = min(SnowSculptingGesture.maximumColumnHeight, CGFloat(gesture.source.heights[index]), CGFloat(height))
-            let amount = min(limit, (SnowSculptingGesture.largeArea - area) / CGFloat(layer.columnWidth))
+            let amount = min(limit, (gesture.effectiveArea - area) / CGFloat(layer.columnWidth))
             guard amount > 0 else { break }
             removals.append((index, Float(amount)))
             area += amount * CGFloat(layer.columnWidth)
