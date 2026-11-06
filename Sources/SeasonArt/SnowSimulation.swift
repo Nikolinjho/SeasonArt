@@ -608,6 +608,56 @@ final class SnowSimulation {
         updateTarget()
     }
 
+    /// Абсолютная высота поверхности для зимней игрушки на конкретной опоре.
+    func winterSurfaceY(at x: CGFloat, on id: CGWindowID?) -> CGFloat? {
+        guard x.isFinite else { return nil }
+        let layer: SnowLayer
+        if let id {
+            guard let ledge = ledges[id] else { return nil }
+            layer = ledge
+        } else {
+            layer = ground
+        }
+        guard x >= CGFloat(layer.base.x), x < CGFloat(layer.base.x + layer.width),
+              let column = layer.index(at: Float(x)), layer.visible[column] else { return nil }
+        return CGFloat(layer.surface(column))
+    }
+
+    /// Отвал переносит массу влево и выбрасывает четверть снятого снега частицами.
+    @discardableResult
+    func plowDock(id: CGWindowID, fromX: CGFloat, toX: CGFloat) -> Float {
+        guard mode == .snow, fromX.isFinite, toX.isFinite,
+              let layer = ledges[id], layer.isDock,
+              grains.count < maxGrains else { return 0 }
+        let left = max(Float(min(fromX, toX)), layer.base.x)
+        let right = min(Float(max(fromX, toX)), layer.base.x + layer.width)
+        guard left < right else { return 0 }
+        var area: Float = 0
+        for i in 0..<layer.count where layer.centerX(i) >= left && layer.centerX(i) < right && layer.visible[i] {
+            area += layer.heights[i] * layer.columnWidth
+            layer.set(i, 0)
+        }
+        guard area > 0 else { return 0 }
+        let frontX = left - layer.columnWidth / 2
+        let frontY: Float
+        let airborne: Float
+        if frontX >= layer.base.x, frontX < layer.base.x + layer.width,
+           let column = layer.index(at: frontX), layer.visible[column] {
+            layer.heap(area * 0.75, against: column, inward: -1, slope: 0.7)
+            frontY = layer.surface(column)
+            airborne = area * 0.25
+        } else {
+            frontY = layer.base.y
+            airborne = area
+        }
+        release(airborne, at: SIMD2(frontX, frontY), velocity: SIMD2(-100, 110),
+                spread: SIMD2(2, 3), scatter: 0.3)
+        layer.refreshTop()
+        heightsChanged = true
+        stirred()
+        return area
+    }
+
     var pileTop: Float { ground.top }
     var hasSnow: Bool { !lying.isEmpty || layers.contains { $0.top > 0.5 } }
     /// Nothing falls, lies, waits for its window or haunts, and nothing will until the snow is stirred.
