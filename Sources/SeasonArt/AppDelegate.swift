@@ -36,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var sessionInactive = false
     private var welcome: WelcomeController?
     private let power = PowerMonitor()
+    private let wallpaper = WallpaperController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Preferences.registerDefaults()
@@ -158,6 +159,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         fullScreenItem = add("Поверх полноэкранных приложений", #selector(toggleFullScreen), to: menu)
         screenshotsItem = add("Показывать на снимках экрана", #selector(toggleScreenshots), to: menu)
         menu.addItem(.separator())
+        add("Выбрать обои…", #selector(chooseWallpaper), to: menu)
         loginItem = add("Запускать при входе", #selector(toggleOpenAtLogin), to: menu)
         add("О SeasonArt", #selector(showAbout), to: menu)
         menu.addItem(withTitle: "Выйти из SeasonArt", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
@@ -259,6 +261,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             snow.window.showsInScreenshots = Preferences.showInScreenshots
             snow.dock.window.showsInScreenshots = Preferences.showInScreenshots
         }
+    }
+
+    @objc private func chooseWallpaper() {
+        wallpaper.chooseWallpaper()
     }
 
     @objc private func toggleOpenAtLogin() {
