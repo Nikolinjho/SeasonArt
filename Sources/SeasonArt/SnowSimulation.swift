@@ -608,6 +608,68 @@ final class SnowSimulation {
         updateTarget()
     }
 
+    /// Видимый снег одной опоры в локальных координатах экрана.
+    func sculptingSource(at point: CGPoint) -> SculptingSource? {
+        guard mode == .snow, point.x.isFinite, point.y.isFinite else { return nil }
+        for layer in layers.reversed() {
+            let source = SculptingSource(layer: layer, visible: sculptingVisibility(of: layer))
+            if source.column(at: point) != nil { return source }
+        }
+        return nil
+    }
+
+    func isSculptingSourceValid(_ source: SculptingSource) -> Bool {
+        guard mode == .snow, layers.contains(where: { $0 === source.layer }) else { return false }
+        let layer = source.layer
+        return source.origin == layer.origin && source.base == layer.base && source.drift == layer.drift
+            && source.right == layer.right && source.bed == layer.bed && source.heights.count == layer.count
+            && source.isDock == layer.isDock && source.face == layer.face
+            && source.visible == sculptingVisibility(of: layer)
+    }
+
+    /// Сначала проверяет весь черновик, затем снимает снег одной атомарной операцией.
+    func commitSculpting(_ gesture: SnowSculptingGesture) -> SculptedBall? {
+        guard isSculptingSourceValid(gesture.source), gesture.size != nil else { return nil }
+        let layer = gesture.source.layer
+        var area: CGFloat = 0
+        var removals: [(Int, Float)] = []
+        for index in gesture.columns {
+            let height = layer.heights[index]
+            guard height.isFinite, height > 0 else { continue }
+            let limit = min(SnowSculptingGesture.maximumColumnHeight, CGFloat(gesture.source.heights[index]), CGFloat(height))
+            let amount = min(limit, (SnowSculptingGesture.largeArea - area) / CGFloat(layer.columnWidth))
+            guard amount > 0 else { break }
+            removals.append((index, Float(amount)))
+            area += amount * CGFloat(layer.columnWidth)
+        }
+        guard let size = SnowSculptingGesture.size(for: area) else { return nil }
+        for (index, amount) in removals { layer.set(index, layer.heights[index] - amount) }
+        layer.refreshTop()
+        heightsChanged = true
+        stirred()
+        let center = CGPoint(x: gesture.center.x, y: gesture.center.y - (gesture.size?.radius ?? size.radius) + size.radius)
+        return SculptedBall(size: size, center: center, collectedArea: area)
+    }
+
+    private func sculptingVisibility(of layer: SnowLayer) -> [Bool] {
+        var blockers = layer.occluders
+        if layer === ground {
+            blockers += windowFrames
+            blockers += ledgeList.filter(\.isDock).map {
+                SIMD4($0.origin.x, $0.origin.y - $0.face, $0.origin.x + $0.width, $0.origin.y)
+            }
+        }
+        return layer.heights.indices.map { index in
+            guard layer.visible[index] else { return false }
+            let x = layer.centerX(index)
+            let floor = layer.floor(index)
+            let top = layer.surface(index)
+            return x >= 0 && x <= width && !blockers.contains {
+                x >= $0.x && x < $0.z && top >= $0.y && floor < $0.w
+            }
+        }
+    }
+
     /// Абсолютная высота поверхности для зимней игрушки на конкретной опоре.
     func winterSurfaceY(at x: CGFloat, on id: CGWindowID?) -> CGFloat? {
         guard x.isFinite else { return nil }
