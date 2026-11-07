@@ -404,7 +404,9 @@ final class WinterScene {
                 if let support = objects[index].support, let surface = surfaces[support] {
                     fit(&objects[index], on: surface)
                 } else {
-                    objects[index].center.y = ground(at: objects[index].center.x) + objects[index].radii[0]
+                    let top = ground(at: objects[index].center.x)
+                    let bottom = restingHeight(top, for: objects[index])
+                    objects[index].center.y = bottom + objects[index].radii[0]
                 }
                 if resting.contains(objects[index].id) { continue }
             }
@@ -594,9 +596,11 @@ final class WinterScene {
 
     private func constrainContact(_ index: Int) {
         if !pushed.contains(objects[index].id) { clampX(&objects[index]) }
-        let floor = objects[index].support.flatMap { surfaces[$0] }.flatMap {
+        let surface = objects[index].support.flatMap { surfaces[$0] }
+        let top = surface.flatMap {
             supportHeight($0, at: objects[index].center.x, radius: objects[index].radii[0])
         } ?? ground(at: objects[index].center.x)
+        let floor = restingHeight(top, for: objects[index], on: surface)
         if objects[index].frame.minY < floor {
             objects[index].center.y = floor + objects[index].radii[0]
             objects[index].velocity.dy = max(0, objects[index].velocity.dy)
@@ -664,6 +668,15 @@ final class WinterScene {
     }
 
     private func ground(at x: CGFloat) -> CGFloat { surfaceHeight(nil, x) ?? 0 }
+
+    /// Свежий снег не поднимает неподвижную фигуру. Таяние опускает её, твёрдый Dock остаётся опорой.
+    private func restingHeight(_ height: CGFloat, for object: WinterObject, on surface: WindowSurface? = nil) -> CGFloat {
+        guard resting.contains(object.id), object.velocity == .zero else { return height }
+        let physicalTop = surface.map {
+            $0.isDock ? dockRestHeight($0, at: object.center.x, radius: object.radii[0]) : -CGFloat.infinity
+        } ?? 0
+        return max(physicalTop, min(object.frame.minY, height))
+    }
 
     /// Физическая кромка повторяет superellipse основания SnowLayer, без высоты снега.
     private func dockRoof(_ surface: WindowSurface, at x: CGFloat) -> CGFloat {
@@ -776,7 +789,8 @@ final class WinterScene {
         if clampToSupport { object.center.x = min(max(object.center.x, low), high) }
         guard let y = supportHeight(surface, at: object.center.x, radius: object.radii[0]), y >= 0,
               y + object.frame.height <= height else { detach(&object); return }
-        object.center.y = y + object.radii[0]
+        let bottom = restingHeight(y, for: object, on: surface)
+        object.center.y = bottom + object.radii[0]
     }
 
     private func detach(_ object: inout WinterObject) {
