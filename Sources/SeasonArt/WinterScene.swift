@@ -322,6 +322,17 @@ final class WinterScene {
             fit(&objects[index], on: next, clampToSupport: objects[index].velocity.dx == 0)
         }
         surfaces = visible.merging(surfaces.filter { update.elsewhere.contains($0.key) || update.parked.contains($0.key) }) { current, _ in current }
+        for object in objects where !object.parked && !object.isDragged {
+            for dock in visible.values where dock.isDock {
+                let intersects = object.ballFrames.contains { frame in
+                    let center = CGPoint(x: object.center.x, y: object.frame.minY + frame.midY)
+                    let x = min(max(center.x, dock.frame.minX), dock.frame.maxX)
+                    let y = min(max(center.y, dock.frame.minY), dock.frame.maxY)
+                    return hypot(center.x - x, center.y - y) < frame.width / 2 - 0.000001
+                }
+                if intersects { resting.remove(object.id) }
+            }
+        }
         wakeUnsupportedObjects()
     }
 
@@ -377,12 +388,81 @@ final class WinterScene {
                 land(&objects[index], on: nil, at: ground(at: x))
             }
         }
+        resolveDockContacts()
         resolveObjectContacts()
+        resolveDockContacts()
         let removed = objects.filter { pushed.contains($0.id) && ($0.frame.maxX < 0 || $0.frame.minX > width) }.map(\.id)
         objects.removeAll { removed.contains($0.id) }
         resting.subtract(removed)
         pushed.subtract(removed)
         for id in removed { bouncing.removeValue(forKey: id) }
+    }
+
+    /// Dock имеет твёрдое тело: бок и низ не пропускают шары к земле под панелью.
+    private func resolveDockContacts() {
+        let docks = surfaces.values.filter { $0.isDock && visibleSupports.contains($0.id) }
+        guard !docks.isEmpty else { return }
+        for index in objects.indices where !objects[index].parked && !objects[index].isDragged {
+            for dock in docks {
+                let body = dock.frame
+                guard objects[index].frame.intersects(body.insetBy(dx: -0.001, dy: -0.001)) else { continue }
+                for _ in 0..<4 {
+                    var corrected = false
+                    for (component, frame) in objects[index].ballFrames.enumerated() {
+                        let radius = frame.width / 2
+                        let center = CGPoint(x: objects[index].center.x, y: objects[index].frame.minY + frame.midY)
+                        let closest = CGPoint(x: min(max(center.x, body.minX), body.maxX),
+                                              y: min(max(center.y, body.minY), body.maxY))
+                        let dx = center.x - closest.x
+                        let dy = center.y - closest.y
+                        let distance = hypot(dx, dy)
+                        guard distance < radius - 0.000001 else { continue }
+                        var correction: CGVector
+                        if distance > 0.000001 {
+                            correction = CGVector(dx: dx / distance * (radius - distance),
+                                                  dy: dy / distance * (radius - distance))
+                        } else {
+                            correction = .zero
+                        }
+                        func legal(_ move: CGVector) -> Bool {
+                            let shifted = objects[index].frame.offsetBy(dx: move.dx, dy: move.dy)
+                            return shifted.minY >= ground(at: objects[index].center.x + move.dx) - 0.001 &&
+                                shifted.minX >= -0.001 && shifted.maxX <= width + 0.001 && shifted.maxY <= height + 0.001
+                        }
+                        if distance <= 0.000001 || !legal(correction) {
+                            let faces = [CGVector(dx: body.minX - radius - center.x, dy: 0),
+                                         CGVector(dx: body.maxX + radius - center.x, dy: 0),
+                                         CGVector(dx: 0, dy: body.minY - radius - center.y),
+                                         CGVector(dx: 0, dy: body.maxY + radius - center.y)]
+                            guard let nearest = faces.filter({ legal($0) }).min(by: {
+                                hypot($0.dx, $0.dy) < hypot($1.dx, $1.dy)
+                            }) else { continue }
+                            correction = nearest
+                        }
+                        let length = hypot(correction.dx, correction.dy)
+                        guard length > 0 else { continue }
+                        let nx = correction.dx / length
+                        let ny = correction.dy / length
+                        objects[index].center.x += correction.dx
+                        objects[index].center.y += correction.dy
+                        if ny > 0.999 && component == 0 {
+                            land(&objects[index], on: dock.id, at: body.maxY)
+                        } else {
+                            let incoming = objects[index].velocity.dx * nx + objects[index].velocity.dy * ny
+                            if incoming < 0 {
+                                objects[index].velocity.dx -= incoming * nx * 1.12
+                                objects[index].velocity.dy -= incoming * ny * 1.12
+                            }
+                            objects[index].support = nil
+                            resting.remove(objects[index].id)
+                            objectSupports.removeValue(forKey: objects[index].id)
+                        }
+                        corrected = true
+                    }
+                    if !corrected { break }
+                }
+            }
+        }
     }
 
     private func wakeUnsupportedObjects() {
