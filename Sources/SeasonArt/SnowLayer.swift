@@ -19,7 +19,7 @@ final class SnowLayer {
     var occluders: [SIMD4<Float>] = []
     /// Windows in front of any part of the window it lies on, which hide a drop running down it.
     var faceOccluders: [SIMD4<Float>] = []
-    /// Lies on the Dock's shelf, and so is drawn below the Dock.
+    /// Лежит на полке Dock и рисуется отдельным слоем над его стеклом.
     var isDock = false
     /// How far the window it lies on reaches down from its top edge: as far as a drop can run down it.
     var face: Float = 200

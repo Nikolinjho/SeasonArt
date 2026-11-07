@@ -14,6 +14,14 @@ struct WindowUpdate {
     /// How fast the sliding Space carried its windows since the previous poll, in points a second, negative to
     /// the left; zero when it didn't.
     let slideVelocity: Float
+
+    /// Пропускает снег мимо верхушек окон у строки меню, сохраняя полку Dock.
+    func excludingSnowNearMenuBar(screenHeight: CGFloat, menuBarHeight: CGFloat) -> WindowUpdate {
+        let boundary = screenHeight - max(0, menuBarHeight) - 38
+        return WindowUpdate(surfaces: surfaces.filter { $0.isDock || $0.frame.maxY < boundary },
+                            interval: interval, parked: parked, elsewhere: elsewhere,
+                            sliding: sliding, slideVelocity: slideVelocity)
+    }
 }
 
 struct WindowSurface: Equatable {
@@ -27,7 +35,7 @@ struct WindowSurface: Equatable {
     /// Top corners as a superellipse quadrant: macOS windows are close to exponent 2.5, Spotlight's capsule is a circle.
     let cornerRadius: CGFloat
     let cornerExponent: CGFloat
-    /// The Dock's shelf: its snow is drawn below the Dock, so the icons stay in front of it.
+    /// Полка Dock: снег на ней рисуется отдельным слоем над стеклом.
     let isDock: Bool
 
     func shifted(by dx: CGFloat) -> WindowSurface {

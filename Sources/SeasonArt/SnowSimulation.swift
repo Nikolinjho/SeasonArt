@@ -641,6 +641,20 @@ final class SnowSimulation {
             && source.visible == sculptingVisibility(of: layer)
     }
 
+    /// До обновления слоёв проверяем только опору черновика и перекрытия нижнего снега.
+    func isSculptingSource(_ source: SculptingSource, unchangedFrom previous: [WindowSurface], to next: [WindowSurface]) -> Bool {
+        guard isSculptingSourceValid(source) else { return false }
+        if source.layer === ground {
+            let before = previous.filter { $0.isDock || groundBehindWindows }
+            let after = next.filter { $0.isDock || groundBehindWindows }
+            return before == after
+        }
+        guard let id = ledges.first(where: { $0.value === source.layer })?.key,
+              let before = previous.first(where: { $0.id == id }),
+              let after = next.first(where: { $0.id == id }) else { return false }
+        return before == after
+    }
+
     /// Сначала проверяет весь черновик, затем снимает снег одной атомарной операцией.
     func commitSculpting(_ gesture: SnowSculptingGesture) -> SculptedBall? {
         guard isSculptingSourceValid(gesture.source), gesture.radius != nil else { return nil }
@@ -2041,6 +2055,14 @@ final class SnowSimulation {
             let dockRoof = collideWithDock(position: &flake.position, velocity: &flake.velocity,
                                            from: previousPosition, radius: flake.size / 2)
             routeGroundPastDock(&flake.position, radius: flake.size / 2)
+
+            // Декоративные хлопья не оседают: после касания полки их полёт заканчивается.
+            // Иначе они бесконечно подскакивают на месте и создают размытую полосу.
+            if dockRoof != nil, (!flake.settles || !accumulates), flake.blown == 0 {
+                recycle(i)
+                i -= 1
+                continue
+            }
 
             if flake.blown != 0 && (flake.position.x < -30 || flake.position.x > width + 30) {
                 removeFlake(i)

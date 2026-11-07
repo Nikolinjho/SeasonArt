@@ -94,7 +94,11 @@ final class ScreenSnow {
     }
     var mode: Mode {
         get { simulation.mode }
-        set { simulation.mode = newValue; winter.isEnabled = newValue == .snow }
+        set {
+            simulation.mode = newValue
+            winter.isEnabled = newValue == .snow
+            refreshWindowSnow()
+        }
     }
 
     init?(screen: NSScreen, device: MTLDevice, snowOnWindows: @escaping () -> Bool) {
@@ -146,7 +150,10 @@ final class ScreenSnow {
             watchForFullScreen(now: now, tracked: true)
             guard onWindows else { return nil }
             simulation.windowFrames = tracker.covers.map { SIMD4(Float($0.minX), Float($0.minY), Float($0.maxX), Float($0.maxY)) }
-            return update
+            guard let update else { return nil }
+            return simulation.mode == .snow && Preferences.skipSnowNearMenuBar
+                ? update.excludingSnowNearMenuBar(screenHeight: self.screen.frame.height, menuBarHeight: tracker.menuBarHeight)
+                : update
         }
         renderer.sceneLight = { [unowned self] now in
             light.update(screen: self.screen, now: now)
@@ -221,6 +228,11 @@ final class ScreenSnow {
         simulation.updateWindows([], interval: 0.1)
         simulation.windowFrames = []
         tracker.reset()
+    }
+
+    func refreshWindowSnow() {
+        tracker.reset()
+        wake()
     }
 
     /// Going full screen, an app adds its Space as the move starts, though it is the current one only once the app is

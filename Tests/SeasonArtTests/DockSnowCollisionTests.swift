@@ -123,6 +123,27 @@ final class DockSnowCollisionTests: XCTestCase {
         XCTAssertEqual(layers(value).reduce(Float(0)) { $0 + $1.heights.reduce(0, +) }, 0)
     }
 
+    func testХлопьяБезНакопленияНеЗависаютРазмытойПолосойНаDock() {
+        let value = simulation()
+        value.accumulates = false
+        scatter(value, x: 250, y: 130)
+        for _ in 0..<300 { _ = value.step(dt: dt, cursor: away) }
+        XCTAssertTrue(sprites(value).isEmpty, "Хлопья заканчивают падение, а не остаются подскакивать над полкой")
+    }
+
+    func testПередниеРазмытыеХлопьяИсчезаютПослеОстановкиСнегопада() {
+        let value = SnowSimulation(width: 6_000, height: 400, snowfall: .heavy)
+        value.thaws = false
+        let fullDock = WindowSurface(id: 42, frame: CGRect(x: 0, y: 6, width: 6_000, height: 60),
+                                     blockers: [], cover: [], cornerRadius: 0, cornerExponent: 2, isDock: true)
+        value.updateWindows([fullDock], interval: dt)
+        _ = value.step(dt: dt, cursor: away)
+        XCTAssertTrue(sprites(value).contains { $0.size >= 8 }, "Сцена содержит передние мягкие хлопья")
+        value.snowfall = .off
+        for _ in 0..<900 { _ = value.step(dt: dt, cursor: away) }
+        XCTAssertFalse(sprites(value).contains { $0.size >= 8 }, "Мягкие хлопья не образуют постоянную полосу над Dock")
+    }
+
     func testПереносСуществующегоСнегаИзПодDockСохраняетМассу() {
         let value = simulation()
         let ground = layers(value)[0]

@@ -154,7 +154,8 @@ final class WinterCollisionTests: XCTestCase {
             _ = scene.create(radius: 6, at: CGPoint(x: 100 + (index % 16) * 30, y: 6 + (index / 16) * 20))
         }
         run(scene, seconds: 2)
-        XCTAssertEqual(scene.objects.count, 64)
+        XCTAssertEqual(scene.objects.reduce(0) { $0 + $1.radii.count }, 64,
+                       "Сборка сохраняет все шары полной сцены")
         for object in scene.objects {
             XCTAssertTrue(object.center.x.isFinite && object.center.y.isFinite)
             XCTAssertGreaterThanOrEqual(object.frame.minY, -0.01)
@@ -189,8 +190,8 @@ final class WinterCollisionTests: XCTestCase {
         scene.endDragging(id)
         XCTAssertTrue(scene.isMoving)
         run(scene)
-        XCTAssertEqual(scene.objects.count, 2)
-        XCTAssertEqual(scene.objects[1].frame.minY, scene.objects[0].frame.maxY, accuracy: 0.1)
+        XCTAssertEqual(scene.objects.count, 1, "После пробуждения и посадки третьего шара собирается снеговик")
+        XCTAssertTrue(scene.objects[0].isSnowman)
     }
 
 }

@@ -1,19 +1,19 @@
 import AppKit
 import QuartzCore
 
-/// The snow lying on the Dock, drawn in a strip along the bottom of the screen just below the Dock's level:
-/// the main overlay sits above the Dock, where the snow would cover icons that grow under the pointer.
-/// The strip shares the main overlay's coordinates, with its origin at the bottom left of the screen.
+/// Снег на Dock рисуется над его стеклом в полосе с координатами основного слоя.
 final class DockOverlay {
     let window: OverlayWindow
     private let layer = CAMetalLayer()
     private var screenFrame: CGRect
+    private(set) var backingScale: CGFloat
     /// The strip's height; it grows to fit the snow and shrinks back as the snow goes.
     private(set) var height: CGFloat = 1
 
     init(screen: NSScreen, device: MTLDevice) {
         screenFrame = screen.frame
-        window = OverlayWindow(screen: screen, level: OverlayWindow.belowDockLevel)
+        backingScale = screen.backingScaleFactor
+        window = OverlayWindow(screen: screen, level: OverlayWindow.aboveDockLevel)
         layer.device = device
         layer.pixelFormat = .bgra8Unorm
         layer.isOpaque = false
@@ -32,6 +32,7 @@ final class DockOverlay {
 
     func fit(to screen: NSScreen) {
         screenFrame = screen.frame
+        backingScale = screen.backingScaleFactor
         place()
     }
 
@@ -72,7 +73,8 @@ final class DockOverlay {
 
     private func place() {
         window.setFrame(CGRect(x: screenFrame.minX, y: screenFrame.minY, width: screenFrame.width, height: height), display: false)
-        // One pixel per point, as for the main overlay.
-        layer.drawableSize = CGSize(width: screenFrame.width, height: height)
+        // Кромка тонкого сугроба рисуется в физических пикселях экрана.
+        layer.contentsScale = backingScale
+        layer.drawableSize = CGSize(width: screenFrame.width * backingScale, height: height * backingScale)
     }
 }

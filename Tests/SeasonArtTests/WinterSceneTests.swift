@@ -126,8 +126,25 @@ final class WinterSceneTests: XCTestCase {
         XCTAssertEqual(scene.objects[0].id, base)
         XCTAssertEqual(scene.objects[0].radii, [28, 21, 14])
         XCTAssertTrue(scene.objects[0].isSnowman)
-        XCTAssertEqual(scene.objects[0].frame, CGRect(x: 172, y: 0, width: 56, height: 115.5),
+        XCTAssertEqual(scene.objects[0].frame, CGRect(x: 172, y: 0, width: 56, height: 105),
                        "Шары слегка перекрываются в местах соединения, основание остаётся на опоре")
+    }
+
+    func testСтопкаИзДвухШаровСтавитсяНаТретийИОбразуетСнеговика() throws {
+        let scene = WinterScene(width: 800, height: 600)
+        let base = try XCTUnwrap(scene.create(radius: 28, at: CGPoint(x: 200, y: 28)))
+        let torso = try XCTUnwrap(scene.create(radius: 21, at: CGPoint(x: 400, y: 21)))
+        let head = try XCTUnwrap(scene.create(radius: 14, at: CGPoint(x: 400, y: 56)))
+        scene.beginDragging(head, at: CGPoint(x: 400, y: 56))
+        scene.endDragging(head)
+        XCTAssertEqual(scene.objects.count, 2)
+        let stack = try XCTUnwrap(scene.objects.first { $0.id == torso })
+        scene.beginDragging(torso, at: stack.center)
+        scene.drag(torso, to: CGPoint(x: 200, y: 77), dt: 0.1)
+        scene.step(dt: 1 / 60)
+        scene.endDragging(torso, idleTime: 0.2)
+        XCTAssertEqual(scene.objects.count, 1, "Верхнюю пару можно поставить на основание целиком")
+        XCTAssertEqual(scene.objects.first { $0.id == base }?.radii, [28, 21, 14])
     }
 
     func testМаленькийШарНаБольшомОбразуетСтопку() throws {
@@ -141,6 +158,22 @@ final class WinterSceneTests: XCTestCase {
         scene.beginDragging(medium, at: CGPoint(x: 240, y: 77))
         scene.endDragging(medium)
         XCTAssertEqual(scene.objects.count, 2, "Слишком далёкий шар не притягивается к стеку")
+    }
+
+    func testДвеПарыНеОбъединяютсяВЧетыреШара() throws {
+        let scene = WinterScene(width: 800, height: 600)
+        for x: CGFloat in [200, 400] {
+            _ = scene.create(radius: 14, at: CGPoint(x: x, y: 14))
+            let top = try XCTUnwrap(scene.create(radius: 14, at: CGPoint(x: x, y: 42)))
+            scene.beginDragging(top, at: CGPoint(x: x, y: 42))
+            scene.endDragging(top)
+        }
+        XCTAssertEqual(scene.objects.map(\.radii.count), [2, 2])
+        let held = scene.objects[1]
+        scene.beginDragging(held.id, at: held.center)
+        scene.drag(held.id, to: CGPoint(x: 200, y: scene.objects[0].frame.maxY + 14), dt: 0.1)
+        scene.endDragging(held.id, idleTime: 0.2)
+        XCTAssertEqual(scene.objects.map(\.radii.count), [2, 2], "В снеговике остаётся максимум три шара")
     }
 
     func testDragOffsetHeldGravityAndThrowCap() throws {
@@ -218,7 +251,7 @@ final class WinterSceneTests: XCTestCase {
             XCTAssertEqual(object.frame.width, try XCTUnwrap(radii.max()) * 2)
             for index in 1..<3 {
                 XCTAssertEqual(object.ballFrames[index - 1].maxY - object.ballFrames[index].minY,
-                               min(radii[index - 1], radii[index]) * 0.3, accuracy: 0.0001)
+                               min(radii[index - 1], radii[index]) * 0.6, accuracy: 0.0001)
             }
         }
     }

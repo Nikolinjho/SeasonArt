@@ -34,6 +34,18 @@ final class PreferencesTests: XCTestCase {
         XCTAssertEqual(Preferences.snowfall, .heavy, "Интенсивность должна сохраняться после открытия профиля")
     }
 
+    func testПропускСнегаУСтрокиМенюВключёнПоУмолчаниюИСохраняется() {
+        let (name, defaults) = makeProfile()
+        Preferences.configure(defaults: defaults)
+        Preferences.registerDefaults()
+        XCTAssertTrue(Preferences.skipSnowNearMenuBar)
+        Preferences.skipSnowNearMenuBar = false
+        defaults.synchronize()
+        Preferences.configure(defaults: UserDefaults(suiteName: name)!)
+        Preferences.registerDefaults()
+        XCTAssertFalse(Preferences.skipSnowNearMenuBar)
+    }
+
     func testNewProfileDoesNotInheritOtherProfileSettings() {
         let (_, first) = makeProfile()
         Preferences.configure(defaults: first)

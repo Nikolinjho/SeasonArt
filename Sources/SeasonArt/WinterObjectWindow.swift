@@ -10,7 +10,7 @@ final class WinterObjectWindow: NSPanel {
     }
 
     init(object: WinterObject, screenFrame: CGRect) {
-        let frame = object.frame.offsetBy(dx: screenFrame.minX, dy: screenFrame.minY)
+        let frame = object.presentationFrame.offsetBy(dx: screenFrame.minX, dy: screenFrame.minY)
         super.init(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         isOpaque = false
         backgroundColor = .clear
@@ -25,9 +25,9 @@ final class WinterObjectWindow: NSPanel {
         setFrame(frame, display: false)
     }
 
-    func display(object: WinterObject, screenFrame: CGRect) {
-        (contentView as? WinterObjectView)?.display(object: object)
-        let next = object.frame.offsetBy(dx: screenFrame.minX, dy: screenFrame.minY)
+    func display(object: WinterObject, screenFrame: CGRect, shadows: [WinterContactShadow]? = nil) {
+        (contentView as? WinterObjectView)?.display(object: object, shadows: shadows)
+        let next = object.presentationFrame.offsetBy(dx: screenFrame.minX, dy: screenFrame.minY)
         if next.size != frame.size {
             setFrame(next, display: false)
         } else if next.origin != frame.origin {

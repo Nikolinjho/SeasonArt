@@ -2,8 +2,8 @@ import AppKit
 
 final class OverlayWindow: NSWindow {
     private static let desktopLevel = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopWindow)) + 1)
-    /// Just under the Dock, so its icons stay in front as they grow under the pointer.
-    static let belowDockLevel = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.dockWindow)) - 1)
+    /// Над стеклом Dock: системное размытие не должно захватывать снег.
+    static let aboveDockLevel = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.dockWindow)) + 1)
 
     private let frontLevel: NSWindow.Level
 

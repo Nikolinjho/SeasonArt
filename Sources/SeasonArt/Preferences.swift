@@ -37,6 +37,7 @@ enum Preferences {
     private static let meltSnowKey = "meltSnow"
     private static let accumulateKey = "accumulate"
     private static let snowOnWindowsKey = "snowOnWindows"
+    private static let skipSnowNearMenuBarKey = "skipSnowNearMenuBar"
     private static let welcomedKey = "welcomed"
     private static let showInScreenshotsKey = "showInScreenshots"
     private static let deepInteractionKey = "deepInteraction"
@@ -56,6 +57,7 @@ enum Preferences {
             meltSnowKey: true,
             accumulateKey: true,
             snowOnWindowsKey: true,
+            skipSnowNearMenuBarKey: true,
             showInScreenshotsKey: false,
             deepInteractionKey: false,
             halloweenKey: false,
@@ -72,6 +74,11 @@ enum Preferences {
     static var snowOnWindows: Bool {
         get { defaults.bool(forKey: snowOnWindowsKey) }
         set { defaults.set(newValue, forKey: snowOnWindowsKey) }
+    }
+
+    static var skipSnowNearMenuBar: Bool {
+        get { defaults.bool(forKey: skipSnowNearMenuBarKey) }
+        set { defaults.set(newValue, forKey: skipSnowNearMenuBarKey) }
     }
 
     static var accumulate: Bool {

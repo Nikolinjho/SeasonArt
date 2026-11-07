@@ -36,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var accumulateItem: NSMenuItem!
     private var meltItem: NSMenuItem!
     private var snowOnWindowsItem: NSMenuItem!
+    private var skipSnowNearMenuBarItem: NSMenuItem!
     private var clearItem: NSMenuItem!
     private var snowItem: NSMenuItem!
     private var autumnItem: NSMenuItem!
@@ -185,6 +186,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         accumulateItem = add("Накапливать", #selector(toggleAccumulate), to: menu)
         meltItem = add("Таяние снега", #selector(toggleMeltSnow), to: menu)
         snowOnWindowsItem = add("Снег на окнах", #selector(toggleSnowOnWindows), to: menu)
+        skipSnowNearMenuBarItem = add("Не копить снег у строки меню", #selector(toggleSkipSnowNearMenuBar), to: menu)
         deepInteractionItem = add("Взаимодействие с выделением", #selector(toggleDeepInteraction), to: menu)
         clearItem = add("Убрать снег", #selector(clearSnow), to: menu)
         menu.addItem(.separator())
@@ -244,6 +246,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         meltItem.state = thaws ? .on : .off
         meltItem.isEnabled = accumulates
         snowOnWindowsItem.state = snowOnWindows ? .on : .off
+        skipSnowNearMenuBarItem.isHidden = mode != .snow
+        skipSnowNearMenuBarItem.isEnabled = snowOnWindows
+        skipSnowNearMenuBarItem.state = Preferences.skipSnowNearMenuBar ? .on : .off
         deepInteractionItem.state = Preferences.deepInteraction ? .on : .off
         deepInteractionItem.isEnabled = snowOnWindows
         clearItem.isEnabled = screens.contains { $0.simulation.hasSnow || $0.simulation.spriteCount > 0 }
@@ -293,6 +298,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func toggleDeepInteraction() {
         Preferences.deepInteraction.toggle()
         Marquee.enabled = Preferences.deepInteraction
+    }
+
+    @objc private func toggleSkipSnowNearMenuBar() {
+        Preferences.skipSnowNearMenuBar.toggle()
+        screens.forEach { $0.refreshWindowSnow() }
     }
 
     @objc private func clearSnow() {

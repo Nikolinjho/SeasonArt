@@ -337,7 +337,7 @@ final class Renderer: NSObject, MTKViewDelegate {
         return field
     }
 
-    /// Draws the Dock's snow into its own strip below the Dock, and clears the strip once after the snow is gone.
+    /// Рисует снег над стеклом Dock и очищает полосу после исчезновения снега.
     private func encodeDock(_ piles: [PileLayer], into commandBuffer: MTLCommandBuffer, uniforms: Uniforms, heights: MTLBuffer) {
         guard let dockOverlay, !piles.isEmpty || dockDrawn else { return }
         let top = piles.map { CGFloat($0.origin.y + $0.top + 2) }.max()
@@ -345,6 +345,7 @@ final class Renderer: NSObject, MTKViewDelegate {
               let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: frame.pass) else { return }
         var uniforms = uniforms
         uniforms.viewSize = SIMD2(simulation.width, Float(dockOverlay.height))
+        uniforms.scale = Float(dockOverlay.backingScale)
         drawPiles(piles, with: encoder, uniforms: uniforms, heights: heights)
         encoder.endEncoding()
         commandBuffer.present(frame.drawable)

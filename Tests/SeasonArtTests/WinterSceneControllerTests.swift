@@ -291,6 +291,22 @@ final class WinterSceneControllerTests: XCTestCase {
         XCTAssertEqual(controller.scene.objects.first?.center, CGPoint(x: 140, y: 180))
     }
 
+    func testИзменениеДругогоОкнаНеПрерываетЛепкуНаDock() {
+        let (controller, simulation, initial) = snowyController()
+        defer { controller.close() }
+        frame(controller, simulation, x: 160)
+        for i in 1...30 {
+            let other = WindowSurface(id: 77, frame: CGRect(x: 500, y: 200 + i, width: 80, height: 100),
+                                      blockers: [], cover: [], cornerRadius: 0, cornerExponent: 2, isDock: false)
+            let surfaces = initial.surfaces + [other]
+            controller.updateWindows(WindowUpdate(surfaces: surfaces, interval: 1 / 60, parked: [], elsewhere: [], sliding: false, slideVelocity: 0))
+            simulation.updateWindows(surfaces, interval: 1 / 60)
+            frame(controller, simulation, x: 160 + CGFloat(i) * 4)
+        }
+        frame(controller, simulation, x: 280, dt: 0.36)
+        XCTAssertEqual(controller.scene.objects.count, 1, "Обновления постороннего окна не сбрасывают время лепки")
+    }
+
     func testИзменениеОпорыОтменяетЧерновикБезСнятияСнега() throws {
         let (controller, simulation, _) = snowyController()
         defer { controller.close() }
@@ -302,6 +318,23 @@ final class WinterSceneControllerTests: XCTestCase {
         XCTAssertFalse(controller.isSculpting)
         XCTAssertTrue(controller.scene.objects.isEmpty)
         XCTAssertEqual(layer.heights, before)
+    }
+
+    func testСдвигИПерекрытиеТекущейОпорыОтменяютЛепку() {
+        for moved in [true, false] {
+            let (controller, simulation, initial) = snowyController()
+            defer { controller.close() }
+            frame(controller, simulation, x: 160)
+            frame(controller, simulation, x: 220)
+            XCTAssertTrue(controller.isSculpting)
+            let dock = initial.surfaces[0]
+            let changed = moved ? dock.shifted(by: 20) : WindowSurface(
+                id: dock.id, frame: dock.frame, blockers: [CGRect(x: 150, y: 40, width: 150, height: 100)],
+                cover: [], cornerRadius: dock.cornerRadius, cornerExponent: dock.cornerExponent, isDock: true)
+            controller.updateWindows(WindowUpdate(surfaces: [changed], interval: 0.1, parked: [], elsewhere: [], sliding: false, slideVelocity: 0))
+            XCTAssertFalse(controller.isSculpting)
+            XCTAssertTrue(controller.scene.objects.isEmpty)
+        }
     }
 
     func testКликПослеПаузыИМаксимумаНеСнимаетБлокировкуДоВыхода() {

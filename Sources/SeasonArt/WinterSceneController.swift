@@ -151,7 +151,8 @@ final class WinterSceneController {
 
     func updateWindows(_ update: WindowUpdate) {
         // Tracker сообщает изменения раньше симуляции. Не подтверждаем устаревший снимок даже между кадрами.
-        if sculptingGesture != nil, update.sliding || trackedSurfaces != update.surfaces {
+        if let gesture = sculptingGesture,
+           update.sliding || !simulation.isSculptingSource(gesture.source, unchangedFrom: trackedSurfaces, to: update.surfaces) {
             cancelSculpting()
         }
         trackedSurfaces = update.surfaces
@@ -250,7 +251,8 @@ final class WinterSceneController {
                 windows[id] = window
             }
             window.title = object.isSnowman ? "SeasonArt · снеговик" : "SeasonArt · снежный шар"
-            window.display(object: object, screenFrame: screenFrame)
+            window.display(object: object, screenFrame: screenFrame,
+                           shadows: WinterContactShadow.shadows(on: object, among: scene.objects))
             if visible && !object.parked && presentsWindows {
                 if !window.isVisible { window.orderFrontRegardless() }
             } else if window.isVisible {

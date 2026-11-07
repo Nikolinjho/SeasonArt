@@ -16,6 +16,7 @@ enum WinterBallSize: Int, CaseIterable {
 enum WinterBallGeometry {
     static let minimumRadius: CGFloat = 6
     static let maximumRadius: CGFloat = 36
+    static let jointOverlap: CGFloat = 0.6
 
     static func isValid(_ radius: CGFloat) -> Bool {
         radius.isFinite && (minimumRadius...maximumRadius).contains(radius)
@@ -34,12 +35,12 @@ struct WinterObject: Identifiable {
 
     var rotation: CGFloat = 0
 
-    /// Локальные границы шаров: стык перекрывает 15% диаметра меньшего из соседей.
+    /// Локальные границы шаров: стык перекрывает 30% диаметра меньшего из соседей.
     var ballFrames: [CGRect] {
         let widest = radii.max() ?? 0
         var bottom: CGFloat = 0
         return radii.enumerated().map { index, radius in
-            if index > 0 { bottom -= min(radii[index - 1], radius) * 0.3 }
+            if index > 0 { bottom -= min(radii[index - 1], radius) * WinterBallGeometry.jointOverlap }
             let rect = CGRect(x: widest - radius, y: bottom,
                               width: radius * 2, height: radius * 2)
             bottom = rect.maxY
@@ -81,7 +82,8 @@ extension WinterObject {
         }
         return WinterDecoration(
             eyes: [-5, 5].map { dot(x: x + CGFloat($0) * headScale, y: head.midY + 3 * headScale, scale: headScale) },
-            buttons: [dot(x: x, y: torso.midY + 10 * torsoScale, scale: torsoScale),
+            buttons: [dot(x: x, y: min(torso.midY + 10 * torsoScale,
+                                      head.minY - 2 * neckScale - 3.8 * torsoScale), scale: torsoScale),
                       dot(x: x, y: torso.midY - 3 * torsoScale, scale: torsoScale),
                       dot(x: x, y: base.midY + 11 * baseScale, scale: baseScale)],
             nose: [CGPoint(x: x - headScale, y: head.midY - headScale),
@@ -133,7 +135,7 @@ final class WinterScene {
     var surfaceHeight: (_ id: CGWindowID?, _ x: CGFloat) -> CGFloat? = { _, _ in nil }
     var didLand: (WinterImpact) -> Void = { _ in }
     var isMoving: Bool {
-        objects.contains { !$0.parked && ($0.isDragged || !resting.contains($0.id) || $0.velocity.dx != 0) }
+        !settledStacks.isEmpty || objects.contains { !$0.parked && ($0.isDragged || !resting.contains($0.id) || $0.velocity.dx != 0) }
     }
 
     private var width: CGFloat
@@ -144,6 +146,7 @@ final class WinterScene {
     private var pushed: Set<UUID> = []
     private var objectSupports: [UUID: (id: UUID, center: CGPoint, radii: [CGFloat], carriedCenter: CGPoint)] = [:]
     private var bouncing: [UUID: WinterContact] = [:]
+    private var settledStacks: [UUID: (ids: [UUID], duration: TimeInterval)] = [:]
     private var dragOffset: CGPoint = .zero
     private var captured: UUID?
     private var dragHistory: [(duration: TimeInterval, velocity: CGVector)] = []
@@ -279,16 +282,16 @@ final class WinterScene {
         fastDragSample = nil
         objects[index].isDragged = false
         let held = objects[index]
-        guard !hasPendingMotion, held.radii.count == 1, let radius = held.radii.first,
+        guard !hasPendingMotion, (1...2).contains(held.radii.count), let radius = held.radii.first,
               hypot(held.velocity.dx, held.velocity.dy) <= WinterMotion.placementSpeed else { return }
         let candidates = objects.indices.filter { candidate in
             let base = objects[candidate]
-            let canStack = (1...2).contains(base.radii.count)
+            let canStack = (1...2).contains(base.radii.count) && base.radii.count + held.radii.count <= 3
             let contactRadius = min(radius, base.radii.last ?? radius)
             let tolerance = min(8, max(2, contactRadius * 0.35))
             let gap = held.frame.minY - base.frame.maxY
             // Допускаем касание и перекрытие готового стыка, но не притягиваем маленькие шары издалека.
-            let hasContact = gap <= tolerance && gap >= -contactRadius * 0.3 - tolerance
+            let hasContact = gap <= tolerance && gap >= -contactRadius * WinterBallGeometry.jointOverlap - tolerance
             return candidate != index && canStack && !base.parked && !base.isDragged
                 && hasContact
                 && abs(held.center.x - base.center.x) <= min(radius, base.radii.last!) * 0.9
@@ -296,11 +299,49 @@ final class WinterScene {
         guard let base = candidates.min(by: {
             abs(objects[$0].center.x - held.center.x) < abs(objects[$1].center.x - held.center.x)
         }) else { return }
-        objects[base].radii.append(radius)
-        resting.remove(id)
-        objectSupports.removeValue(forKey: id)
-        objects.remove(at: index)
+        merge([id], onto: objects[base].id)
+    }
+
+    private func merge(_ ids: [UUID], onto base: UUID) {
+        guard let index = objects.firstIndex(where: { $0.id == base }) else { return }
+        for id in ids {
+            guard let held = objects.first(where: { $0.id == id }) else { continue }
+            objects[index].radii.append(contentsOf: held.radii)
+            resting.remove(id)
+            objectSupports.removeValue(forKey: id)
+            bouncing.removeValue(forKey: id)
+            pushed.remove(id)
+        }
+        objects.removeAll { ids.contains($0.id) }
         wakeUnsupportedObjects()
+    }
+
+    /// Три шара, спокойно стоящие друг на друге, собираются и после завершения падения.
+    private func assembleSettledSnowmen(dt: TimeInterval) {
+        var next: [UUID: (ids: [UUID], duration: TimeInterval)] = [:]
+        var ready: [(base: UUID, ids: [UUID])] = []
+        func stable(_ object: WinterObject) -> Bool {
+            !object.parked && !object.isDragged && resting.contains(object.id) && object.velocity == .zero
+        }
+        for base in objects where stable(base) && objectSupports[base.id] == nil && base.radii.count < 3 {
+            var chain = [base.id]
+            var count = base.radii.count
+            while count < 3, let top = chain.last,
+                  let upper = objects.first(where: { stable($0) && objectSupports[$0.id]?.id == top }) {
+                chain.append(upper.id)
+                count += upper.radii.count
+            }
+            guard count == 3 else { continue }
+            let previous = settledStacks[base.id]
+            let duration = (previous?.ids == chain ? previous!.duration : 0) + dt
+            if duration >= 0.2 {
+                ready.append((base.id, Array(chain.dropFirst())))
+            } else {
+                next[base.id] = (chain, duration)
+            }
+        }
+        settledStacks = next
+        for stack in ready { merge(stack.ids, onto: stack.base) }
     }
 
     func updateWindows(_ update: WindowUpdate) {
@@ -342,6 +383,7 @@ final class WinterScene {
         let duration = min(dt, 1.0 / 30)
         let steps = max(1, Int(ceil(duration * (objects.count > 1 ? 360 : 120))))
         for _ in 0..<steps { integrate(elapsed: CGFloat(duration / Double(steps))) }
+        assembleSettledSnowmen(dt: duration)
     }
 
     private func integrate(elapsed: CGFloat) {
@@ -591,6 +633,7 @@ final class WinterScene {
 
     func removeAll() {
         objects.removeAll()
+        settledStacks.removeAll()
         resting.removeAll()
         objectSupports.removeAll()
         pushed.removeAll()
