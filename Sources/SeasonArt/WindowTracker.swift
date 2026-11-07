@@ -48,13 +48,16 @@ final class WindowTracker {
     private let windowListProvider: (() -> CFArray?)?
     private let fullScreenSpaceProvider: () -> Set<UInt64>?
     private let windowSpacesProvider: (CGWindowID) -> Set<UInt64>?
+    private let dockReservedProvider: (() -> CGRect?)?
 
     init(windowListProvider: (() -> CFArray?)? = nil,
          fullScreenSpaceProvider: @escaping () -> Set<UInt64>? = { Spaces.fullScreen() },
-         windowSpacesProvider: @escaping (CGWindowID) -> Set<UInt64>? = { Spaces.of($0) }) {
+         windowSpacesProvider: @escaping (CGWindowID) -> Set<UInt64>? = { Spaces.of($0) },
+         dockReservedProvider: (() -> CGRect?)? = nil) {
         self.windowListProvider = windowListProvider
         self.fullScreenSpaceProvider = fullScreenSpaceProvider
         self.windowSpacesProvider = windowSpacesProvider
+        self.dockReservedProvider = dockReservedProvider
     }
 
     /// The display tracked, in the window list's global coordinates: origin at the top left of the primary display.
@@ -345,7 +348,8 @@ final class WindowTracker {
 
     /// The Dock's shelf while it is out, nil while it is away or leaving.
     private func dockShelf(now: CFTimeInterval) -> CGRect? {
-        guard let reserved = Dock.reserved, abs(reserved.maxY - screen.maxY) < 2 else {
+        guard let reserved = dockReservedProvider.map({ $0() }) ?? Dock.reserved,
+              abs(reserved.maxY - screen.maxY) < 2 else {
             dockShownAt = nil
             return nil
         }
@@ -543,7 +547,7 @@ final class WindowTracker {
             if layer < dockLevel && !fading { windows.append(frame) }
             if layer == 0 && !fading && id != 0 { frames[id] = frame }
             let coverOnly = coverOnlyOwners.contains(owner) && !shelf
-            if roomAbove && onScreen && !coverOnly && !fading && bounds.width >= 80 && bounds.height >= 40, id != 0,
+            if roomAbove && onScreen && !coverOnly && !fading && bounds.width >= 80 && (shelf ? bounds.height > 0 : bounds.height >= 40), id != 0,
                shelf || !isCard(id, bounds, into: &checked) {
                 // Search bars like Spotlight are capsules: low and wide, with fully rounded ends.
                 let capsule = !shelf && (owner.lowercased().contains("spotlight") || (bounds.height <= 90 && bounds.width >= bounds.height * 3))

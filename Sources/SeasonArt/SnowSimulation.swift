@@ -506,6 +506,8 @@ final class SnowSimulation {
     private let ground: SnowLayer
     private var ledges: [CGWindowID: SnowLayer] = [:]
     private var ledgeList: [SnowLayer] = []
+    private var dockBodies: [CGWindowID: CGRect] = [:]
+    private var dockCorners: [CGWindowID: (radius: Float, exponent: Float)] = [:]
     private var layers: [SnowLayer]
     private var heldLayers: [SnowLayer] = []
     private var flakes: [Flake] = []
@@ -877,6 +879,7 @@ final class SnowSimulation {
         tendGlass(dt: dt)
         haunt(dt: dt)
         settle(dt: dt)
+        clearGroundUnderDock()
         tendLeaves(dt: dt)
         if let next = nextMode, gust == nil, grains.isEmpty || clock - switchedAt > 6 {
             nextMode = nil
@@ -1158,6 +1161,10 @@ final class SnowSimulation {
 
     func updateWindows(_ surfaces: [WindowSurface], interval: Float, parked: Set<CGWindowID> = [], elsewhere: Set<CGWindowID> = [], sliding: Bool = false) {
         leafBudget = nil
+        dockBodies = Dictionary(surfaces.filter(\.isDock).map { ($0.id, $0.frame) }, uniquingKeysWith: { _, next in next })
+        dockCorners = Dictionary(surfaces.filter(\.isDock).map {
+            ($0.id, (Float(max(0, min($0.cornerRadius, $0.frame.width / 2, $0.frame.height / 2))), Float(max(1, $0.cornerExponent))))
+        }, uniquingKeysWith: { _, next in next })
         var seen = Set<CGWindowID>()
         for surface in surfaces {
             let left = Float(surface.frame.minX) + ledgeInset
@@ -1560,7 +1567,17 @@ final class SnowSimulation {
             release(area, at: position, velocity: velocity, spread: SIMD2(4, 2), scatter: 0.5)
             return
         }
-        let pieces = Int(area / 90) + 1
+        let requested = Int(area / 90) + 1
+        let pieces: Int
+        if mode == .snow, !dockBodies.isEmpty {
+            pieces = min(requested, maxGrains - grains.count)
+            guard pieces > 0 else {
+                depositReleased(area, at: position)
+                return
+            }
+        } else {
+            pieces = requested
+        }
         for _ in 0..<pieces where grains.count < maxGrains {
             let share = area / Float(pieces)
             grains.append(Grain(
@@ -1631,7 +1648,7 @@ final class SnowSimulation {
         }
         let room = maxGrains - grains.count
         guard room > 0 else {
-            ground.deposit(area, at: position.x, wide: true)
+            depositReleased(area, at: position)
             return
         }
         if leafy {
@@ -1844,6 +1861,137 @@ final class SnowSimulation {
 
     // MARK: - Particles
 
+    /// Тело видимого Dock останавливает частицы со всех сторон, включая быстрый пролёт за один кадр.
+    private func collideWithDock(position: inout SIMD2<Float>, velocity: inout SIMD2<Float>,
+                                 from: SIMD2<Float>, radius: Float) -> SnowLayer? {
+        guard mode == .snow else { return nil }
+        var roof: SnowLayer?
+        for (id, frame) in dockBodies {
+            let low = SIMD2(Float(frame.minX) - radius, Float(frame.minY) - radius)
+            var top = Float(frame.maxY)
+            if let corner = dockCorners[id], corner.radius > 0 {
+                // На быстром боковом пролёте проверяем и середину пути, где крыша выше углов.
+                let x = min(max(Float(frame.midX), min(from.x, position.x)), max(from.x, position.x))
+                let inset = max(0, min(x - Float(frame.minX), Float(frame.maxX) - x))
+                let u = max(0, 1 - inset / corner.radius)
+                top -= corner.radius * (1 - pow(max(0, 1 - pow(u, corner.exponent)), 1 / corner.exponent))
+            }
+            let high = SIMD2(Float(frame.maxX) + radius, top + radius)
+            let delta = position - from
+            var enter: Float = 0
+            var leave: Float = 1
+            var normal = SIMD2<Float>.zero
+            let inside = from.x > low.x && from.x < high.x && from.y > low.y && from.y < high.y
+            if inside {
+                let faces: [(Float, SIMD2<Float>)] = [
+                    (from.x - low.x, SIMD2(-1, 0)), (high.x - from.x, SIMD2(1, 0)),
+                    (from.y - low.y, SIMD2(0, -1)), (high.y - from.y, SIMD2(0, 1))
+                ]
+                normal = faces.min { $0.0 < $1.0 }!.1
+            } else {
+                for axis in 0..<2 {
+                    if abs(delta[axis]) < 0.00001 {
+                        if from[axis] < low[axis] || from[axis] > high[axis] { leave = -1 }
+                        continue
+                    }
+                    let near = (low[axis] - from[axis]) / delta[axis]
+                    let far = (high[axis] - from[axis]) / delta[axis]
+                    if min(near, far) >= enter {
+                        enter = min(near, far)
+                        normal = .zero
+                        normal[axis] = delta[axis] > 0 ? -1 : 1
+                    }
+                    leave = min(leave, max(near, far))
+                }
+                guard enter <= leave, enter <= 1, leave >= 0, normal != .zero else { continue }
+                position = from + delta * max(0, enter)
+            }
+            if normal.x < 0 { position.x = low.x - 0.01 }
+            if normal.x > 0 { position.x = high.x + 0.01 }
+            if normal.y < 0 { position.y = low.y - 0.01 }
+            if normal.y > 0 {
+                position.y = high.y + 0.01
+                roof = ledges[id]
+            }
+            let inward = simd_dot(velocity, normal)
+            if inward < 0 { velocity -= normal * inward * 1.15 }
+        }
+        return roof
+    }
+
+    /// Под низкой полкой нет места сугробу: снег у земли выходит к ближайшему свободному краю.
+    private func routeGroundPastDock(_ position: inout SIMD2<Float>, radius: Float = 0) {
+        guard mode == .snow else { return }
+        for frame in dockBodies.values where position.x >= Float(frame.minX) && position.x <= Float(frame.maxX) {
+            guard position.y <= ground.surface(ground.clampedIndex(at: position.x)) + radius else { continue }
+            let left = Float(frame.minX) - radius - columnWidth * 3
+            let right = Float(frame.maxX) + radius + columnWidth * 3
+            if left < columnWidth && right > width - columnWidth {
+                position.y = Float(frame.maxY) + radius + 0.01
+            } else if left < columnWidth {
+                position.x = right
+            } else if right > width - columnWidth {
+                position.x = left
+            } else {
+                position.x = position.x < Float(frame.midX) ? left : right
+            }
+        }
+    }
+
+    /// Оседание и сглаживание тоже переносят массу: возвращаем её из-под тела Dock к свободным краям.
+    private func clearGroundUnderDock() {
+        guard mode == .snow else { return }
+        for frame in dockBodies.values {
+            let first = ground.clampedIndex(at: Float(frame.minX))
+            let last = ground.clampedIndex(at: Float(frame.maxX))
+            var left: Float = 0
+            var right: Float = 0
+            for i in first...last where ground.heights[i] > 0 {
+                let x = ground.centerX(i)
+                guard x >= Float(frame.minX), x <= Float(frame.maxX) else { continue }
+                if x < Float(frame.midX) { left += ground.heights[i] * columnWidth }
+                else { right += ground.heights[i] * columnWidth }
+                ground.set(i, 0)
+            }
+            if left + right > 0 {
+                depositReleased(left, at: SIMD2(Float(frame.minX) + 0.01, -Float.greatestFiniteMagnitude))
+                depositReleased(right, at: SIMD2(Float(frame.maxX) - 0.01, -Float.greatestFiniteMagnitude))
+                heightsChanged = true
+            }
+        }
+    }
+
+    /// При заполненном буфере частиц масса остаётся на доступной опоре, а не проваливается под Dock.
+    private func depositReleased(_ area: Float, at point: SIMD2<Float>) {
+        guard mode == .snow, !dockBodies.isEmpty else {
+            ground.deposit(area, at: point.x, wide: true)
+            return
+        }
+        if let id = dockBodies.first(where: { _, frame in
+               point.x >= Float(frame.minX) && point.x <= Float(frame.maxX) && point.y >= Float(frame.maxY)
+           })?.key, let layer = ledges[id] {
+            let missed = layer.deposit(area, at: point.x, wide: true)
+            if missed > 0.05 {
+                depositOnGroundPastDock(missed, at: point.x)
+            }
+        } else {
+            depositOnGroundPastDock(area, at: point.x)
+        }
+    }
+
+    private func depositOnGroundPastDock(_ area: Float, at x: Float) {
+        var outside = SIMD2(x, -Float.greatestFiniteMagnitude)
+        routeGroundPastDock(&outside)
+        if outside.y > 0,
+           let id = dockBodies.first(where: { _, frame in outside.x >= Float(frame.minX) && outside.x <= Float(frame.maxX) })?.key,
+           let layer = ledges[id] {
+            let i = layer.clampedIndex(at: outside.x)
+            layer.set(i, layer.heights[i] + area / columnWidth)
+        } else {
+            ground.deposit(area, at: outside.x, wide: false)
+        }
+    }
+
     /// The highest visible snow surface crossed while falling from `from` to `to` at `x`, allowing for the surface moving meanwhile.
     private func landing(x: Float, from: Float, to: Float) -> (layer: SnowLayer, index: Int)? {
         var hit: (layer: SnowLayer, index: Int)?
@@ -1887,8 +2035,12 @@ final class SnowSimulation {
             flake.phase += flake.swayRate * dt
             if flake.phase > phaseWrap { flake.phase -= phaseWrap }
             if flake.tintAmount > 0 { flake.tintAmount = max(0, flake.tintAmount - dt * 1.3) }
+            let previousPosition = flake.position
             let previousY = flake.position.y
             flake.position += motion(of: flake) * dt
+            let dockRoof = collideWithDock(position: &flake.position, velocity: &flake.velocity,
+                                           from: previousPosition, radius: flake.size / 2)
+            routeGroundPastDock(&flake.position, radius: flake.size / 2)
 
             if flake.blown != 0 && (flake.position.x < -30 || flake.position.x > width + 30) {
                 removeFlake(i)
@@ -1902,7 +2054,8 @@ final class SnowSimulation {
             }
 
             if flake.settles && (accumulates || flake.rain) && flake.blown == 0 {
-                if let hit = landing(x: flake.position.x, from: previousY, to: flake.position.y) {
+                let dockHit = dockRoof.flatMap { layer in layer.index(at: flake.position.x).map { (layer: layer, index: $0) } }
+                if let hit = dockHit ?? landing(x: flake.position.x, from: previousY, to: flake.position.y) {
                     if flake.rain {
                         splash(at: SIMD2(flake.position.x, hit.layer.surface(hit.index)), depth: flake.depth)
                         if hit.layer !== ground {
@@ -1970,12 +2123,16 @@ final class SnowSimulation {
         while i >= 0 {
             var grain = grains[i]
             if grain.stuck > 0 {
+                let previousPosition = grain.position
                 grain.stuck -= dt
                 grain.position.y -= 5 * dt
+                _ = collideWithDock(position: &grain.position, velocity: &grain.velocity,
+                                    from: previousPosition, radius: grain.size / 2)
                 grains[i] = grain
                 i -= 1
                 continue
             }
+            let previousPosition = grain.position
             let previousY = grain.position.y
             if grain.blown {
                 // Light powder: the wind keeps it moving toward the edge it was blown to, and it barely sinks.
@@ -1997,10 +2154,14 @@ final class SnowSimulation {
                 grain.velocity *= damping
             }
             grain.position += grain.velocity * dt
+            let dockRoof = collideWithDock(position: &grain.position, velocity: &grain.velocity,
+                                           from: previousPosition, radius: grain.size / 2)
+            routeGroundPastDock(&grain.position, radius: grain.size / 2)
+            let dockHit = dockRoof.flatMap { layer in layer.index(at: grain.position.x).map { (layer: layer, index: $0) } }
 
             if grain.position.x < -10 || grain.position.x > width + 10 || grain.position.y < -10 {
                 removeGrain(i)
-            } else if !grain.blown, grain.velocity.y <= 0, let hit = landing(x: grain.position.x, from: previousY, to: grain.position.y) {
+            } else if !grain.blown, let hit = dockHit ?? (grain.velocity.y <= 0 ? landing(x: grain.position.x, from: previousY, to: grain.position.y) : nil) {
                 if grain.lump > 0 {
                     burst(grain, into: hit.layer)
                     heightsChanged = true
@@ -2048,9 +2209,12 @@ final class SnowSimulation {
                 motes.swapAt(i, motes.count - 1)
                 motes.removeLast()
             } else {
+                let previousPosition = mote.position
                 mote.velocity.y -= 35 * dt
                 mote.velocity *= damping
                 mote.position += (mote.velocity + SIMD2(drift, 0)) * dt
+                _ = collideWithDock(position: &mote.position, velocity: &mote.velocity,
+                                    from: previousPosition, radius: mote.size * (1 + mote.age / mote.life) / 2)
                 motes[i] = mote
             }
             i -= 1
