@@ -126,7 +126,9 @@ private enum WinterContact: Equatable {
 }
 
 final class WinterScene {
+    static let maximumObjects = 64
     private(set) var objects: [WinterObject] = []
+    var hasCapacity: Bool { objects.count < Self.maximumObjects }
     /// Абсолютная высота снега. nil использует геометрию опоры или землю.
     var surfaceHeight: (_ id: CGWindowID?, _ x: CGFloat) -> CGFloat? = { _, _ in nil }
     var didLand: (WinterImpact) -> Void = { _ in }
@@ -158,7 +160,7 @@ final class WinterScene {
 
     @discardableResult
     func create(radius: CGFloat, at point: CGPoint) -> UUID? {
-        guard objects.count < 12, WinterBallGeometry.isValid(radius),
+        guard hasCapacity, WinterBallGeometry.isValid(radius),
               point.x.isFinite, point.y.isFinite else { return nil }
         var object = WinterObject(id: UUID(), radii: [radius], center: point, velocity: .zero,
                                   support: nil, parked: false, isDragged: false)

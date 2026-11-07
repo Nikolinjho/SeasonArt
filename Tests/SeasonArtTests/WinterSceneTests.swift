@@ -170,8 +170,8 @@ final class WinterSceneTests: XCTestCase {
 
     func testLimitClearAndVehiclePush() throws {
         let scene = WinterScene(width: 800, height: 600)
-        for _ in 0..<12 { XCTAssertNotNil(scene.create(.small, at: CGPoint(x: 100, y: 14))) }
-        XCTAssertNil(scene.create(.small, at: .zero), "Лимит составляет двенадцать объектов")
+        for _ in 0..<WinterScene.maximumObjects { XCTAssertNotNil(scene.create(.small, at: CGPoint(x: 100, y: 14))) }
+        XCTAssertNil(scene.create(.small, at: .zero), "Предохранительный лимит учитывает все игрушки")
         let id = try XCTUnwrap(scene.objects.first?.id)
         scene.beginDragging(id, at: CGPoint(x: 100, y: 14))
         scene.removeAll()

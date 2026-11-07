@@ -31,9 +31,9 @@ final class WinterSceneControllerTests: XCTestCase {
         defer { controller.close() }
         XCTAssertFalse(controller.canCreate, "До включения снежного режима игрушки не создаются")
         controller.isEnabled = true
-        for i in 0..<12 { XCTAssertNotNil(controller.create(.small, at: CGPoint(x: 50 + i * 50, y: 100))) }
-        XCTAssertFalse(controller.canCreate, "Лимит двенадцать учитывает все окна")
-        XCTAssertEqual(controller.objectWindowCount, 12)
+        for i in 0..<WinterScene.maximumObjects { XCTAssertNotNil(controller.create(.small, at: CGPoint(x: 50 + i * 50, y: 100))) }
+        XCTAssertFalse(controller.canCreate, "Предохранительный лимит учитывает все окна")
+        XCTAssertEqual(controller.objectWindowCount, WinterScene.maximumObjects)
         controller.clear()
         XCTAssertEqual(controller.objectWindowCount, 0, "Очистка закрывает собственные панели")
         XCTAssertFalse(controller.isRunning, "Пустая сцена не держит таймер")
@@ -103,6 +103,16 @@ final class WinterSceneControllerTests: XCTestCase {
                        x: CGFloat, y: CGFloat = 61, dt: TimeInterval = 1 / 60, buttons: Int = 0) {
         controller.updateAutomaticSculpting(at: CGPoint(x: x - 600, y: y + 100), dt: dt, mouseButtons: buttons)
         _ = simulation.step(dt: Float(dt), cursor: SIMD2(Float(x), Float(y)))
+    }
+
+    func testПослеДвенадцатиИгрушекЛепкаПродолжаетСоздаватьСнежки() {
+        let (controller, simulation, _) = snowyController()
+        defer { controller.close() }
+        for i in 0..<12 { XCTAssertNotNil(controller.create(.small, at: CGPoint(x: i * 35, y: 200))) }
+        frame(controller, simulation, x: 160)
+        move(controller, simulation, from: 160, to: 260)
+        frame(controller, simulation, x: 260, dt: 0.36)
+        XCTAssertEqual(controller.scene.objects.count, 13, "Лепка не останавливается после двенадцатой игрушки")
     }
 
     private func move(_ controller: WinterSceneController, _ simulation: SnowSimulation,
@@ -399,11 +409,17 @@ final class WinterSceneControllerTests: XCTestCase {
         }
         let (controller, simulation, _) = snowyController()
         defer { controller.close() }
-        for i in 0..<12 { controller.create(.small, at: CGPoint(x: i * 40, y: 150)) }
-        frame(controller, simulation, x: 160)
-        frame(controller, simulation, x: 300)
+        let layer = try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 160, y: 61))).layer
+        let before = layer.heights
+        for i in 0..<WinterScene.maximumObjects { controller.create(.small, at: CGPoint(x: i * 40, y: 150)) }
+        for i in 0...20 {
+            controller.updateAutomaticSculpting(at: CGPoint(x: 160 + CGFloat(i) * 7 - 600, y: 161),
+                                                dt: 0.025, mouseButtons: 0)
+        }
+        controller.updateAutomaticSculpting(at: CGPoint(x: -300, y: 161), dt: 0.36, mouseButtons: 0)
         XCTAssertFalse(controller.isSculpting)
-        XCTAssertEqual(controller.scene.objects.count, 12)
+        XCTAssertEqual(controller.scene.objects.count, WinterScene.maximumObjects)
+        XCTAssertEqual(layer.heights, before, "При полном лимите лепка не снимает снег")
     }
     func testПеретаскиваниеБезАппаратнойКнопкиОтменяетАвтолёпку() throws {
         let (controller, simulation, _) = snowyController()

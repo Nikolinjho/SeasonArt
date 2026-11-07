@@ -34,7 +34,7 @@ final class WinterSceneController {
             sculptingPreview?.showsInScreenshots = showsInScreenshots
         }
     }
-    var canCreate: Bool { !closed && isEnabled && isActive && !isSuppressed && scene.objects.count < 12 }
+    var canCreate: Bool { !closed && isEnabled && isActive && !isSuppressed && scene.hasCapacity }
     var canPlow: Bool { !closed && isEnabled && isActive && shelf != nil && plow == nil }
     var objectWindowCount: Int { windows.count }
     var isRunning: Bool { timer != nil }

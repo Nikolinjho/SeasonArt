@@ -255,6 +255,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         screenshotsItem.state = Preferences.showInScreenshots ? .on : .off
         winterItem.isHidden = mode != .snow
         let winter = screenAtPointer()?.winter
+        winterItem.title = winter?.scene.hasCapacity == false
+            ? "Зимние игрушки: лимит \(WinterScene.maximumObjects)"
+            : "Зимние игрушки"
         for item in winterBallItems { item.isEnabled = winter?.canCreate ?? false }
         winterClearItem.isEnabled = screens.contains { $0.winter.hasObjects }
         winterPlowItem.isEnabled = winter?.canPlow ?? false
