@@ -161,4 +161,36 @@ final class WinterCollisionTests: XCTestCase {
         }
     }
 
+    func testБоковоеРазделениеНеОставляетСпящийШарВВоздухе() {
+        let scene = WinterScene(width: 800, height: 600)
+        _ = scene.create(.large, at: CGPoint(x: 300, y: 28))
+        _ = scene.create(.small, at: CGPoint(x: 300, y: 300))
+        run(scene)
+        _ = scene.create(.small, at: CGPoint(x: 320, y: 70))
+        run(scene)
+        for object in scene.objects where object.frame.minY > 0.1 {
+            let supported = scene.objects.contains { other in
+                guard other.id != object.id, other.center.y < object.center.y else { return false }
+                return abs(hypot(object.center.x - other.center.x, object.center.y - other.center.y) -
+                           object.radii[0] - other.radii[0]) < 0.1
+            }
+            XCTAssertTrue(supported, "Спящий шар должен касаться нижней опоры")
+        }
+    }
+
+    func testСборкаНаОснованииБудитЛежащийНаНёмОтдельныйШар() throws {
+        let scene = WinterScene(width: 800, height: 600)
+        _ = scene.create(.large, at: CGPoint(x: 300, y: 28))
+        _ = scene.create(.small, at: CGPoint(x: 300, y: 300))
+        run(scene)
+        let point = CGPoint(x: 300, y: 70)
+        let id = try XCTUnwrap(scene.create(.small, at: point))
+        scene.beginDragging(id, at: point)
+        scene.endDragging(id)
+        XCTAssertTrue(scene.isMoving)
+        run(scene)
+        XCTAssertEqual(scene.objects.count, 2)
+        XCTAssertEqual(scene.objects[1].frame.minY, scene.objects[0].frame.maxY, accuracy: 0.1)
+    }
+
 }

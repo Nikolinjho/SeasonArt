@@ -142,7 +142,7 @@ final class WinterScene {
     private var visibleSupports: Set<CGWindowID> = []
     private var resting: Set<UUID> = []
     private var pushed: Set<UUID> = []
-    private var objectSupports: [UUID: (id: UUID, center: CGPoint)] = [:]
+    private var objectSupports: [UUID: (id: UUID, center: CGPoint, radii: [CGFloat], carriedCenter: CGPoint)] = [:]
     private var bouncing: [UUID: WinterContact] = [:]
     private var dragOffset: CGPoint = .zero
     private var captured: UUID?
@@ -298,7 +298,9 @@ final class WinterScene {
         }) else { return }
         objects[base].radii.append(radius)
         resting.remove(id)
+        objectSupports.removeValue(forKey: id)
         objects.remove(at: index)
+        wakeUnsupportedObjects()
     }
 
     func updateWindows(_ update: WindowUpdate) {
@@ -391,11 +393,15 @@ final class WinterScene {
         resolveDockContacts()
         resolveObjectContacts()
         resolveDockContacts()
+        wakeUnsupportedObjects()
         let removed = objects.filter { pushed.contains($0.id) && ($0.frame.maxX < 0 || $0.frame.minX > width) }.map(\.id)
         objects.removeAll { removed.contains($0.id) }
         resting.subtract(removed)
         pushed.subtract(removed)
-        for id in removed { bouncing.removeValue(forKey: id) }
+        for id in removed {
+            bouncing.removeValue(forKey: id)
+            objectSupports.removeValue(forKey: id)
+        }
     }
 
     /// Dock имеет твёрдое тело: бок и низ не пропускают шары к земле под панелью.
@@ -473,7 +479,8 @@ final class WinterScene {
                 let id = objects[index].id
                 guard let support = objectSupports[id] else { continue }
                 if let base = objects.first(where: { $0.id == support.id }),
-                   !base.parked, !base.isDragged, base.center == support.center,
+                   !base.parked, !base.isDragged, base.center == support.center, base.radii == support.radii,
+                   objects[index].center == support.carriedCenter,
                    resting.contains(base.id), base.velocity.dx == 0, objects[index].velocity.dx == 0 {
                     continue
                 }
@@ -569,7 +576,7 @@ final class WinterScene {
         objects[index].velocity = .zero
         objects[index].support = nil
         resting.insert(objects[index].id)
-        objectSupports[objects[index].id] = (objects[base].id, objects[base].center)
+        objectSupports[objects[index].id] = (objects[base].id, objects[base].center, objects[base].radii, objects[index].center)
     }
 
     func resize(width: CGFloat, height: CGFloat) {
@@ -607,7 +614,10 @@ final class WinterScene {
         let removed = objects.filter { pushed.contains($0.id) && ($0.frame.maxX < 0 || $0.frame.minX > width) }.map(\.id)
         objects.removeAll { removed.contains($0.id) }
         pushed.subtract(removed)
-        for id in removed { bouncing.removeValue(forKey: id) }
+        for id in removed {
+            bouncing.removeValue(forKey: id)
+            objectSupports.removeValue(forKey: id)
+        }
         resting.subtract(removed)
         wakeUnsupportedObjects()
     }
