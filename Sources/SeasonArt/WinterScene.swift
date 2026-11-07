@@ -142,6 +142,7 @@ final class WinterScene {
     private var visibleSupports: Set<CGWindowID> = []
     private var resting: Set<UUID> = []
     private var pushed: Set<UUID> = []
+    private var objectSupports: [UUID: (id: UUID, center: CGPoint)] = [:]
     private var bouncing: [UUID: WinterContact] = [:]
     private var dragOffset: CGPoint = .zero
     private var captured: UUID?
@@ -181,6 +182,8 @@ final class WinterScene {
         objects[index].support = nil
         objects[index].velocity = .zero
         resting.remove(id)
+        objectSupports.removeValue(forKey: id)
+        wakeUnsupportedObjects()
         pushed.remove(id)
         bouncing.removeValue(forKey: id)
     }
@@ -319,19 +322,22 @@ final class WinterScene {
             fit(&objects[index], on: next, clampToSupport: objects[index].velocity.dx == 0)
         }
         surfaces = visible.merging(surfaces.filter { update.elsewhere.contains($0.key) || update.parked.contains($0.key) }) { current, _ in current }
+        wakeUnsupportedObjects()
     }
 
     func step(dt: TimeInterval) {
         guard dt.isFinite, dt > 0 else { return }
         let duration = min(dt, 1.0 / 30)
-        let steps = max(1, Int(ceil(duration * 120)))
+        let steps = max(1, Int(ceil(duration * (objects.count > 1 ? 360 : 120))))
         for _ in 0..<steps { integrate(elapsed: CGFloat(duration / Double(steps))) }
     }
 
     private func integrate(elapsed: CGFloat) {
+        wakeUnsupportedObjects()
         for index in objects.indices {
             guard !objects[index].isDragged, !objects[index].parked else { continue }
             if resting.contains(objects[index].id) {
+                if objectSupports[objects[index].id] != nil { continue }
                 let previousX = objects[index].center.x
                 let decay = exp(-WinterMotion.friction * elapsed)
                 objects[index].center.x += objects[index].velocity.dx * (1 - decay) / WinterMotion.friction
@@ -371,11 +377,119 @@ final class WinterScene {
                 land(&objects[index], on: nil, at: ground(at: x))
             }
         }
+        resolveObjectContacts()
         let removed = objects.filter { pushed.contains($0.id) && ($0.frame.maxX < 0 || $0.frame.minX > width) }.map(\.id)
         objects.removeAll { removed.contains($0.id) }
         resting.subtract(removed)
         pushed.subtract(removed)
         for id in removed { bouncing.removeValue(forKey: id) }
+    }
+
+    private func wakeUnsupportedObjects() {
+        var changed = true
+        while changed {
+            changed = false
+            for index in objects.indices {
+                let id = objects[index].id
+                guard let support = objectSupports[id] else { continue }
+                if let base = objects.first(where: { $0.id == support.id }),
+                   !base.parked, !base.isDragged, base.center == support.center,
+                   resting.contains(base.id), base.velocity.dx == 0, objects[index].velocity.dx == 0 {
+                    continue
+                }
+                objectSupports.removeValue(forKey: id)
+                resting.remove(id)
+                changed = true
+            }
+        }
+    }
+
+    /// Прямоугольники отсекают далёкие пары, контакт проверяется по каждому шару фигуры.
+    private func resolveObjectContacts() {
+        let active = objects.indices.filter { !objects[$0].parked && !objects[$0].isDragged }
+        guard active.count > 1 else { return }
+        let components = objects.map(\.ballFrames)
+        let inverseMasses = objects.map { object in 1 / object.radii.reduce(0) { $0 + pow($1, 3) } }
+        for _ in 0..<12 {
+            var maximumOverlap: CGFloat = 0
+            let bounds = objects.map(\.frame)
+            let sorted = active.sorted { bounds[$0].minX < bounds[$1].minX }
+            for position in sorted.indices {
+                let a = sorted[position]
+                for next in sorted.indices where next > position {
+                    let b = sorted[next]
+                    if bounds[b].minX > bounds[a].maxX + 0.01 { break }
+                    if bounds[b].minY > bounds[a].maxY + 0.01 ||
+                       bounds[a].minY > bounds[b].maxY + 0.01 { continue }
+                    let framesA = components[a]
+                    let framesB = components[b]
+                    for frameA in framesA {
+                        for frameB in framesB {
+                            let dx = objects[b].center.x - objects[a].center.x
+                            let dy = objects[b].center.y - objects[b].radii[0] + frameB.midY -
+                                objects[a].center.y + objects[a].radii[0] - frameA.midY
+                            let distance = hypot(dx, dy)
+                            let radius = (frameA.width + frameB.width) / 2
+                            guard distance < radius + 0.002 else { continue }
+                            let nx: CGFloat = distance > 0.000001 ? dx / distance : 1
+                            let ny: CGFloat = distance > 0.000001 ? dy / distance : 0
+                            let inverseA: CGFloat = ny > 0.8 && resting.contains(objects[a].id) ? 0 : inverseMasses[a]
+                            let inverseB: CGFloat = ny < -0.8 && resting.contains(objects[b].id) ? 0 : inverseMasses[b]
+                            let total = inverseA + inverseB
+                            guard total > 0 else { continue }
+                            let overlap = max(0, radius - distance)
+                            maximumOverlap = max(maximumOverlap, overlap)
+                            objects[a].center.x -= nx * overlap * inverseA / total
+                            objects[a].center.y -= ny * overlap * inverseA / total
+                            objects[b].center.x += nx * overlap * inverseB / total
+                            objects[b].center.y += ny * overlap * inverseB / total
+                            let relative = (objects[b].velocity.dx - objects[a].velocity.dx) * nx +
+                                (objects[b].velocity.dy - objects[a].velocity.dy) * ny
+                            if relative < 0 {
+                                let restitution: CGFloat = relative < -220 ? 0.12 : 0
+                                let impulse = -(1 + restitution) * relative / total
+                                objects[a].velocity.dx -= impulse * inverseA * nx
+                                objects[a].velocity.dy -= impulse * inverseA * ny
+                                objects[b].velocity.dx += impulse * inverseB * nx
+                                objects[b].velocity.dy += impulse * inverseB * ny
+                            }
+                            constrainContact(a)
+                            constrainContact(b)
+                            if ny > 0.99 { restOnObject(b, base: a) }
+                            if ny < -0.99 { restOnObject(a, base: b) }
+                        }
+                    }
+                }
+            }
+            if maximumOverlap < 0.001 { break }
+        }
+    }
+
+    private func constrainContact(_ index: Int) {
+        if !pushed.contains(objects[index].id) { clampX(&objects[index]) }
+        let floor = objects[index].support.flatMap { surfaces[$0] }.flatMap {
+            supportHeight($0, at: objects[index].center.x)
+        } ?? ground(at: objects[index].center.x)
+        if objects[index].frame.minY < floor {
+            objects[index].center.y = floor + objects[index].radii[0]
+            objects[index].velocity.dy = max(0, objects[index].velocity.dy)
+        }
+        if abs(objects[index].velocity.dx) < WinterMotion.sleepSpeed { objects[index].velocity.dx = 0 }
+        if objects[index].velocity.dy > WinterMotion.sleepSpeed {
+            resting.remove(objects[index].id)
+            objectSupports.removeValue(forKey: objects[index].id)
+            objects[index].support = nil
+        }
+    }
+
+    private func restOnObject(_ index: Int, base: Int) {
+        guard resting.contains(objects[base].id), objects[base].velocity == .zero,
+              abs(objects[index].velocity.dy) < WinterMotion.sleepSpeed,
+              objects[index].velocity.dx == 0 else { return }
+        objects[index].velocity = .zero
+        objects[index].support = nil
+        resting.insert(objects[index].id)
+        objectSupports[objects[index].id] = (objects[base].id, objects[base].center)
     }
 
     func resize(width: CGFloat, height: CGFloat) {
@@ -387,11 +501,13 @@ final class WinterScene {
                 fit(&objects[index], on: surface, clampToSupport: true)
             }
         }
+        wakeUnsupportedObjects()
     }
 
     func removeAll() {
         objects.removeAll()
         resting.removeAll()
+        objectSupports.removeAll()
         pushed.removeAll()
         bouncing.removeAll()
         captured = nil
@@ -413,6 +529,7 @@ final class WinterScene {
         pushed.subtract(removed)
         for id in removed { bouncing.removeValue(forKey: id) }
         resting.subtract(removed)
+        wakeUnsupportedObjects()
     }
 
     private func ground(at x: CGFloat) -> CGFloat { surfaceHeight(nil, x) ?? 0 }
@@ -425,6 +542,7 @@ final class WinterScene {
     }
 
     private func land(_ object: inout WinterObject, on support: CGWindowID?, at y: CGFloat) {
+        objectSupports.removeValue(forKey: object.id)
         let contact = WinterContact(support: support)
         if bouncing[object.id] != contact {
             didLand(WinterImpact(support: support, x: object.center.x, radius: object.radii[0],
