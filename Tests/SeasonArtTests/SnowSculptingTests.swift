@@ -126,6 +126,126 @@ final class SnowSculptingTests: XCTestCase {
         return gesture
     }
 
+    private func grains(_ simulation: SnowSimulation) -> [(area: Float, velocity: SIMD2<Float>)] {
+        let value = Mirror(reflecting: simulation).children.first { $0.label == "grains" }!.value
+        return Mirror(reflecting: value).children.map {
+            let fields = Mirror(reflecting: $0.value).children
+            return (fields.first { $0.label == "area" }!.value as! Float,
+                    fields.first { $0.label == "velocity" }!.value as! SIMD2<Float>)
+        }
+    }
+
+    func testОтделениеЛокальноПроминаетСнегОставляетВаликиИПыльНаЛюбойОпоре() throws {
+        for support in 0..<3 {
+            for length: CGFloat in [18, 108] {
+                let simulation = SnowSimulation(width: 600, height: 400, snowfall: .off)
+                if support > 0 { simulation.updateWindows([surface(dock: support == 1)], interval: 1 / 60) }
+                let fields = Mirror(reflecting: simulation).children
+                let layer: SnowLayer
+                if support == 0 {
+                    layer = try XCTUnwrap(fields.first { $0.label == "ground" }?.value as? SnowLayer)
+                } else {
+                    let ledges = try XCTUnwrap(fields.first { $0.label == "ledges" }?.value as? [CGWindowID: SnowLayer])
+                    layer = try XCTUnwrap(ledges[42])
+                }
+                layer.replace(heights: layer.heights.map { _ in 30 })
+                layer.refreshTop()
+                let start = CGPoint(x: 160, y: CGFloat(layer.base.y) + 1)
+                let source = try XCTUnwrap(simulation.sculptingSource(at: start))
+                var draft = SnowSculptingGesture(source: source, at: start)
+                draft.include(CGPoint(x: start.x + length, y: start.y))
+                let before = layer.heights
+                var collected = before
+                for i in draft.columns { collected[i] -= 2 }
+                XCTAssertEqual(layer.heights, before, "Черновик не проминает снег")
+                let ball = try XCTUnwrap(simulation.commitSculpting(draft))
+                let center = try XCTUnwrap(layer.index(at: Float(ball.center.x)))
+                XCTAssertLessThan(layer.heights[center], collected[center], "Под шаром остаётся лунка")
+                XCTAssertTrue(layer.heights.indices.contains { layer.centerX($0) < Float(ball.center.x) && layer.heights[$0] > collected[$0] }, "Слева остаётся валик")
+                XCTAssertTrue(layer.heights.indices.contains { layer.centerX($0) > Float(ball.center.x) && layer.heights[$0] > collected[$0] }, "Справа остаётся валик")
+                for i in layer.heights.indices where abs(layer.centerX(i) - Float(ball.center.x)) > Float(ball.radius) * 1.6 {
+                    XCTAssertEqual(layer.heights[i], collected[i], "Деформация локальна")
+                }
+                let dust = grains(simulation)
+                XCTAssertTrue((1...4).contains(dust.count), "Отделение выпускает немного пыли")
+                XCTAssertTrue(dust.allSatisfy { $0.velocity.y > 0 && $0.velocity.y < 70 })
+                XCTAssertEqual(CGFloat((before.reduce(0, +) - layer.heights.reduce(0, +)) * layer.columnWidth),
+                               ball.collectedArea + CGFloat(dust.reduce(0) { $0 + $1.area }), accuracy: 0.05)
+                XCTAssertEqual(ball.center.y - ball.radius, CGFloat(layer.surface(center)), accuracy: 0.001, "Шар касается живой поверхности после деформации")
+                XCTAssertLessThan(collected[center] - layer.heights[center], Float(ball.radius) * 0.15, "Лепка мягче приземления")
+                XCTAssertEqual(draft.source.heights, before, "Снимок не меняется после отделения")
+            }
+        }
+    }
+
+    func testЛепкаСохраняетМассуПриПолномБюджетеИНеПроходитЗаПерекрытие() throws {
+        for fullBudget in [false, true] {
+            let simulation = SnowSimulation(width: 600, height: 400, snowfall: .off)
+            let layer = try XCTUnwrap(Mirror(reflecting: simulation).children.first { $0.label == "ground" }?.value as? SnowLayer)
+            layer.replace(heights: layer.heights.map { _ in 30 })
+            if fullBudget {
+                for _ in 0..<1500 {
+                    simulation.displaceSnow(for: WinterImpact(support: nil, x: 240, radius: 14, mass: 1, velocity: CGVector(dx: 0, dy: -400)))
+                    layer.replace(heights: layer.heights.map { _ in 30 })
+                }
+                XCTAssertEqual(grains(simulation).count, 12_000)
+            }
+            layer.occluders = [SIMD4(280, 0, 290, 400)]
+            layer.refreshTop()
+            let start = CGPoint(x: 160, y: 1)
+            var draft = SnowSculptingGesture(source: try XCTUnwrap(simulation.sculptingSource(at: start)), at: start)
+            draft.include(CGPoint(x: 268, y: 1))
+            let before = layer.heights
+            let dustBefore = grains(simulation)
+            let ball = try XCTUnwrap(simulation.commitSculpting(draft))
+            for i in layer.heights.indices where layer.centerX(i) >= 280 {
+                XCTAssertEqual(layer.heights[i], before[i], "Валик не проходит через перекрытие")
+            }
+            let dust = grains(simulation)
+            XCTAssertEqual(CGFloat((before.reduce(0, +) - layer.heights.reduce(0, +)) * layer.columnWidth), ball.collectedArea + CGFloat(dust.reduce(0) { $0 + $1.area } - dustBefore.reduce(0) { $0 + $1.area }), accuracy: 0.05)
+            if fullBudget { XCTAssertEqual(dust.count, dustBefore.count, "При полном бюджете вся смещённая масса остаётся в слое") }
+            let after = layer.heights
+            simulation.mode = .autumn
+            XCTAssertNil(simulation.commitSculpting(draft))
+            XCTAssertEqual(layer.heights, after)
+            XCTAssertEqual(grains(simulation).count, dust.count)
+        }
+    }
+
+    func testЛепкаУПравойГраницыНеТеряетДопустимуюКоординату() throws {
+        let simulation = SnowSimulation(width: 600, height: 400, snowfall: .off)
+        simulation.updateWindows([surface()], interval: 1 / 60)
+        let ledges = try XCTUnwrap(Mirror(reflecting: simulation).children.first { $0.label == "ledges" }?.value as? [CGWindowID: SnowLayer])
+        let layer = try XCTUnwrap(ledges[42])
+        layer.replace(heights: layer.heights.map { _ in 30 })
+        layer.refreshTop()
+        let start = CGPoint(x: CGFloat(layer.base.x + layer.width) - 40, y: 61)
+        var draft = SnowSculptingGesture(source: try XCTUnwrap(simulation.sculptingSource(at: start)), at: start)
+        draft.include(CGPoint(x: CGFloat(layer.base.x + layer.width).nextDown, y: 61))
+        let ball = try XCTUnwrap(simulation.commitSculpting(draft))
+        XCTAssertEqual(ball.center.y - ball.radius, CGFloat(layer.surface(layer.count - 1)), accuracy: 0.001)
+    }
+
+    func testКороткийЖестИПолностьюСнятыйТонкийСнегНеСоздаютПыль() throws {
+        let simulation = SnowSimulation(width: 600, height: 400, snowfall: .off)
+        let layer = try XCTUnwrap(Mirror(reflecting: simulation).children.first { $0.label == "ground" }?.value as? SnowLayer)
+        layer.replace(heights: layer.heights.map { _ in 0.5 })
+        layer.refreshTop()
+        let before = layer.heights
+        let start = CGPoint(x: 160, y: 1)
+        var draft = SnowSculptingGesture(source: try XCTUnwrap(simulation.sculptingSource(at: start)), at: start)
+        draft.include(CGPoint(x: 180, y: 1))
+        XCTAssertNil(simulation.commitSculpting(draft))
+        XCTAssertEqual(layer.heights, before)
+        XCTAssertTrue(grains(simulation).isEmpty)
+        draft.include(CGPoint(x: 238, y: 1))
+        let ball = try XCTUnwrap(simulation.commitSculpting(draft))
+        XCTAssertEqual(ball.collectedArea, 40)
+        XCTAssertTrue(grains(simulation).isEmpty, "После снятия всего снега под шаром пыль не возникает из воздуха")
+        for i in layer.heights.indices { XCTAssertEqual(layer.heights[i], draft.columns.contains(i) ? 0 : before[i]) }
+        XCTAssertEqual(ball.center.y - ball.radius, 0, accuracy: 0.001)
+    }
+
     func testCommitRemovesOnlyChosenColumnsWithAreaAndHeightCaps() throws {
         let simulation = simulation()
         let before = values(simulation)
@@ -137,9 +257,9 @@ final class SnowSculptingTests: XCTestCase {
         XCTAssertTrue(result.center.x.isFinite && result.center.y.isFinite)
         XCTAssertEqual(result.collectedArea, 220, accuracy: 0.001)
         let after = values(simulation)
-        XCTAssertEqual((before.reduce(0, +) - after.reduce(0, +)) * 2, 220, accuracy: 0.1)
+        XCTAssertEqual((before.reduce(0, +) - after.reduce(0, +)) * 2, 220 + grains(simulation).reduce(0) { $0 + $1.area }, accuracy: 0.1)
         XCTAssertEqual(simulation.winterSurfaceY(at: 380, on: 42), distant, "Дальний участок не меняется")
-        XCTAssertTrue(zip(before, after).allSatisfy { $0 - $1 <= 2.001 && $1 >= 0 }, "Высота каждой колонки уменьшается не больше чем на два пункта")
+        XCTAssertTrue(zip(before, after).allSatisfy { $0 - $1 <= 2 + Float(result.radius) * 0.054 + 0.001 && $1 >= 0 }, "Сбор ограничен двумя пунктами, локальная лунка зависит от радиуса")
     }
 
     func testReducedLiveSnowCreatesSmallerBallWithActualArea() throws {
@@ -148,14 +268,15 @@ final class SnowSculptingTests: XCTestCase {
         XCTAssertEqual(draft.radius, 36)
         _ = simulation.plowDock(id: 42, fromX: 150, toX: 210)
         let before = values(simulation)
+        let dustBefore = grains(simulation).reduce(0) { $0 + $1.area }
         let result = try XCTUnwrap(simulation.commitSculpting(draft))
         XCTAssertEqual(result.radius, SnowSculptingGesture.radius(for: result.collectedArea))
         XCTAssertLessThan(result.radius, try XCTUnwrap(draft.radius))
-        XCTAssertEqual(result.center.y - result.radius, draft.center.y - (try XCTUnwrap(draft.radius)), accuracy: 0.001)
+        XCTAssertEqual(result.center.y - result.radius, try XCTUnwrap(simulation.winterSurfaceY(at: result.center.x, on: 42)), accuracy: 0.001)
         XCTAssertGreaterThanOrEqual(result.collectedArea, SnowSculptingGesture.mediumArea)
         XCTAssertLessThan(result.collectedArea, SnowSculptingGesture.largeArea)
         let after = values(simulation)
-        XCTAssertEqual(CGFloat((before.reduce(0, +) - after.reduce(0, +)) * 2), result.collectedArea, accuracy: 0.1)
+        XCTAssertEqual(CGFloat((before.reduce(0, +) - after.reduce(0, +)) * 2), result.collectedArea + CGFloat(grains(simulation).reduce(0) { $0 + $1.area } - dustBefore), accuracy: 0.1)
     }
 
     func testInsufficientLiveSnowIsAtomic() throws {

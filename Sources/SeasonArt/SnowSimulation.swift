@@ -655,11 +655,16 @@ final class SnowSimulation {
             area += amount * CGFloat(layer.columnWidth)
         }
         guard let radius = SnowSculptingGesture.radius(for: area) else { return nil }
+        // Допустимая CGFloat-координата у правого края при переводе во Float округляется наружу.
+        let x = min(Float(gesture.center.x), (layer.base.x + layer.width).nextDown)
+        let column = layer.clampedIndex(at: x)
         for (index, amount) in removals { layer.set(index, layer.heights[index] - amount) }
+        displaceSnow(on: layer, at: x, radius: Float(radius),
+                     strength: 0.18, horizontalVelocity: 0, grainLimit: 4)
         layer.refreshTop()
         heightsChanged = true
         stirred()
-        let center = CGPoint(x: gesture.center.x, y: gesture.center.y - (gesture.radius ?? radius) + radius)
+        let center = CGPoint(x: gesture.center.x, y: CGFloat(layer.surface(column)) + radius)
         return SculptedBall(radius: radius, center: center, collectedArea: area)
     }
 
@@ -731,14 +736,19 @@ final class SnowSimulation {
         } else {
             layer = ground
         }
-        guard impact.x >= CGFloat(layer.base.x), impact.x < CGFloat(layer.base.x + layer.width),
-              let center = layer.index(at: Float(impact.x)) else { return }
-        let visible = sculptingVisibility(of: layer)
-        guard visible[center], layer.heights[center] > 0 else { return }
-        let radius = Float(impact.radius)
-        let x = Float(impact.x)
         // Кубический корень сохраняет рост силы для всей допустимой массы, включая три шара радиуса 36.
         let strength = min(1, Float(-impact.velocity.dy) / 800) * pow(Float(impact.mass), 1 / 3)
+        displaceSnow(on: layer, at: Float(impact.x), radius: Float(impact.radius),
+                     strength: strength, horizontalVelocity: Float(impact.velocity.dx), grainLimit: 8)
+    }
+
+    /// Локальный перенос массы для удара и мягкого отделения шара от сугроба.
+    private func displaceSnow(on layer: SnowLayer, at x: Float, radius: Float,
+                              strength: Float, horizontalVelocity: Float, grainLimit: Int) {
+        guard x >= layer.base.x, x < layer.base.x + layer.width,
+              let center = layer.index(at: x) else { return }
+        let visible = sculptingVisibility(of: layer)
+        guard visible[center], layer.heights[center] > 0 else { return }
         let reach = radius * 1.6
         // Перекрытие обрывает область, чтобы снег не проходил сквозь скрытые колонки.
         var low = center
@@ -765,13 +775,13 @@ final class SnowSimulation {
             for i in sides { layer.set(i, layer.heights[i] + share) }
         }
         if airborne > 0 {
-            let count = min(room, 8)
+            let count = min(room, grainLimit)
             let share = airborne / Float(count)
             for i in 0..<count {
                 let direction: Float = i % 2 == 0 ? -1 : 1
                 grains.append(Grain(
                     position: SIMD2(layer.centerX(direction < 0 ? low : high), top + 1),
-                    velocity: SIMD2(direction * (50 + 110 * strength) + Float(impact.velocity.dx) * 0.2,
+                    velocity: SIMD2(direction * (50 + 110 * strength) + horizontalVelocity * 0.2,
                                     40 + 100 * strength),
                     area: share, size: min(5, max(1.1, share.squareRoot()))))
             }

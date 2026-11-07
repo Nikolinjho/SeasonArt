@@ -140,20 +140,29 @@ final class WinterSceneControllerTests: XCTestCase {
         XCTAssertNil(controller.sculptingPreview)
     }
 
+    private func snowArea(_ simulation: SnowSimulation) -> Float {
+        let fields = Mirror(reflecting: simulation).children
+        let layers = fields.first { $0.label == "layers" }!.value as! [SnowLayer]
+        let grains = fields.first { $0.label == "grains" }!.value
+        let airborne = Mirror(reflecting: grains).children.reduce(Float(0)) { sum, grain in
+            sum + (Mirror(reflecting: grain.value).children.first { $0.label == "area" }!.value as! Float)
+        }
+        return layers.reduce(airborne) { $0 + $1.heights.reduce(0, +) * $1.columnWidth }
+    }
+
     func testДвижениеСначалаПоказываетМаленькийШарИПаузаСохраняетРазмер() throws {
         let (controller, simulation, _) = snowyController()
         defer { controller.close() }
-        let layer = try XCTUnwrap(simulation.sculptingSource(at: CGPoint(x: 160, y: 61))).layer
-        let before = layer.heights.reduce(0, +) * layer.columnWidth
+        let before = snowArea(simulation)
         frame(controller, simulation, x: 160)
         for i in 1...5 { frame(controller, simulation, x: 160 + CGFloat(i) * 25, dt: 0.05) }
         let preview = try XCTUnwrap(controller.sculptingPreview)
         XCTAssertEqual(preview.frame.width, 16, accuracy: 0.001, "Первый видимый радиус равен шести")
         XCTAssertTrue(controller.scene.objects.isEmpty)
-        frame(controller, simulation, x: 285, dt: 0.36)
+        controller.updateAutomaticSculpting(at: CGPoint(x: 285 - 600, y: 61 + 100), dt: 0.36, mouseButtons: 0)
         XCTAssertEqual(try XCTUnwrap(controller.scene.objects.first).radii[0], 6, accuracy: 0.001)
-        let removed = before - layer.heights.reduce(0, +) * layer.columnWidth
-        XCTAssertEqual(removed, 40, accuracy: 0.01, "Подтверждение снимает только массу видимого шара")
+        let removed = before - snowArea(simulation)
+        XCTAssertEqual(removed, 40, accuracy: 0.01, "Масса слоя и пыли уменьшается только на массу видимого шара")
     }
 
     func testКороткийПроходПослеПаузыПозволяетПовторитьБезВыхода() {
