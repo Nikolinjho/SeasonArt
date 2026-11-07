@@ -110,7 +110,7 @@ final class WinterDockCollisionTests: XCTestCase {
             scene.didLand = { _ in impacts += 1 }
             _ = scene.create(radius: 6, at: CGPoint(x: 104, y: 300))
             for _ in 0..<300 { scene.step(dt: 1 / 60) }
-            XCTAssertEqual(scene.objects[0].center.y, cornerRadius == 0 ? 72 : 64, accuracy: 0.01)
+            XCTAssertEqual(scene.objects[0].center.y, cornerRadius == 0 ? 72 : 46 + sqrt(26 * 26 - 16 * 16), accuracy: 0.01)
             XCTAssertFalse(scene.isMoving)
             scene.updateWindows(WindowUpdate(surfaces: [dock], interval: 0.1, parked: [], elsewhere: [], sliding: false, slideVelocity: 0))
             XCTAssertFalse(scene.isMoving)
@@ -132,9 +132,36 @@ final class WinterDockCollisionTests: XCTestCase {
         scene.updateWindows(WindowUpdate(surfaces: [dock], interval: 0.1, parked: [], elsewhere: [], sliding: false, slideVelocity: 0))
         _ = scene.create(radius: 6, at: CGPoint(x: 104, y: 90))
         for _ in 0..<300 { scene.step(dt: 1 / 60) }
-        XCTAssertEqual(scene.objects[0].center.y, 64, accuracy: 0.01)
+        XCTAssertEqual(scene.objects[0].center.y, 46 + sqrt(26 * 26 - 16 * 16), accuracy: 0.01)
         XCTAssertEqual(impacts, 1)
         XCTAssertFalse(scene.isMoving)
+    }
+
+    func testВесьКругЛежитНадОкруглымТеломDock() {
+        for exponent: CGFloat in [2, 2.5] {
+            for radius: CGFloat in [6, 36] {
+                for x: CGFloat in [104, 396] {
+                    let scene = WinterScene(width: 800, height: 600)
+                    let dock = WindowSurface(id: 42, frame: CGRect(x: 100, y: 6, width: 300, height: 60),
+                                             blockers: [], cover: [], cornerRadius: 20, cornerExponent: exponent, isDock: true)
+                    scene.surfaceHeight = { id, _ in id == 42 ? 46 : 0 }
+                    scene.updateWindows(WindowUpdate(surfaces: [dock], interval: 0.1, parked: [], elsewhere: [], sliding: false, slideVelocity: 0))
+                    _ = scene.create(radius: radius, at: CGPoint(x: x, y: 300))
+                    for _ in 0..<300 { scene.step(dt: 1 / 60) }
+                    let object = scene.objects[0]
+                    for sample in 0...200 {
+                        let sampleX = object.center.x - radius + 2 * radius * CGFloat(sample) / 200
+                        guard sampleX >= 100, sampleX <= 400 else { continue }
+                        let d = min(sampleX - 100, 400 - sampleX)
+                        let u = max(0, 1 - d / 20)
+                        let roof = 46 + 20 * pow(max(0, 1 - pow(u, exponent)), 1 / exponent)
+                        let ballBottom = object.center.y - sqrt(max(0, radius * radius - pow(sampleX - object.center.x, 2)))
+                        XCTAssertGreaterThanOrEqual(ballBottom, roof - 0.01)
+                    }
+                    XCTAssertFalse(scene.isMoving)
+                }
+            }
+        }
     }
 
 }

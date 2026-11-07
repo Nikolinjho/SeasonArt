@@ -325,13 +325,11 @@ final class WinterScene {
         }
         surfaces = visible.merging(surfaces.filter { update.elsewhere.contains($0.key) || update.parked.contains($0.key) }) { current, _ in current }
         for object in objects where !object.parked && !object.isDragged {
-            for dock in visible.values where dock.isDock {
+            for dock in visible.values where dock.isDock && object.frame.intersects(dock.frame) {
                 let intersects = object.ballFrames.contains { frame in
                     let center = CGPoint(x: object.center.x, y: object.frame.minY + frame.midY)
-                    let body = dockBodyFrame(dock, at: center.x)
-                    let x = min(max(center.x, body.minX), body.maxX)
-                    let y = min(max(center.y, body.minY), body.maxY)
-                    return hypot(center.x - x, center.y - y) < frame.width / 2 - 0.000001
+                    let closest = closestDockPoint(dock, to: center)
+                    return hypot(center.x - closest.x, center.y - closest.y) < frame.width / 2 - 0.000001
                 }
                 if intersects { resting.remove(object.id) }
             }
@@ -380,7 +378,7 @@ final class WinterScene {
                 let radius = objects[index].frame.width / 2
                 guard visibleSupports.contains(surface.id),
                       max(radius, surface.frame.minX + radius) <= min(width - radius, surface.frame.maxX - radius),
-                      let y = supportHeight(surface, at: x), y >= 0,
+                      let y = supportHeight(surface, at: x, radius: objects[index].radii[0]), y >= 0,
                       y + objects[index].frame.height <= height,
                       y <= beforeBottom + 0.01, y >= afterBottom else { return nil }
                 return (surface.id, y)
@@ -415,11 +413,10 @@ final class WinterScene {
                 for _ in 0..<4 {
                     var corrected = false
                     for (component, frame) in objects[index].ballFrames.enumerated() {
-                        let body = dockBodyFrame(dock, at: objects[index].center.x)
+                        let body = dock.frame
                         let radius = frame.width / 2
                         let center = CGPoint(x: objects[index].center.x, y: objects[index].frame.minY + frame.midY)
-                        let closest = CGPoint(x: min(max(center.x, body.minX), body.maxX),
-                                              y: min(max(center.y, body.minY), body.maxY))
+                        let closest = closestDockPoint(dock, to: center)
                         let dx = center.x - closest.x
                         let dy = center.y - closest.y
                         let distance = hypot(dx, dy)
@@ -440,7 +437,7 @@ final class WinterScene {
                             let faces = [CGVector(dx: body.minX - radius - center.x, dy: 0),
                                          CGVector(dx: body.maxX + radius - center.x, dy: 0),
                                          CGVector(dx: 0, dy: body.minY - radius - center.y),
-                                         CGVector(dx: 0, dy: body.maxY + radius - center.y)]
+                                         CGVector(dx: 0, dy: dockRestHeight(dock, at: center.x, radius: radius) + radius - center.y)]
                             guard let nearest = faces.filter({ legal($0) }).min(by: {
                                 hypot($0.dx, $0.dy) < hypot($1.dx, $1.dy)
                             }) else { continue }
@@ -453,7 +450,7 @@ final class WinterScene {
                         objects[index].center.x += correction.dx
                         objects[index].center.y += correction.dy
                         if ny > 0.999 && component == 0 {
-                            land(&objects[index], on: dock.id, at: body.maxY)
+                            land(&objects[index], on: dock.id, at: dockRestHeight(dock, at: center.x, radius: radius))
                         } else {
                             let incoming = objects[index].velocity.dx * nx + objects[index].velocity.dy * ny
                             if incoming < 0 {
@@ -556,7 +553,7 @@ final class WinterScene {
     private func constrainContact(_ index: Int) {
         if !pushed.contains(objects[index].id) { clampX(&objects[index]) }
         let floor = objects[index].support.flatMap { surfaces[$0] }.flatMap {
-            supportHeight($0, at: objects[index].center.x)
+            supportHeight($0, at: objects[index].center.x, radius: objects[index].radii[0])
         } ?? ground(at: objects[index].center.x)
         if objects[index].frame.minY < floor {
             objects[index].center.y = floor + objects[index].radii[0]
@@ -626,21 +623,77 @@ final class WinterScene {
     private func ground(at x: CGFloat) -> CGFloat { surfaceHeight(nil, x) ?? 0 }
 
     /// Физическая кромка повторяет superellipse основания SnowLayer, без высоты снега.
-    private func dockBodyFrame(_ surface: WindowSurface, at x: CGFloat) -> CGRect {
+    private func dockRoof(_ surface: WindowSurface, at x: CGFloat) -> CGFloat {
         let radius = max(0, min(surface.cornerRadius, surface.frame.width / 2, surface.frame.height / 2))
-        guard radius > 0 else { return surface.frame }
+        guard radius > 0 else { return surface.frame.maxY }
         let distance = max(0, min(x - surface.frame.minX, surface.frame.maxX - x))
         let u = max(0, 1 - distance / radius)
         let exponent = max(1, surface.cornerExponent)
-        let drop = radius * (1 - pow(max(0, 1 - pow(u, exponent)), 1 / exponent))
-        return CGRect(x: surface.frame.minX, y: surface.frame.minY,
-                      width: surface.frame.width, height: surface.frame.height - drop)
+        return surface.frame.maxY - radius * (1 - pow(max(0, 1 - pow(u, exponent)), 1 / exponent))
     }
 
-    private func supportHeight(_ surface: WindowSurface, at x: CGFloat) -> CGFloat? {
+    /// Нижняя точка шара учитывает всю ширину контакта с выпуклым силуэтом.
+    private func dockRestHeight(_ surface: WindowSurface, at x: CGFloat, radius: CGFloat) -> CGFloat {
+        guard radius > 0, surface.cornerRadius > 0 else { return dockRoof(surface, at: x) }
+        let corner = min(surface.cornerRadius, surface.frame.width / 2, surface.frame.height / 2)
+        if x >= surface.frame.minX + corner && x <= surface.frame.maxX - corner { return surface.frame.maxY }
+        var low = max(surface.frame.minX, x - radius)
+        var high = min(surface.frame.maxX, x + radius)
+        guard low <= high else { return dockRoof(surface, at: x) }
+        func clearance(_ sample: CGFloat) -> CGFloat {
+            dockRoof(surface, at: sample) + sqrt(max(0, radius * radius - pow(sample - x, 2)))
+        }
+        for _ in 0..<40 {
+            let a = low + (high - low) / 3
+            let b = high - (high - low) / 3
+            if clearance(a) < clearance(b) { low = a } else { high = b }
+        }
+        return clearance((low + high) / 2) - radius
+    }
+
+    private func closestDockPoint(_ surface: WindowSurface, to point: CGPoint) -> CGPoint {
+        let body = surface.frame
+        if point.x >= body.minX, point.x <= body.maxX,
+           point.y >= body.minY, point.y <= dockRoof(surface, at: point.x) { return point }
+        let radius = max(0, min(surface.cornerRadius, body.width / 2, body.height / 2))
+        let sideTop = body.maxY - radius
+        if point.y >= body.maxY, point.x >= body.minX + radius, point.x <= body.maxX - radius {
+            return CGPoint(x: point.x, y: body.maxY)
+        }
+        if point.x <= body.minX, point.y >= body.minY, point.y <= sideTop {
+            return CGPoint(x: body.minX, y: point.y)
+        }
+        if point.x >= body.maxX, point.y >= body.minY, point.y <= sideTop {
+            return CGPoint(x: body.maxX, y: point.y)
+        }
+        var candidates = [CGPoint(x: min(max(point.x, body.minX), body.maxX), y: body.minY),
+                          CGPoint(x: body.minX, y: min(max(point.y, body.minY), sideTop)),
+                          CGPoint(x: body.maxX, y: min(max(point.y, body.minY), sideTop)),
+                          CGPoint(x: min(max(point.x, body.minX + radius), body.maxX - radius), y: body.maxY)]
+        func squaredDistance(_ x: CGFloat) -> CGFloat {
+            pow(x - point.x, 2) + pow(dockRoof(surface, at: x) - point.y, 2)
+        }
+        if radius > 0 {
+            for start in [body.minX, body.maxX - radius] {
+                var low = start
+                var high = start + radius
+                for _ in 0..<40 {
+                    let a = low + (high - low) / 3
+                    let b = high - (high - low) / 3
+                    if squaredDistance(a) < squaredDistance(b) { high = b } else { low = a }
+                }
+                let x = (low + high) / 2
+                candidates.append(CGPoint(x: x, y: dockRoof(surface, at: x)))
+            }
+        }
+        return candidates.min { hypot($0.x - point.x, $0.y - point.y) < hypot($1.x - point.x, $1.y - point.y) }!
+    }
+
+    private func supportHeight(_ surface: WindowSurface, at x: CGFloat, radius: CGFloat = 0) -> CGFloat? {
         guard x >= surface.frame.minX, x <= surface.frame.maxX else { return nil }
-        let physicalTop = surface.isDock ? dockBodyFrame(surface, at: x).maxY : -CGFloat.infinity
-        let y = max(surfaceHeight(surface.id, x) ?? surface.frame.maxY, physicalTop)
+        let physicalTop = surface.isDock ? dockRestHeight(surface, at: x, radius: radius) : -CGFloat.infinity
+        let fallback = surface.isDock ? physicalTop : surface.frame.maxY
+        let y = max(surfaceHeight(surface.id, x) ?? fallback, physicalTop)
         guard !surface.blockers.contains(where: { $0.contains(CGPoint(x: x, y: y + 1)) }) else { return nil }
         return y
     }
@@ -654,7 +707,7 @@ final class WinterScene {
                              velocity: object.velocity))
         }
         let physicalTop = support.flatMap { surfaces[$0] }.map {
-            $0.isDock ? dockBodyFrame($0, at: object.center.x).maxY : -CGFloat.infinity
+            $0.isDock ? dockRestHeight($0, at: object.center.x, radius: object.radii[0]) : -CGFloat.infinity
         } ?? -CGFloat.infinity
         object.center.y = max(surfaceHeight(support, object.center.x) ?? y, physicalTop) + object.radii[0]
         object.support = support
@@ -678,7 +731,7 @@ final class WinterScene {
         let high = min(width - radius, surface.frame.maxX - radius)
         guard low <= high else { detach(&object); return }
         if clampToSupport { object.center.x = min(max(object.center.x, low), high) }
-        guard let y = supportHeight(surface, at: object.center.x), y >= 0,
+        guard let y = supportHeight(surface, at: object.center.x, radius: object.radii[0]), y >= 0,
               y + object.frame.height <= height else { detach(&object); return }
         object.center.y = y + object.radii[0]
     }
