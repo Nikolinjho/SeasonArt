@@ -403,15 +403,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func showAbout() {
         let alert = NSAlert()
         alert.messageText = "SeasonArt"
-        alert.informativeText = "Локальная версия для Никиты. Основано на Snowhush, автор Mykhailo Bezruchko.\n\nЛицензия PolyForm Noncommercial 1.0.0 и сведения об изменениях включены в приложение."
+        alert.informativeText = "Сезонные эффекты для рабочего стола."
         alert.addButton(withTitle: "Закрыть")
-        alert.addButton(withTitle: "Лицензия и авторство")
         NSApp.activate()
-        if alert.runModal() == .alertSecondButtonReturn,
-           let resources = Bundle.main.resourceURL {
-            NSWorkspace.shared.open(resources.appendingPathComponent("THIRD_PARTY.md"))
-            NSWorkspace.shared.open(resources.appendingPathComponent("LICENSE"))
-        }
+        alert.runModal()
     }
 
     private func updateStatusIcon() {
