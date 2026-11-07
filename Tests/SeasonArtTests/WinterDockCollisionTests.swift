@@ -99,4 +99,42 @@ final class WinterDockCollisionTests: XCTestCase {
         assertOutside(scene, body: CGRect(x: 100, y: 6, width: 300, height: 60))
     }
 
+    func testНизкийСлойНеВозвращаетШарВТелоDockИНеПовторяетУдар() {
+        for cornerRadius: CGFloat in [0, 20] {
+            let scene = WinterScene(width: 800, height: 600)
+            let dock = WindowSurface(id: 42, frame: CGRect(x: 100, y: 6, width: 300, height: 60),
+                                     blockers: [], cover: [], cornerRadius: cornerRadius, cornerExponent: 2, isDock: true)
+            scene.surfaceHeight = { id, _ in id == 42 ? 58 : 0 }
+            scene.updateWindows(WindowUpdate(surfaces: [dock], interval: 0.1, parked: [], elsewhere: [], sliding: false, slideVelocity: 0))
+            var impacts = 0
+            scene.didLand = { _ in impacts += 1 }
+            _ = scene.create(radius: 6, at: CGPoint(x: 104, y: 300))
+            for _ in 0..<300 { scene.step(dt: 1 / 60) }
+            XCTAssertEqual(scene.objects[0].center.y, cornerRadius == 0 ? 72 : 64, accuracy: 0.01)
+            XCTAssertFalse(scene.isMoving)
+            scene.updateWindows(WindowUpdate(surfaces: [dock], interval: 0.1, parked: [], elsewhere: [], sliding: false, slideVelocity: 0))
+            XCTAssertFalse(scene.isMoving)
+            let before = impacts
+            for _ in 0..<60 { scene.step(dt: 1 / 60) }
+            XCTAssertEqual(impacts, before)
+            XCTAssertLessThan(impacts, 5)
+        }
+    }
+
+    func testДеформацияСнегаПослеУдараСохраняетОкруглуюФизическуюОпору() {
+        let scene = WinterScene(width: 800, height: 600)
+        let dock = WindowSurface(id: 42, frame: CGRect(x: 100, y: 6, width: 300, height: 60),
+                                 blockers: [], cover: [], cornerRadius: 20, cornerExponent: 2, isDock: true)
+        var snowHeight: CGFloat = 80
+        var impacts = 0
+        scene.surfaceHeight = { id, _ in id == 42 ? snowHeight : 0 }
+        scene.didLand = { _ in snowHeight = 58; impacts += 1 }
+        scene.updateWindows(WindowUpdate(surfaces: [dock], interval: 0.1, parked: [], elsewhere: [], sliding: false, slideVelocity: 0))
+        _ = scene.create(radius: 6, at: CGPoint(x: 104, y: 90))
+        for _ in 0..<300 { scene.step(dt: 1 / 60) }
+        XCTAssertEqual(scene.objects[0].center.y, 64, accuracy: 0.01)
+        XCTAssertEqual(impacts, 1)
+        XCTAssertFalse(scene.isMoving)
+    }
+
 }

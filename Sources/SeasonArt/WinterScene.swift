@@ -328,8 +328,9 @@ final class WinterScene {
             for dock in visible.values where dock.isDock {
                 let intersects = object.ballFrames.contains { frame in
                     let center = CGPoint(x: object.center.x, y: object.frame.minY + frame.midY)
-                    let x = min(max(center.x, dock.frame.minX), dock.frame.maxX)
-                    let y = min(max(center.y, dock.frame.minY), dock.frame.maxY)
+                    let body = dockBodyFrame(dock, at: center.x)
+                    let x = min(max(center.x, body.minX), body.maxX)
+                    let y = min(max(center.y, body.minY), body.maxY)
                     return hypot(center.x - x, center.y - y) < frame.width / 2 - 0.000001
                 }
                 if intersects { resting.remove(object.id) }
@@ -410,11 +411,11 @@ final class WinterScene {
         guard !docks.isEmpty else { return }
         for index in objects.indices where !objects[index].parked && !objects[index].isDragged {
             for dock in docks {
-                let body = dock.frame
-                guard objects[index].frame.intersects(body.insetBy(dx: -0.001, dy: -0.001)) else { continue }
+                guard objects[index].frame.intersects(dock.frame.insetBy(dx: -0.001, dy: -0.001)) else { continue }
                 for _ in 0..<4 {
                     var corrected = false
                     for (component, frame) in objects[index].ballFrames.enumerated() {
+                        let body = dockBodyFrame(dock, at: objects[index].center.x)
                         let radius = frame.width / 2
                         let center = CGPoint(x: objects[index].center.x, y: objects[index].frame.minY + frame.midY)
                         let closest = CGPoint(x: min(max(center.x, body.minX), body.maxX),
@@ -624,9 +625,22 @@ final class WinterScene {
 
     private func ground(at x: CGFloat) -> CGFloat { surfaceHeight(nil, x) ?? 0 }
 
+    /// Физическая кромка повторяет superellipse основания SnowLayer, без высоты снега.
+    private func dockBodyFrame(_ surface: WindowSurface, at x: CGFloat) -> CGRect {
+        let radius = max(0, min(surface.cornerRadius, surface.frame.width / 2, surface.frame.height / 2))
+        guard radius > 0 else { return surface.frame }
+        let distance = max(0, min(x - surface.frame.minX, surface.frame.maxX - x))
+        let u = max(0, 1 - distance / radius)
+        let exponent = max(1, surface.cornerExponent)
+        let drop = radius * (1 - pow(max(0, 1 - pow(u, exponent)), 1 / exponent))
+        return CGRect(x: surface.frame.minX, y: surface.frame.minY,
+                      width: surface.frame.width, height: surface.frame.height - drop)
+    }
+
     private func supportHeight(_ surface: WindowSurface, at x: CGFloat) -> CGFloat? {
         guard x >= surface.frame.minX, x <= surface.frame.maxX else { return nil }
-        let y = surfaceHeight(surface.id, x) ?? surface.frame.maxY
+        let physicalTop = surface.isDock ? dockBodyFrame(surface, at: x).maxY : -CGFloat.infinity
+        let y = max(surfaceHeight(surface.id, x) ?? surface.frame.maxY, physicalTop)
         guard !surface.blockers.contains(where: { $0.contains(CGPoint(x: x, y: y + 1)) }) else { return nil }
         return y
     }
@@ -639,7 +653,10 @@ final class WinterScene {
                              mass: object.radii.reduce(0) { $0 + pow($1 / WinterBallSize.small.radius, 3) },
                              velocity: object.velocity))
         }
-        object.center.y = (surfaceHeight(support, object.center.x) ?? y) + object.radii[0]
+        let physicalTop = support.flatMap { surfaces[$0] }.map {
+            $0.isDock ? dockBodyFrame($0, at: object.center.x).maxY : -CGFloat.infinity
+        } ?? -CGFloat.infinity
+        object.center.y = max(surfaceHeight(support, object.center.x) ?? y, physicalTop) + object.radii[0]
         object.support = support
         let rebound = -object.velocity.dy * WinterMotion.restitution
         if object.velocity.dy < -WinterMotion.bounceThreshold {
