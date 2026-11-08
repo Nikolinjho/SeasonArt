@@ -184,7 +184,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         accumulateItem = add("Накапливать", #selector(toggleAccumulate), to: menu)
         meltItem = add("Таяние снега", #selector(toggleMeltSnow), to: menu)
         snowOnWindowsItem = add("Снег на окнах", #selector(toggleSnowOnWindows), to: menu)
-        skipSnowNearMenuBarItem = add("Не копить снег у строки меню", #selector(toggleSkipSnowNearMenuBar), to: menu)
+        skipSnowNearMenuBarItem = add("Пропускать окна у строки меню", #selector(toggleSkipSnowNearMenuBar), to: menu)
         deepInteractionItem = add("Взаимодействие с выделением", #selector(toggleDeepInteraction), to: menu)
         clearItem = add("Убрать снег", #selector(clearSnow), to: menu)
         menu.addItem(.separator())
@@ -243,7 +243,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         meltItem.state = thaws ? .on : .off
         meltItem.isEnabled = accumulates
         snowOnWindowsItem.state = snowOnWindows ? .on : .off
-        skipSnowNearMenuBarItem.isHidden = mode != .snow
         skipSnowNearMenuBarItem.isEnabled = snowOnWindows
         skipSnowNearMenuBarItem.state = Preferences.skipSnowNearMenuBar ? .on : .off
         deepInteractionItem.state = Preferences.deepInteraction ? .on : .off

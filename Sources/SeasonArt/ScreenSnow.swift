@@ -151,9 +151,7 @@ final class ScreenSnow {
             guard onWindows else { return nil }
             simulation.windowFrames = tracker.covers.map { SIMD4(Float($0.minX), Float($0.minY), Float($0.maxX), Float($0.maxY)) }
             guard let update else { return nil }
-            return simulation.mode == .snow && Preferences.skipSnowNearMenuBar
-                ? update.excludingSnowNearMenuBar(screenHeight: self.screen.frame.height, menuBarHeight: tracker.menuBarHeight)
-                : update
+            return particleWindowUpdate(update)
         }
         renderer.sceneLight = { [unowned self] now in
             light.update(screen: self.screen, now: now)
@@ -233,6 +231,12 @@ final class ScreenSnow {
     func refreshWindowSnow() {
         tracker.reset()
         wake()
+    }
+
+    func particleWindowUpdate(_ update: WindowUpdate) -> WindowUpdate {
+        Preferences.skipSnowNearMenuBar
+            ? update.excludingSurfacesNearMenuBar(screenHeight: screen.frame.height, menuBarHeight: tracker.menuBarHeight)
+            : update
     }
 
     /// Going full screen, an app adds its Space as the move starts, though it is the current one only once the app is

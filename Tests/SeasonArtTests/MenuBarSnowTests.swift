@@ -14,7 +14,7 @@ final class MenuBarSnowTests: XCTestCase {
 
     func testЗонаОтсчитываетсяОтНижнегоКраяСтрокиМенюИСохраняетDock() {
         let original = update([surface(1, top: 370), surface(2, top: 332), surface(3, top: 331), surface(4, top: 60, dock: true), surface(5, top: 340)])
-        let filtered = original.excludingSnowNearMenuBar(screenHeight: 400, menuBarHeight: 30)
+        let filtered = original.excludingSurfacesNearMenuBar(screenHeight: 400, menuBarHeight: 30)
         XCTAssertEqual(filtered.surfaces.map(\.id), [3, 4], "Граница 38 пунктов включена в зону без сугробов")
         XCTAssertEqual(original.surfaces.count, 5, "Исходные опоры зимних игрушек сохраняются")
         XCTAssertEqual(filtered.interval, original.interval)
@@ -28,7 +28,7 @@ final class MenuBarSnowTests: XCTestCase {
             let simulation = SnowSimulation(width: 600, height: 400, snowfall: .off)
             simulation.thaws = false
             let original = update([surface(1, top: 370), surface(2, top: 200)])
-            let snow = skipTop ? original.excludingSnowNearMenuBar(screenHeight: 400, menuBarHeight: 30) : original
+            let snow = skipTop ? original.excludingSurfacesNearMenuBar(screenHeight: 400, menuBarHeight: 30) : original
             simulation.updateWindows(snow.surfaces, interval: 0.1)
             simulation.scatter((0..<500).map { i in
                 ScatterPiece(position: SIMD2(150 + Float(i % 200), 390), velocity: SIMD2(0, -100), color: SIMD3(repeating: 1))

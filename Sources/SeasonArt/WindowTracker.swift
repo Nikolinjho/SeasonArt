@@ -15,8 +15,8 @@ struct WindowUpdate {
     /// the left; zero when it didn't.
     let slideVelocity: Float
 
-    /// Пропускает снег мимо верхушек окон у строки меню, сохраняя полку Dock.
-    func excludingSnowNearMenuBar(screenHeight: CGFloat, menuBarHeight: CGFloat) -> WindowUpdate {
+    /// Пропускает частицы мимо верхушек окон у строки меню, сохраняя полку Dock.
+    func excludingSurfacesNearMenuBar(screenHeight: CGFloat, menuBarHeight: CGFloat) -> WindowUpdate {
         let boundary = screenHeight - max(0, menuBarHeight) - 38
         return WindowUpdate(surfaces: surfaces.filter { $0.isDock || $0.frame.maxY < boundary },
                             interval: interval, parked: parked, elsewhere: elsewhere,
