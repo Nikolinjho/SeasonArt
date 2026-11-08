@@ -60,6 +60,7 @@ struct WinterObject: Identifiable {
 /// Геометрия украшений использует радиус соответствующего шара.
 struct WinterDecoration {
     let eyes: [CGRect]
+    let mouth: [CGRect]
     let buttons: [CGRect]
     let nose: [CGPoint]
     let scarf: [CGRect]
@@ -82,6 +83,9 @@ extension WinterObject {
         }
         return WinterDecoration(
             eyes: [-5, 5].map { dot(x: x + CGFloat($0) * headScale, y: head.midY + 3 * headScale, scale: headScale) },
+            mouth: [(-6.0, -6.5), (-3.2, -8.2), (0, -8.8), (3.2, -8.2), (6.0, -6.5)].map { dx, dy in
+                dot(x: x + dx * headScale, y: head.midY + dy * headScale, scale: headScale * 0.5)
+            },
             buttons: [dot(x: x, y: min(torso.midY + 10 * torsoScale,
                                       head.minY - 2 * neckScale - 3.8 * torsoScale), scale: torsoScale),
                       dot(x: x, y: torso.midY - 3 * torsoScale, scale: torsoScale),

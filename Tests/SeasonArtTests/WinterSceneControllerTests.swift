@@ -3,6 +3,23 @@ import XCTest
 @testable import SeasonArt
 
 final class WinterSceneControllerTests: XCTestCase {
+    func testСистемныйВыборОкнаЗапрещаетНовыйПроходТрактора() {
+        let (controller, _, _) = snowyController()
+        defer { controller.close() }
+        XCTAssertTrue(controller.canPlow)
+        controller.isSuppressed = true
+        XCTAssertFalse(controller.canPlow)
+        XCTAssertFalse(controller.startPlow())
+        XCTAssertNil(controller.plow)
+        controller.isSuppressed = false
+        XCTAssertTrue(controller.startPlow())
+        controller.isSuppressed = true
+        XCTAssertNotNil(controller.plow, "Существующий проход приостанавливается без удаления")
+        XCTAssertFalse(controller.isRunning)
+        controller.isSuppressed = false
+        XCTAssertTrue(controller.isRunning)
+    }
+
     private func controller() -> WinterSceneController {
         _ = NSApplication.shared
         return WinterSceneController(screenFrame: CGRect(x: 0, y: 0, width: 800, height: 600),

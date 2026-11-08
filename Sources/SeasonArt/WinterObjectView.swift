@@ -4,6 +4,7 @@ final class WinterObjectView: NSView {
     private(set) var object: WinterObject
     private var shadows: [WinterContactShadow]
     private var lastDragTimestamp: TimeInterval?
+    private var lastDragPoint: CGPoint?
 
     init(object: WinterObject) {
         self.object = object
@@ -27,24 +28,34 @@ final class WinterObjectView: NSView {
     override func mouseDown(with event: NSEvent) {
         guard let panel = window as? WinterObjectWindow else { return }
         lastDragTimestamp = event.timestamp
-        panel.dragBegan?(panel.convertPoint(toScreen: event.locationInWindow))
+        let point = panel.convertPoint(toScreen: event.locationInWindow)
+        lastDragPoint = point
+        panel.dragBegan?(point)
     }
 
     override func mouseDragged(with event: NSEvent) {
         guard let panel = window as? WinterObjectWindow, let previous = lastDragTimestamp else { return }
         lastDragTimestamp = event.timestamp
-        panel.dragged?(panel.convertPoint(toScreen: event.locationInWindow), max(1.0 / 240, event.timestamp - previous))
+        let point = panel.convertPoint(toScreen: event.locationInWindow)
+        lastDragPoint = point
+        panel.dragged?(point, max(1.0 / 240, event.timestamp - previous))
     }
 
     override func mouseUp(with event: NSEvent) {
-        guard let previous = lastDragTimestamp else { return }
+        guard let previous = lastDragTimestamp, let panel = window as? WinterObjectWindow else { return }
+        let point = panel.convertPoint(toScreen: event.locationInWindow)
+        let moved = point != lastDragPoint
+        // AppKit может объединить последнее движение с отпусканием кнопки.
+        if moved { panel.dragged?(point, max(1.0 / 240, event.timestamp - previous)) }
         lastDragTimestamp = nil
-        (window as? WinterObjectWindow)?.dragEnded?(max(0, event.timestamp - previous))
+        lastDragPoint = nil
+        panel.dragEnded?(moved ? 0 : max(0, event.timestamp - previous))
     }
 
     func cancelDrag() {
         guard lastDragTimestamp != nil else { return }
         lastDragTimestamp = nil
+        lastDragPoint = nil
         (window as? WinterObjectWindow)?.dragCancelled?()
     }
 
@@ -107,7 +118,7 @@ final class WinterObjectView: NSView {
         }
         guard let decoration = object.decoration else { return }
         NSColor(calibratedWhite: 0.14, alpha: 1).setFill()
-        for rect in decoration.eyes + decoration.buttons {
+        for rect in decoration.eyes + decoration.mouth + decoration.buttons {
             NSBezierPath(ovalIn: rect).fill()
         }
         NSColor.systemOrange.setFill()

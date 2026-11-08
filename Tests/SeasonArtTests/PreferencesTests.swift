@@ -66,7 +66,7 @@ final class PreferencesTests: XCTestCase {
     func testAllModesAndIntensityOptionsPersist() {
         let (_, defaults) = makeProfile()
         Preferences.configure(defaults: defaults)
-        for mode: Mode in [.snow, .rain, .autumn, .blossom] {
+        for mode: Mode in [.snow, .rain, .autumn, .blossom, .fireflies, .starfall] {
             Preferences.mode = mode
             XCTAssertEqual(Preferences.mode, mode, "Каждый режим должен сохраняться")
         }

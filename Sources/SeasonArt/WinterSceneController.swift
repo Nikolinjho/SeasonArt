@@ -35,7 +35,7 @@ final class WinterSceneController {
         }
     }
     var canCreate: Bool { !closed && isEnabled && isActive && !isSuppressed && scene.hasCapacity }
-    var canPlow: Bool { !closed && isEnabled && isActive && shelf != nil && plow == nil }
+    var canPlow: Bool { !closed && isEnabled && isActive && !isSuppressed && shelf != nil && plow == nil }
     var objectWindowCount: Int { windows.count }
     var isRunning: Bool { timer != nil }
     var hasObjects: Bool { !scene.objects.isEmpty || plow != nil || isSculpting }

@@ -3,6 +3,29 @@ import XCTest
 @testable import SeasonArt
 
 final class WinterObjectWindowTests: XCTestCase {
+    func testОтпусканиеПередаётПоследнююКоординатуМоделиБроска() throws {
+        let scene = WinterScene(width: 800, height: 600)
+        let id = try XCTUnwrap(scene.create(.small, at: CGPoint(x: 200, y: 300)))
+        let window = WinterObjectWindow(object: scene.objects[0], screenFrame: .zero)
+        defer { window.close() }
+        window.dragBegan = { scene.beginDragging(id, at: $0) }
+        window.dragged = { scene.drag(id, to: $0, dt: $1) }
+        window.dragEnded = { scene.endDragging(id, idleTime: $0) }
+        let view = try XCTUnwrap(window.contentView)
+        func event(_ type: NSEvent.EventType, x: CGFloat, time: TimeInterval) throws -> NSEvent {
+            try XCTUnwrap(NSEvent.mouseEvent(with: type, location: CGPoint(x: x, y: 14), modifierFlags: [],
+                timestamp: time, windowNumber: window.windowNumber, context: nil,
+                eventNumber: 1, clickCount: 1, pressure: 1))
+        }
+        view.mouseDown(with: try event(.leftMouseDown, x: 14, time: 1))
+        view.mouseDragged(with: try event(.leftMouseDragged, x: 29, time: 1.05))
+        // Последнее движение пришло вместе с отпусканием, без отдельного drag-события.
+        view.mouseUp(with: try event(.leftMouseUp, x: 44, time: 1.1))
+        XCTAssertEqual(scene.objects[0].center.x, 230, accuracy: 0.001)
+        XCTAssertEqual(scene.objects[0].velocity.dx, 300, accuracy: 0.001)
+        XCTAssertFalse(scene.objects[0].isDragged)
+    }
+
     private let screen = CGRect(x: -1440, y: 180, width: 1440, height: 900)
 
     override func setUp() {

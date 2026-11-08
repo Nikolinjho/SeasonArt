@@ -50,6 +50,8 @@ struct Sprite {
     float turnSpeed;
     float flipSpeed;
     float rain;
+    float glow;
+    float trail;
 };
 
 struct SpriteOut {
@@ -85,6 +87,7 @@ struct SpriteOut {
     float rain;
     /// For a drop running down the glass, the share of it from its head back that is its smear over the exposure.
     float blur;
+    float glow;
 };
 
 constant float3 candle = float3(1.0, 0.62, 0.26);
@@ -384,8 +387,22 @@ vertex SpriteOut spriteVertex(uint vid [[vertex_id]],
                               const device Sprite *sprites [[buffer(0)]],
                               constant Uniforms &u [[buffer(1)]]) {
     Sprite s = sprites[vid];
+    if (s.glow > 0.0) {
+        SpriteOut out = {};
+        float2 direction = length(s.velocity) > 0.0 ? normalize(s.velocity) : float2(0.0);
+        float2 travel = direction * s.trail;
+        float extent = max(s.size + s.trail, 2.0);
+        out.position = float4((s.position - travel * 0.5) / u.viewSize * 2.0 - 1.0, 0.0, 1.0);
+        out.pointSize = extent * u.scale;
+        out.streak = travel / extent;
+        out.radius = s.size / extent * 0.5;
+        out.alpha = s.alpha;
+        out.tint = float4(s.tintRed, s.tintGreen, s.tintBlue, 1.0);
+        out.glow = s.glow;
+        return out;
+    }
     if (s.leaf != 0.0) {
-        SpriteOut out;
+        SpriteOut out = {};
         // About a 1/40 s exposure: at 30 frames a second a falling leaf smears most of the way to where the next
         // frame shows it, so it glides instead of hopping. The sprite sits midway along the smear.
         float exposure = 0.024;
@@ -415,7 +432,7 @@ vertex SpriteOut spriteVertex(uint vid [[vertex_id]],
     }
     if (s.rain > 4.5) {
         // A piece of the film a running drop leaves behind: `velocity` from one end to the other, `size` wide.
-        SpriteOut out;
+        SpriteOut out = {};
         float pixels = max(s.size * u.scale, 1.0);
         float2 piece = s.velocity * u.scale;
         float extent = length(piece) + pixels + 2.0;
@@ -436,7 +453,7 @@ vertex SpriteOut spriteVertex(uint vid [[vertex_id]],
         return out;
     }
     if (s.rain != 0.0) {
-        SpriteOut out;
+        SpriteOut out = {};
         float pixels = max(s.size * u.scale, 1.5);
         // A raindrop in the air shows as the whole streak it draws over a 1/35 s exposure, the sprite at its head;
         // a drop on the glass draws out a tail behind it as it runs, and smears back along its path over a 1/40 s
@@ -488,7 +505,7 @@ vertex SpriteOut spriteVertex(uint vid [[vertex_id]],
     // A lump's ragged edge reaches past its nominal size.
     float reach = s.lump > 0.0 ? 1.3 : 1.0;
     float extent = max(pixels * reach + length(streak), 2.0);
-    SpriteOut out;
+    SpriteOut out = {};
     out.position = float4((s.position + u.shake.xy) / u.viewSize * 2.0 - 1.0, 0.0, 1.0);
     out.pointSize = extent;
     out.streak = streak / extent;
@@ -754,6 +771,19 @@ fragment float4 glassFragment(GlassOut in [[stage_in]], texture2d<half, access::
 fragment float4 spriteFragment(SpriteOut in [[stage_in]], float2 coord [[point_coord]], constant Uniforms &u [[buffer(1)]]) {
     // Point coordinates run down the screen; velocities run up.
     float2 p = float2(coord.x - 0.5, 0.5 - coord.y);
+    if (in.glow > 0.0) {
+        float span = dot(in.streak, in.streak);
+        float along = span > 0.0 ? clamp(dot(p, in.streak) / span + 0.5, 0.0, 1.0) : 1.0;
+        float2 offset = p - in.streak * (along - 0.5);
+        float radius = length(offset) / max(in.radius, 0.001);
+        float tail = span > 0.0 ? pow(along, 1.6) : 1.0;
+        float halo = exp(-radius * radius * 4.0) * 0.45;
+        float core = exp(-radius * radius * 55.0);
+        float alpha = saturate((halo + core) * in.alpha * tail) * (1.0 - smoothstep(0.8, 1.0, radius));
+        if (alpha < 0.002) discard_fragment();
+        float3 color = mix(in.tint.rgb, float3(1.0), core * 0.75);
+        return float4(color * alpha, alpha);
+    }
     if (in.rain != 0.0) {
         float4 water = rainAt(in, p);
         if (water.a < 0.002) discard_fragment();

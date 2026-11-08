@@ -3,6 +3,23 @@ import XCTest
 @testable import SeasonArt
 
 final class WinterAssemblyTests: XCTestCase {
+    func testУлыбкаСнеговикаМасштабируетсяИОстаётсяНаГолове() throws {
+        for radii: [CGFloat] in [[28, 21, 14], [6, 6, 6], [36, 6, 36], [6, 36, 6]] {
+            let object = WinterObject(id: UUID(), radii: radii, center: .zero, velocity: .zero,
+                                      support: nil, parked: false, isDragged: false)
+            let decoration = try XCTUnwrap(object.decoration)
+            let head = try XCTUnwrap(object.ballFrames.last)
+            XCTAssertEqual(decoration.mouth.count, 5)
+            for dot in decoration.mouth {
+                XCTAssertTrue(head.contains(dot))
+                XCTAssertLessThan(dot.maxY, head.midY)
+                XCTAssertGreaterThan(dot.minY, decoration.scarf[0].maxY)
+            }
+            XCTAssertLessThan(decoration.mouth[2].midY, decoration.mouth[0].midY)
+            XCTAssertEqual(decoration.mouth[0].midX + decoration.mouth[4].midX, head.midX * 2, accuracy: 0.001)
+        }
+    }
+
     private func advance(_ scene: WinterScene, seconds: Double = 3, fps: Int = 60) {
         for _ in 0..<Int(seconds * Double(fps)) { scene.step(dt: 1 / Double(fps)) }
     }

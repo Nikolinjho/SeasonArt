@@ -3,8 +3,21 @@ import Foundation
 import simd
 
 /// What falls: snow, autumn leaves, rain or cherry blossom petals.
-enum Mode: Int {
-    case snow, autumn, rain, blossom
+enum Mode: Int, CaseIterable {
+    case snow, autumn, rain, blossom, fireflies, starfall
+
+    var isNightEffect: Bool { self == .fireflies || self == .starfall }
+
+    var title: String {
+        switch self {
+        case .snow: "Снег"
+        case .autumn: "Осенние листья"
+        case .rain: "Дождь"
+        case .blossom: "Цветение"
+        case .fireflies: "Светлячки"
+        case .starfall: "Звездопад"
+        }
+    }
 }
 
 struct Sprite {
@@ -52,6 +65,10 @@ struct Sprite {
     /// Rain instead of snow: one for a raindrop or a splash in the air, two for a drop running down the glass, three for
     /// one hanging under an edge, four for spray on the glass, five for the film a running drop leaves behind.
     var rain: Float = 0
+    /// Самосвечение ночных частиц, независимо от освещения рабочего стола.
+    var glow: Float = 0
+    /// Длина светящегося хвоста в логических пунктах.
+    var trail: Float = 0
 }
 
 /// A Halloween sign a ghost holds up, or lets fall into the snow.
@@ -569,6 +586,7 @@ final class SnowSimulation {
     var mode = Mode.snow {
         didSet {
             guard mode != oldValue else { return }
+            night.mode = mode
             lying.removeAll()
             updateTarget()
             flakes = flakes.prefix(targetFlakes).map { makeFlake(y: $0.position.y) }
@@ -581,6 +599,7 @@ final class SnowSimulation {
     var blossom: Bool { mode == .blossom }
     var rain: Bool { mode == .rain }
     private var restyled = false
+    private let night: NightScene
     /// The mode waiting for the gust to clear the screen, so one kind never turns into the other in sight.
     private var nextMode: Mode?
     private var switchedAt: Double = 0
@@ -599,6 +618,7 @@ final class SnowSimulation {
         self.width = width
         self.height = height
         self.snowfall = snowfall
+        night = NightScene(width: width, height: height)
         var seed = RandomSource()
         ground = SnowLayer(
             origin: .zero,
@@ -849,12 +869,12 @@ final class SnowSimulation {
         snowfall == .off && !halloween && flakes.isEmpty && grains.isEmpty && motes.isEmpty && ghosts.isEmpty
             && fallingSigns.isEmpty && snowballs.isEmpty && gust == nil && dormant.isEmpty && parking.isEmpty && lying.isEmpty && nextMode == nil
             && splashes.isEmpty && glassDrops.isEmpty && !wet
-            && !layers.contains { $0.top > 0 }
+            && !layers.contains { $0.top > 0 } && night.sprites.isEmpty
     }
     /// Running drops or beads on the glass, drawn from a field of their own.
     var hasGlassDrops: Bool { glassDrops.contains { !$0.hanging } }
     var spriteCount: Int {
-        lying.count + flakes.count + grains.count + motes.count + ghosts.count * 2 + snowballs.count + splashes.count + glassDrops.count
+        lying.count + flakes.count + grains.count + motes.count + ghosts.count * 2 + snowballs.count + splashes.count + glassDrops.count + night.sprites.count
             + ledgeList.reduce(0) { $0 + $1.spray.count + $1.film.count }
     }
     /// Floats the renderer needs per frame: each layer's surface and bed.
@@ -865,6 +885,7 @@ final class SnowSimulation {
         ground.resize(columns: Self.columnCount(for: width, columnWidth: columnWidth))
         self.width = width
         self.height = height
+        night.resize(width: width, height: height)
         updateTarget()
     }
 
@@ -872,7 +893,7 @@ final class SnowSimulation {
     func step(dt: Float, cursor point: SIMD2<Float>) -> Bool {
         clock += Double(dt)
         let wasMoving = !flakes.isEmpty || !grains.isEmpty || !motes.isEmpty || !ghosts.isEmpty || !fallingSigns.isEmpty || !snowballs.isEmpty
-            || !splashes.isEmpty || !glassDrops.isEmpty || wet
+            || !splashes.isEmpty || !glassDrops.isEmpty || wet || !night.sprites.isEmpty
         heightsChanged = false
         leafBudget = nil
 
@@ -900,6 +921,20 @@ final class SnowSimulation {
             mode = next
         }
         spawnFlakes()
+        if mode.isNightEffect {
+            var supports: [NightSupport] = []
+            if mode == .starfall {
+                for layer in ledgeList {
+                    for i in 0..<layer.count where layer.visible[i] {
+                        let left = layer.base.x + Float(i) * layer.columnWidth
+                        supports.append(NightSupport(left: left, right: left + layer.columnWidth,
+                                                     y: layer.base.y + layer.bed[i]))
+                    }
+                }
+            }
+            night.step(dt: dt, intensity: snowfallHeld || holding ? 0 : snowfall.flakesPerMegapoint / 380 * strength * density,
+                       cursor: point, supports: supports)
+        }
         if halloween { settlePumpkins(dt: dt) }
 
         for layer in layers {
@@ -912,13 +947,13 @@ final class SnowSimulation {
         let flying = grains.count > 24 || clock < scatteredUntil || abs(slideWind) > 20
         if pushed {
             pace = .interactive
-        } else if flying {
+        } else if flying || (mode == .starfall && !night.sprites.isEmpty) {
             pace = .lively
         } else {
             pace = .calm
         }
         let changed = wasMoving || !flakes.isEmpty || !grains.isEmpty || !motes.isEmpty || !ghosts.isEmpty || !fallingSigns.isEmpty || !snowballs.isEmpty
-            || !splashes.isEmpty || !glassDrops.isEmpty || wet || heightsChanged || windowsChanged || pumpkinsMoved || restyled
+            || !splashes.isEmpty || !glassDrops.isEmpty || wet || !night.sprites.isEmpty || heightsChanged || windowsChanged || pumpkinsMoved || restyled
         restyled = false
         windowsChanged = false
         pumpkinsMoved = false
@@ -927,6 +962,10 @@ final class SnowSimulation {
 
     func writeSprites(into buffer: UnsafeMutablePointer<Sprite>, capacity: Int) -> Int {
         var count = 0
+        for sprite in night.sprites.prefix(max(0, capacity)) {
+            buffer[count] = sprite
+            count += 1
+        }
         let shown = Set(layers.map(ObjectIdentifier.init))
         for leaf in lying where count < capacity && shown.contains(ObjectIdentifier(leaf.layer)) {
             let layer = leaf.layer
@@ -3760,7 +3799,7 @@ final class SnowSimulation {
     }
 
     private func updateTarget() {
-        let share: Float = leafy ? leafShare : rain ? rainShare : 1
+        let share: Float = mode.isNightEffect ? 0 : leafy ? leafShare : rain ? rainShare : 1
         targetFlakes = snowfallHeld ? 0 : Int(snowfall.flakesPerMegapoint * share * strength * density * width * height / 1_000_000)
     }
 

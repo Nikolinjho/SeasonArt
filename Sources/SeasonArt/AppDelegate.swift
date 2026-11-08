@@ -38,10 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var snowOnWindowsItem: NSMenuItem!
     private var skipSnowNearMenuBarItem: NSMenuItem!
     private var clearItem: NSMenuItem!
-    private var snowItem: NSMenuItem!
-    private var autumnItem: NSMenuItem!
-    private var rainItem: NSMenuItem!
-    private var blossomItem: NSMenuItem!
+    private var modeItems: [Mode: NSMenuItem] = [:]
     private var defaultPerformanceItem: NSMenuItem!
     private var maxPerformanceItem: NSMenuItem!
     private var behindWindowsItem: NSMenuItem!
@@ -173,10 +170,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.separator())
         let modes = NSMenu()
         modes.autoenablesItems = false
-        snowItem = add("Снег", #selector(chooseMode), to: modes)
-        autumnItem = add("Осенние листья", #selector(chooseMode), to: modes)
-        rainItem = add("Дождь", #selector(chooseMode), to: modes)
-        blossomItem = add("Цветение", #selector(chooseMode), to: modes)
+        for mode in Mode.allCases {
+            let item = add(mode.title, #selector(chooseMode), to: modes)
+            item.tag = mode.rawValue
+            modeItems[mode] = item
+        }
         menu.addItem(withTitle: "Режим", action: nil, keyEquivalent: "").submenu = modes
         let performance = NSMenu()
         performance.autoenablesItems = false
@@ -232,16 +230,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let autumn = mode == .autumn
         let rain = mode == .rain
         let blossom = mode == .blossom
-        snowItem.state = mode == .snow ? .on : .off
-        autumnItem.state = autumn ? .on : .off
-        rainItem.state = rain ? .on : .off
-        blossomItem.state = blossom ? .on : .off
+        for (choice, item) in modeItems { item.state = choice == mode ? .on : .off }
         // Дождь не накапливается, поэтому таяние и очистка ему не нужны.
-        accumulateItem.isHidden = rain
-        meltItem.isHidden = rain
-        clearItem.isHidden = rain
+        accumulateItem.isHidden = rain || mode.isNightEffect
+        meltItem.isHidden = rain || mode.isNightEffect
+        clearItem.isHidden = rain || mode.isNightEffect
         meltItem.title = autumn ? "Увядание листьев" : blossom ? "Увядание лепестков" : "Таяние снега"
         snowOnWindowsItem.title = autumn ? "Листья на окнах" : blossom ? "Лепестки на окнах" : rain ? "Дождь на окнах" : "Снег на окнах"
+        if mode == .starfall { snowOnWindowsItem.title = "Искры на окнах" }
+        snowOnWindowsItem.isHidden = mode == .fireflies
         clearItem.title = autumn ? "Убрать листья" : blossom ? "Убрать лепестки" : "Убрать снег"
         meltItem.state = thaws ? .on : .off
         meltItem.isEnabled = accumulates
@@ -250,6 +247,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         skipSnowNearMenuBarItem.isEnabled = snowOnWindows
         skipSnowNearMenuBarItem.state = Preferences.skipSnowNearMenuBar ? .on : .off
         deepInteractionItem.state = Preferences.deepInteraction ? .on : .off
+        deepInteractionItem.isHidden = mode.isNightEffect
         deepInteractionItem.isEnabled = snowOnWindows
         clearItem.isEnabled = screens.contains { $0.simulation.hasSnow || $0.simulation.spriteCount > 0 }
         defaultPerformanceItem.state = Preferences.maxPerformance ? .off : .on
@@ -354,7 +352,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func chooseMode(_ sender: NSMenuItem) {
-        let mode: Mode = sender === autumnItem ? .autumn : sender === rainItem ? .rain : sender === blossomItem ? .blossom : .snow
+        guard let mode = Mode(rawValue: sender.tag) else { return }
         guard mode != Preferences.mode else { return }
         Preferences.mode = mode
         refreshHalloween()
@@ -413,7 +411,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.button?.image = Self.icon(halloween: halloween, dimmed: snowfall == .off)
     }
 
-    private static let symbol: [Mode: String] = [.snow: "snowflake", .autumn: "leaf", .rain: "cloud.rain"]
+    private static let symbol: [Mode: String] = [.snow: "snowflake", .autumn: "leaf", .rain: "cloud.rain",
+                                               .fireflies: "sparkles", .starfall: "moon.stars"]
 
     private static func icon(halloween: Bool, dimmed: Bool) -> NSImage? {
         let image = halloween ? Halloween.icon : Preferences.mode == .blossom ? Blossom.icon
