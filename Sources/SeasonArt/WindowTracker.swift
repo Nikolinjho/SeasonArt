@@ -57,15 +57,23 @@ final class WindowTracker {
     private let fullScreenSpaceProvider: () -> Set<UInt64>?
     private let windowSpacesProvider: (CGWindowID) -> Set<UInt64>?
     private let dockReservedProvider: (() -> CGRect?)?
+    private let pointerProvider: () -> CGPoint
+    private let dockAutoHideProvider: () -> Bool
+    /// Видимая область полки и увеличенных иконок в координатах экрана снизу вверх.
+    var dockInteractionFrame: CGRect?
 
     init(windowListProvider: (() -> CFArray?)? = nil,
          fullScreenSpaceProvider: @escaping () -> Set<UInt64>? = { Spaces.fullScreen() },
          windowSpacesProvider: @escaping (CGWindowID) -> Set<UInt64>? = { Spaces.of($0) },
-         dockReservedProvider: (() -> CGRect?)? = nil) {
+         dockReservedProvider: (() -> CGRect?)? = nil,
+         pointerProvider: @escaping () -> CGPoint = { NSEvent.mouseLocation },
+         dockAutoHideProvider: @escaping () -> Bool = { UserDefaults(suiteName: "com.apple.dock")?.bool(forKey: "autohide") ?? false }) {
         self.windowListProvider = windowListProvider
         self.fullScreenSpaceProvider = fullScreenSpaceProvider
         self.windowSpacesProvider = windowSpacesProvider
         self.dockReservedProvider = dockReservedProvider
+        self.pointerProvider = pointerProvider
+        self.dockAutoHideProvider = dockAutoHideProvider
     }
 
     /// The display tracked, in the window list's global coordinates: origin at the top left of the primary display.
@@ -177,6 +185,7 @@ final class WindowTracker {
         guard surfaces != previous || ahead != lead || shift != nil else { return nil }
         lead = ahead
         let vanished = Set(previous.map(\.id)).subtracting(surfaces.map(\.id))
+        let vanishedDock = Set(previous.filter { $0.isDock && vanished.contains($0.id) }.map(\.id))
         previous = surfaces
         lastChange = now
         let away = offscreen(among: vanished)
@@ -185,6 +194,9 @@ final class WindowTracker {
         var elsewhere = sliding || exposing ? away.elsewhere.union(vanished.subtracting(away.parked)) : away.elsewhere
         // Dock скрывается при переходе в fullscreen, его сугроб ждёт возвращения опоры.
         if let dock = sinkingDock { elsewhere.insert(dock) }
+        // Уход с Dock и переход в другой Space не переносят его сугроб на землю.
+        // Полка может временно исчезать даже при выключенном системном автоскрытии.
+        elsewhere.formUnion(vanishedDock)
         let shown = lead == 0 ? surfaces : surfaces.map { $0.isDock || staying.contains($0.id) ? $0 : $0.shifted(by: lead) }
         let slideVelocity = shift.map { Float($0) / Float(max(interval, 1.0 / 120)) } ?? 0
         return WindowUpdate(surfaces: shown, interval: Float(min(interval, 0.25)), parked: away.parked, elsewhere: elsewhere, sliding: sliding, slideVelocity: slideVelocity)
@@ -350,7 +362,7 @@ final class WindowTracker {
 
     /// The pointer in the window list's coordinates.
     private var pointer: CGPoint {
-        let location = NSEvent.mouseLocation
+        let location = pointerProvider()
         return CGPoint(x: location.x, y: primaryHeight - location.y)
     }
 
@@ -365,10 +377,19 @@ final class WindowTracker {
             dockShownAt = nil
             return Dock.shelf(in: reserved)
         }
-        // Auto-hidden: it stays out only while the pointer is on it, and leaves the moment the pointer does.
+        // Увеличенный значок выходит за обычную полку и тоже удерживает Dock открытым.
         let shelf = Dock.shelf(in: CGRect(x: reserved.minX, y: screen.maxY - Dock.height, width: reserved.width, height: Dock.height))
+        // Нулевая резервная высота встречается и у постоянно видимого Dock.
+        // В таком случае указатель не управляет существованием опоры.
+        if !dockAutoHideProvider() {
+            dockShownAt = nil
+            return shelf
+        }
         let pointer = pointer
-        guard pointer.y >= shelf.minY, pointer.x >= reserved.minX - 8, pointer.x <= reserved.maxX + 8 else {
+        let localPointer = CGPoint(x: pointer.x - screen.minX, y: screen.maxY - pointer.y)
+        let overIcon = dockInteractionFrame?.insetBy(dx: -4, dy: -4).contains(localPointer) ?? false
+        let overShelf = pointer.y >= shelf.minY && pointer.x >= reserved.minX - 8 && pointer.x <= reserved.maxX + 8
+        guard overShelf || overIcon else {
             dockShownAt = nil
             return nil
         }

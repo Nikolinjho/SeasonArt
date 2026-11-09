@@ -24,6 +24,12 @@ enum Snowfall: Int, CaseIterable {
     }
 }
 
+enum DockSnowPosition: Int, CaseIterable {
+    case above, below
+
+    var title: String { self == .above ? "Над Dock" : "Под Dock" }
+}
+
 enum Preferences {
     private static var defaults = UserDefaults.standard
 
@@ -32,6 +38,8 @@ enum Preferences {
         self.defaults = defaults
     }
     private static let snowfallKey = "snowfall"
+    private static let blizzardKey = "blizzard"
+    private static let dockSnowPositionKey = "dockSnowPosition"
     private static let behindWindowsKey = "behindWindows"
     private static let showOverFullScreenKey = "showOverFullScreen"
     private static let meltSnowKey = "meltSnow"
@@ -52,6 +60,8 @@ enum Preferences {
         let calm = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         defaults.register(defaults: [
             snowfallKey: (calm ? Snowfall.light : .steady).rawValue,
+            blizzardKey: false,
+            dockSnowPositionKey: DockSnowPosition.above.rawValue,
             behindWindowsKey: false,
             showOverFullScreenKey: false,
             meltSnowKey: true,
@@ -74,6 +84,16 @@ enum Preferences {
     static var snowOnWindows: Bool {
         get { defaults.bool(forKey: snowOnWindowsKey) }
         set { defaults.set(newValue, forKey: snowOnWindowsKey) }
+    }
+
+    static var blizzard: Bool {
+        get { defaults.bool(forKey: blizzardKey) }
+        set { defaults.set(newValue, forKey: blizzardKey) }
+    }
+
+    static var dockSnowPosition: DockSnowPosition {
+        get { DockSnowPosition(rawValue: defaults.integer(forKey: dockSnowPositionKey)) ?? .above }
+        set { defaults.set(newValue.rawValue, forKey: dockSnowPositionKey) }
     }
 
     static var skipSnowNearMenuBar: Bool {

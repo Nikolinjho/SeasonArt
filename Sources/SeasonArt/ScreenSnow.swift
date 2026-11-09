@@ -6,8 +6,18 @@ final class ScreenSnow {
     let displayID: CGDirectDisplayID
     let window: OverlayWindow
     let dock: DockOverlay
+    private let dockIconGeometry = DockIconGeometry()
     let simulation: SnowSimulation
     let winter: WinterSceneController
+    var dockSnowPosition: DockSnowPosition {
+        get { simulation.dockSnowPosition }
+        set {
+            winter.cancelSculpting()
+            simulation.dockSnowPosition = newValue
+            window.belowDock = simulation.mode == .snow && newValue == .below
+            activityChanged()
+        }
+    }
     var behindWindows: Bool {
         get { window.behindWindows }
         set {
@@ -96,6 +106,7 @@ final class ScreenSnow {
         get { simulation.mode }
         set {
             simulation.mode = newValue
+            window.belowDock = newValue == .snow && simulation.dockSnowPosition == .below
             winter.isEnabled = newValue == .snow
             refreshWindowSnow()
         }
@@ -110,6 +121,8 @@ final class ScreenSnow {
         )
         simulation.thaws = Preferences.meltSnow
         simulation.accumulates = Preferences.accumulate
+        simulation.blizzard = Preferences.blizzard
+        simulation.dockSnowPosition = Preferences.dockSnowPosition
         let renderer: Renderer
         do {
             renderer = try Renderer(device: device, pixelFormat: .bgra8Unorm, simulation: simulation)
@@ -124,6 +137,7 @@ final class ScreenSnow {
         winter.showsInScreenshots = Preferences.showInScreenshots
         self.renderer = renderer
         window = OverlayWindow(screen: screen)
+        window.belowDock = simulation.mode == .snow && simulation.dockSnowPosition == .below
         window.showsInScreenshots = Preferences.showInScreenshots
         overFullScreen = Preferences.showOverFullScreen
         dock = DockOverlay(screen: screen, device: device)
@@ -141,7 +155,17 @@ final class ScreenSnow {
                 at: CGPoint(x: CGFloat(cursor.x) + window.frame.minX, y: CGFloat(cursor.y) + window.frame.minY),
                 dt: dt, mouseButtons: Int(NSEvent.pressedMouseButtons))
         }
+        renderer.snowSurfaceUpdated = { [unowned self] in winter.updateDockContacts() }
         renderer.windowSurfaces = { [unowned self] now in
+            let mouse = NSEvent.mouseLocation
+            let geometry = dockIconGeometry.update(now: now, screen: self.screen.frame,
+                primaryHeight: NSScreen.screens.first?.frame.maxY ?? self.screen.frame.maxY,
+                dock: simulation.mode == .snow ? simulation.dockFrame : nil,
+                cursor: CGPoint(x: mouse.x - window.frame.minX, y: mouse.y - window.frame.minY))
+            simulation.dockMagnification = geometry.settings
+            simulation.dockIconFrames = geometry.icons
+            simulation.dockPresentationFrame = geometry.dock
+            tracker.dockInteractionFrame = dockIconGeometry.interactionFrame
             // Behind the windows the snow still settles on them: what lies on a window's top edge is above it, in
             // plain view.
             let onWindows = snowOnWindows()
@@ -161,7 +185,11 @@ final class ScreenSnow {
             view.isPaused = true
             renderer.releaseFrames(of: view)
         }
-        simulation.stirred = { [unowned self] in wake() }
+        simulation.stirred = { [unowned self] in
+            // Меню меняет режим через отложенный switchMode, минуя setter ScreenSnow.mode.
+            self.window.belowDock = self.simulation.mode == .snow && self.simulation.dockSnowPosition == .below
+            wake()
+        }
         winter.changed = { [weak self] in
             self?.tracker.reset()
             self?.wake()

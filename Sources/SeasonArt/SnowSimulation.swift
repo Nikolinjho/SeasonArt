@@ -106,6 +106,7 @@ struct PileLayer {
     var occluders: [SIMD4<Float>]
     var isDock: Bool
     var drift: Float
+    var columnWidth: Float = 2
 }
 
 private struct Flake {
@@ -382,6 +383,92 @@ final class SnowSimulation {
     }
     var thaws = false
     var accumulates = true
+    var dockSnowPosition = DockSnowPosition.above {
+        didSet {
+            guard dockSnowPosition != oldValue else { return }
+            if snowBelowDock {
+                for layer in ledgeList where layer.isDock { moveDockSnowToGround(layer) }
+            } else if mode == .snow {
+                clearGroundUnderDock()
+            }
+            dockContactBuffer = nil
+            restyled = true
+            stirred()
+        }
+    }
+    private var snowBelowDock: Bool { mode == .snow && dockSnowPosition == .below }
+
+    /// Смена расположения сохраняет массу, а не создаёт новый сугроб из прежнего изображения.
+    private func moveDockSnowToGround(_ layer: SnowLayer) {
+        for i in layer.heights.indices where layer.heights[i] > 0 {
+            let x = layer.centerX(i)
+            let missed = ground.deposit(layer.heights[i] * layer.columnWidth, at: x, wide: true)
+            if missed > 0 {
+                let column = ground.clampedIndex(at: x)
+                ground.set(column, ground.heights[column] + missed / ground.columnWidth)
+            }
+            layer.set(i, 0)
+        }
+        layer.refreshTop()
+        heightsChanged = true
+    }
+    var blizzard = false {
+        didSet { if blizzard != oldValue { stirred() } }
+    }
+    private var blizzardWind = BlizzardWind()
+    var dockMagnification = DockMagnificationSettings.disabled
+    var dockIconFrames: [DockSnowIcon]?
+    var dockPresentationFrame: CGRect?
+    private var dockSnowSurface = DockSnowSurface()
+    private var dockGeometryChanged = false
+    private var dockContactBuffer: [Float]?
+
+    /// Один и тот же контур используется для изображения и столкновений с увеличенными иконками.
+    private func presentedDockBuffer(_ layer: SnowLayer) -> [Float]? {
+        guard mode == .snow, !snowBelowDock, layer.isDock, dockSnowSurface.offsets.count == layer.count,
+              dockSnowSurface.maximum > 0, layer.top > 0.05 else { return nil }
+        if let dockContactBuffer { return dockContactBuffer }
+        let origin = dockPresentationFrame.map { Float($0.minX) } ?? layer.base.x
+        let column = dockPresentationFrame.map { Float($0.width) / Float(layer.count) } ?? layer.columnWidth
+        var values = [Float](repeating: 0, count: layer.count * 2)
+        values.withUnsafeMutableBufferPointer {
+            layer.writeSmoothed(into: $0.baseAddress!)
+            _ = dockSnowSurface.apply(to: $0.baseAddress!, columnWidth: column, originX: origin)
+        }
+        dockContactBuffer = values
+        return values
+    }
+
+    /// Высота контакта круглого шара с видимым сугробом и минимальная опора движущейся иконки.
+    func winterDockContact(on id: CGWindowID, at x: CGFloat, radius: CGFloat) -> (top: CGFloat, floor: CGFloat)? {
+        guard x.isFinite, radius.isFinite, radius >= 0, let layer = ledges[id],
+              let values = presentedDockBuffer(layer) else { return nil }
+        let origin = dockPresentationFrame.map { Float($0.minX) } ?? layer.base.x
+        let column = dockPresentationFrame.map { Float($0.width) / Float(layer.count) } ?? layer.columnWidth
+        var top = -CGFloat.infinity
+        var floor = -CGFloat.infinity
+        for i in 0..<layer.count where layer.visible[i] {
+            // Ближайшая к центру точка колонки даёт контакт и на крутом плече горки.
+            let left = CGFloat(origin + Float(i) * column)
+            let sample = min(max(x, left), left + CGFloat(column))
+            let distance = abs(sample - x)
+            guard distance <= radius else { continue }
+            let sag = radius - sqrt(max(0, radius * radius - distance * distance))
+            let y = CGFloat(layer.base.y + values[i]) - sag
+            top = max(top, y)
+            if dockSnowSurface.offsets[i] > 0 { floor = max(floor, y) }
+        }
+        return top.isFinite ? (top, floor) : nil
+    }
+    private var previousDockCursor: SIMD2<Float>?
+    private var dockMotionUntil: Double = -10
+    var dockFrame: CGRect? { dockBodies.values.first }
+    /// AX задаёт ширину и раскладку значков, высота опоры берётся из снимка текущего кадра.
+    private var currentDockPresentationFrame: CGRect? {
+        guard let body = dockFrame else { return nil }
+        guard let presentation = dockPresentationFrame else { return body }
+        return CGRect(x: presentation.minX, y: body.minY, width: presentation.width, height: body.height)
+    }
     /// Screen edges with no display past them: a window slid past one leaves its snow heaped against the edge.
     var walls: (left: Bool, right: Bool) = (false, false)
     /// Keeps the snowfall from starting until a scattered window's snow first reaches the bottom of the screen.
@@ -586,6 +673,9 @@ final class SnowSimulation {
     var mode = Mode.snow {
         didSet {
             guard mode != oldValue else { return }
+            if snowBelowDock {
+                for layer in ledgeList where layer.isDock { moveDockSnowToGround(layer) }
+            }
             night.mode = mode
             lying.removeAll()
             updateTarget()
@@ -646,10 +736,15 @@ final class SnowSimulation {
     func sculptingSource(at point: CGPoint) -> SculptingSource? {
         guard mode == .snow, point.x.isFinite, point.y.isFinite else { return nil }
         for layer in layers.reversed() {
-            let source = SculptingSource(layer: layer, visible: sculptingVisibility(of: layer))
+            let source = sculptingSource(for: layer)
             if source.column(at: point) != nil { return source }
         }
         return nil
+    }
+
+    func sculptingSource(for layer: SnowLayer) -> SculptingSource {
+        SculptingSource(layer: layer, visible: sculptingVisibility(of: layer),
+            presentationFrame: layer.isDock ? dockPresentationFrame : nil, contour: presentedDockBuffer(layer))
     }
 
     func isSculptingSourceValid(_ source: SculptingSource) -> Bool {
@@ -692,15 +787,21 @@ final class SnowSimulation {
         }
         guard let radius = SnowSculptingGesture.radius(for: area) else { return nil }
         // Допустимая CGFloat-координата у правого края при переводе во Float округляется наружу.
-        let x = min(Float(gesture.center.x), (layer.base.x + layer.width).nextDown)
+        let source = gesture.source
+        let physicalX = CGFloat(layer.base.x) + (gesture.center.x - source.displayLeft) / source.columnWidth * CGFloat(layer.columnWidth)
+        let x = min(Float(physicalX), (layer.base.x + layer.width).nextDown)
         let column = layer.clampedIndex(at: x)
         for (index, amount) in removals { layer.set(index, layer.heights[index] - amount) }
+        dockContactBuffer = nil
         displaceSnow(on: layer, at: x, radius: Float(radius),
                      strength: 0.18, horizontalVelocity: 0, grainLimit: 4)
         layer.refreshTop()
         heightsChanged = true
         stirred()
-        let center = CGPoint(x: gesture.center.x, y: CGFloat(layer.surface(column)) + radius)
+        let contact = ledges.first(where: { $0.value === layer && layer.isDock }).flatMap {
+            winterDockContact(on: $0.key, at: gesture.center.x, radius: radius)
+        }
+        let center = CGPoint(x: gesture.center.x, y: (contact?.top ?? CGFloat(layer.surface(column))) + radius)
         return SculptedBall(radius: radius, center: center, collectedArea: area)
     }
 
@@ -746,6 +847,7 @@ final class SnowSimulation {
     /// Абсолютная высота поверхности для зимней игрушки на конкретной опоре.
     func winterSurfaceY(at x: CGFloat, on id: CGWindowID?) -> CGFloat? {
         guard x.isFinite else { return nil }
+        if let id, let contact = winterDockContact(on: id, at: x, radius: 0) { return contact.top }
         let layer: SnowLayer
         if let id {
             guard let ledge = ledges[id] else { return nil }
@@ -760,6 +862,7 @@ final class SnowSimulation {
 
     /// Проминает видимый снег выбранной опоры и сохраняет снятую массу рядом или в частицах.
     func displaceSnow(for impact: WinterImpact) {
+        dockContactBuffer = nil
         guard mode == .snow, impact.x.isFinite, impact.radius.isFinite, impact.mass.isFinite,
               impact.velocity.dx.isFinite, impact.velocity.dy.isFinite,
               impact.radius > 0, impact.radius <= 200, impact.mass > 0, impact.mass <= 100,
@@ -889,8 +992,26 @@ final class SnowSimulation {
         updateTarget()
     }
 
+    /// Вызывается до лепки, чтобы попадание курсора использовало геометрию текущего кадра.
+    @discardableResult
+    func updateDockSnowSurface(dt: Float, cursor point: SIMD2<Float>) -> Bool {
+        let layer = ledgeList.first { $0.isDock }
+        let frame = currentDockPresentationFrame
+        let column = frame.map { Float($0.width) / Float(max(1, layer?.count ?? 1)) } ?? columnWidth
+        let changed = dockSnowSurface.step(dt: dt, frame: mode == .snow && !snowBelowDock && (layer?.top ?? 0) > 0.05 ? frame : nil,
+            columns: layer?.count ?? 0, columnWidth: column, cursor: point,
+            settings: dockMagnification, icons: dockIconFrames)
+        if changed {
+            dockContactBuffer = nil
+            dockGeometryChanged = true
+            restyled = true
+        }
+        return changed
+    }
+
     /// Returns whether anything visible changed.
     func step(dt: Float, cursor point: SIMD2<Float>) -> Bool {
+        dockContactBuffer = nil
         clock += Double(dt)
         let wasMoving = !flakes.isEmpty || !grains.isEmpty || !motes.isEmpty || !ghosts.isEmpty || !fallingSigns.isEmpty || !snowballs.isEmpty
             || !splashes.isEmpty || !glassDrops.isEmpty || wet || !night.sprites.isEmpty
@@ -898,6 +1019,20 @@ final class SnowSimulation {
         leafBudget = nil
 
         vary(dt: dt)
+        let dockLayer = ledgeList.first { $0.isDock }
+        let drawnDock = currentDockPresentationFrame
+        let capChanged = updateDockSnowSurface(dt: dt, cursor: point) || dockGeometryChanged
+        dockGeometryChanged = false
+        if mode == .snow, dockMagnification.isActive, (dockLayer?.top ?? 0) > 0.05, let dock = drawnDock {
+            let near = point.x >= Float(dock.minX - dockMagnification.largeSize)
+                && point.x <= Float(dock.maxX + dockMagnification.largeSize)
+                && point.y >= Float(dock.minY) - 4
+                && point.y <= Float(dock.maxY + dockMagnification.largeSize - dockMagnification.normalSize + 12)
+            let moved = previousDockCursor.map { simd_distance($0, point) > 0.1 } ?? false
+            if capChanged || (near && moved) { dockMotionUntil = clock + 0.25 }
+        }
+        previousDockCursor = point
+        blizzardWind.step(dt: dt, enabled: blizzard && mode == .snow)
         slideWind = abs(slideWind) < 1 ? 0 : slideWind * exp(-dt / slideCalm)
         expireParking()
         for ledge in ledgeList { carry(ledge, dt: dt) }
@@ -941,10 +1076,13 @@ final class SnowSimulation {
             layer.refreshTop()
             layer.previousBaseY = layer.base.y
         }
+        dockContactBuffer = nil
         // Only a cursor that actually displaces snow needs the full rate; one passing near it or resting in it changes nothing.
         let pushed = clock - lastWindowMotion < 0.6 || clock - lastCursorPush < 0.3 || gust != nil || !snowballs.isEmpty || clock - hitAt < 0.6
+            || clock < dockMotionUntil
         // The steady trickle off window corners is a few tiny grains at a time; they read fine at the calm rate.
         let flying = grains.count > 24 || clock < scatteredUntil || abs(slideWind) > 20
+            || (mode == .snow && blizzardWind.amount > 0.01 && !flakes.isEmpty)
         if pushed {
             pace = .interactive
         } else if flying || (mode == .starfall && !night.sprites.isEmpty) {
@@ -1157,17 +1295,25 @@ final class SnowSimulation {
         var result: [PileLayer] = []
         var offset = 0
         for layer in layers where layer.top > 0.05 && offset + 2 * layer.count <= capacity {
+            if snowBelowDock && layer.isDock { continue }
             layer.writeSmoothed(into: buffer + offset)
-            result.append(PileLayer(
-                offset: offset,
-                count: layer.count,
-                origin: layer.base,
-                top: layer.top,
-                bottom: -layer.bedDepth,
-                occluders: layer.occluders,
-                isDock: layer.isDock,
-                drift: layer.drift
-            ))
+
+            var origin = layer.base
+            var drawnColumn = layer.columnWidth
+            if layer.isDock, mode == .snow, let frame = dockPresentationFrame {
+                origin.x = Float(frame.minX)
+                drawnColumn = Float(frame.width) / Float(layer.count)
+            }
+            var top = layer.top
+            var bottom = -layer.bedDepth
+            if let presented = presentedDockBuffer(layer) {
+                presented.withUnsafeBufferPointer { (buffer + offset).update(from: $0.baseAddress!, count: presented.count) }
+                top = presented.prefix(layer.count).max() ?? top
+                bottom = presented.suffix(layer.count).min() ?? bottom
+            }
+            result.append(PileLayer(offset: offset, count: layer.count, origin: origin, top: top,
+                bottom: bottom, occluders: layer.occluders, isDock: layer.isDock,
+                drift: layer.drift, columnWidth: drawnColumn))
             offset += 2 * layer.count
         }
         return result
@@ -1213,6 +1359,7 @@ final class SnowSimulation {
     }
 
     func updateWindows(_ surfaces: [WindowSurface], interval: Float, parked: Set<CGWindowID> = [], elsewhere: Set<CGWindowID> = [], sliding: Bool = false) {
+        dockContactBuffer = nil
         leafBudget = nil
         dockBodies = Dictionary(surfaces.filter(\.isDock).map { ($0.id, $0.frame) }, uniquingKeysWith: { _, next in next })
         dockCorners = Dictionary(surfaces.filter(\.isDock).map {
@@ -1230,7 +1377,10 @@ final class SnowSimulation {
             let ledge: SnowLayer
             if let existing = ledges[surface.id] {
                 ledge = existing
-                if sliding && columns == ledge.count {
+                if surface.isDock {
+                    // Появление и раскладка Dock не являются рывком пользовательского окна.
+                    restore(ledge, left: left, top: top, columns: columns)
+                } else if sliding && columns == ledge.count {
                     pan(ledge, left: left, top: top, interval: interval)
                 } else {
                     move(ledge, left: left, right: right, top: top, columns: columns, interval: interval)
@@ -1256,6 +1406,7 @@ final class SnowSimulation {
             ledge.occluders = Array(blockers.prefix(16))
             ledge.faceOccluders = surface.cover.prefix(16).map { SIMD4<Float>(Float($0.minX), Float($0.minY), Float($0.maxX), Float($0.maxY)) }
             ledge.isDock = surface.isDock
+            if snowBelowDock && surface.isDock { moveDockSnowToGround(ledge) }
             ledge.face = Float(surface.frame.height)
             ledge.updateVisibility(screenWidth: width, blockers: blockers)
         }
@@ -1284,7 +1435,27 @@ final class SnowSimulation {
 
     /// Puts snow that waited off screen back on its window, wherever the window is now, without treating the jump as motion.
     private func restore(_ ledge: SnowLayer, left: Float, top: Float, columns: Int) {
-        ledge.resize(columns: columns)
+        if ledge.isDock {
+            if columns != ledge.count {
+                var heights = [Float](repeating: 0, count: columns)
+                let ratio = Float(columns) / Float(ledge.count)
+                for i in ledge.heights.indices where ledge.heights[i] > 0 {
+                    let position = (Float(i) + 0.5) * ratio - 0.5
+                    let first = Int(floor(position))
+                    let fraction = position - Float(first)
+                    heights[min(max(first, 0), columns - 1)] += ledge.heights[i] * (1 - fraction)
+                    heights[min(max(first + 1, 0), columns - 1)] += ledge.heights[i] * fraction
+                }
+                ledge.replace(heights: heights)
+            }
+            ledge.jolt = .zero
+            ledge.agitation = 0
+            ledge.swingDirection = .zero
+            ledge.swingPeak = 0
+            ledge.previousSwingPeak = 0
+        } else {
+            ledge.resize(columns: columns)
+        }
         ledge.origin = SIMD2(left, top)
         ledge.track = ledge.origin
         ledge.trackVelocity = .zero
@@ -1917,7 +2088,7 @@ final class SnowSimulation {
     /// Тело видимого Dock останавливает частицы со всех сторон, включая быстрый пролёт за один кадр.
     private func collideWithDock(position: inout SIMD2<Float>, velocity: inout SIMD2<Float>,
                                  from: SIMD2<Float>, radius: Float) -> SnowLayer? {
-        guard mode == .snow else { return nil }
+        guard mode == .snow, !snowBelowDock else { return nil }
         var roof: SnowLayer?
         for (id, frame) in dockBodies {
             let low = SIMD2(Float(frame.minX) - radius, Float(frame.minY) - radius)
@@ -1974,7 +2145,7 @@ final class SnowSimulation {
 
     /// Под низкой полкой нет места сугробу: снег у земли выходит к ближайшему свободному краю.
     private func routeGroundPastDock(_ position: inout SIMD2<Float>, radius: Float = 0) {
-        guard mode == .snow else { return }
+        guard mode == .snow, !snowBelowDock else { return }
         for frame in dockBodies.values where position.x >= Float(frame.minX) && position.x <= Float(frame.maxX) {
             guard position.y <= ground.surface(ground.clampedIndex(at: position.x)) + radius else { continue }
             let left = Float(frame.minX) - radius - columnWidth * 3
@@ -1993,7 +2164,7 @@ final class SnowSimulation {
 
     /// Оседание и сглаживание тоже переносят массу: возвращаем её из-под тела Dock к свободным краям.
     private func clearGroundUnderDock() {
-        guard mode == .snow else { return }
+        guard mode == .snow, !snowBelowDock else { return }
         for frame in dockBodies.values {
             let first = ground.clampedIndex(at: Float(frame.minX))
             let last = ground.clampedIndex(at: Float(frame.maxX))
@@ -2016,7 +2187,7 @@ final class SnowSimulation {
 
     /// При заполненном буфере частиц масса остаётся на доступной опоре, а не проваливается под Dock.
     private func depositReleased(_ area: Float, at point: SIMD2<Float>) {
-        guard mode == .snow, !dockBodies.isEmpty else {
+        guard mode == .snow, !snowBelowDock, !dockBodies.isEmpty else {
             ground.deposit(area, at: point.x, wide: true)
             return
         }
@@ -2041,8 +2212,39 @@ final class SnowSimulation {
             let i = layer.clampedIndex(at: outside.x)
             layer.set(i, layer.heights[i] + area / columnWidth)
         } else {
+            if outside.x != x,
+               let dock = dockBodies.values.first(where: { x >= Float($0.minX) && x <= Float($0.maxX) }),
+               spreadGroundSnow(area, past: dock, left: outside.x < Float(dock.minX)) { return }
             ground.deposit(area, at: outside.x, wide: false)
         }
+    }
+
+    /// Масса из-под Dock образует широкий округлый сугроб, а не высокий пик в трёх колонках у бока.
+    private func spreadGroundSnow(_ area: Float, past dock: CGRect, left: Bool) -> Bool {
+        guard area > 0 else { return true }
+        let anchor = left ? max(0, Float(dock.minX) - columnWidth * 3)
+            : min(width, Float(dock.maxX) + columnWidth * 3)
+        let available = left ? anchor : width - anchor
+        let span = min(available, max(48, area.squareRoot() * 6))
+        guard span > 0 else { return false }
+        let start = left ? anchor - span : anchor
+        let end = start + span
+        var columns: [(Int, Float)] = []
+        var total: Float = 0
+        for i in ground.clampedIndex(at: start)...ground.clampedIndex(at: end) {
+            let x = ground.centerX(i)
+            guard x >= start, x < end,
+                  !dockBodies.values.contains(where: { x >= Float($0.minX) && x <= Float($0.maxX) }) else { continue }
+            let weight = pow(sin(.pi * (x - start) / span), 2)
+            guard weight > 0 else { continue }
+            columns.append((i, weight))
+            total += weight
+        }
+        guard total > 0 else { return false }
+        for (i, weight) in columns {
+            ground.set(i, ground.heights[i] + area * weight / (total * columnWidth))
+        }
+        return true
     }
 
     /// The highest visible snow surface crossed while falling from `from` to `to` at `x`, allowing for the surface moving meanwhile.
@@ -2050,6 +2252,7 @@ final class SnowSimulation {
         var hit: (layer: SnowLayer, index: Int)?
         var highest = -Float.greatestFiniteMagnitude
         for ledge in ledgeList {
+            if snowBelowDock && ledge.isDock { continue }
             guard let i = ledge.index(at: x), ledge.visible[i] else { continue }
             let surface = ledge.surface(i)
             // Entering the snow from above the window's edge counts, even if the surface rose this frame.
@@ -2066,21 +2269,24 @@ final class SnowSimulation {
     private func advanceFlakes(dt: Float) {
         let wind = breeze() + slideWind
         // A Space's wind is short: the flakes take it up faster than the slow breeze, or it would be gone first.
-        let follow = min(1, dt * (1.2 + abs(slideWind) * 0.03))
+        let follow = min(1, dt * (1.2 + abs(slideWind) * 0.03 + (mode == .snow ? blizzardWind.amount * 1.8 : 0)))
         let settle = min(1, dt * 1.6)
         let wake = cursorWake()
 
         var i = flakes.count - 1
         while i >= 0 {
             var flake = flakes[i]
+            let turbulent = mode == .snow && flake.blown == 0 && flake.leaf == 0 && !flake.rain
+                ? blizzardWind.velocity(at: flake.position, phase: flake.phase, depth: flake.depth) : .zero
             if flake.blown != 0 {
                 // The nearer the flake, the faster the gust seems to carry it.
                 flake.velocity.x += (flake.blown * gustWind * (1.3 + 1.3 * flake.depth) - flake.velocity.x) * min(1, dt * 2.5)
             } else {
                 // Rain falls slanted, as wind drives it; snow and leaves only drift.
-                flake.velocity.x += (wind * (flake.rain ? 3 : 1) * (0.35 + 0.65 * flake.depth) - flake.velocity.x) * follow
+                flake.velocity.x += (wind * (flake.rain ? 3 : 1) * (0.35 + 0.65 * flake.depth) + turbulent.x - flake.velocity.x) * follow
             }
-            flake.velocity.y += (-flake.fallSpeed - flake.velocity.y) * settle
+            let falling = min(-flake.fallSpeed * 0.25, -flake.fallSpeed + turbulent.y)
+            flake.velocity.y += (falling - flake.velocity.y) * settle
 
             if let wake, !flake.rain { stir(&flake.velocity, at: flake.position, in: wake, dt: dt) }
 

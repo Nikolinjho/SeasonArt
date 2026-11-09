@@ -50,6 +50,7 @@ final class Renderer: NSObject, MTKViewDelegate {
     var automaticSculpting: (SIMD2<Float>, TimeInterval) -> Void = { _, _ in }
     var cursorLocation: () -> SIMD2<Float> = { SIMD2(-10_000, -10_000) }
     var windowSurfaces: (CFTimeInterval) -> WindowUpdate? = { _ in nil }
+    var snowSurfaceUpdated: () -> Void = {}
     /// Frames per second while the snow is being disturbed: the display's highest rate, up to 120 on ProMotion screens.
     var interactiveFrameRate = 60
     var budget = PowerBudget.full
@@ -207,8 +208,10 @@ final class Renderer: NSObject, MTKViewDelegate {
             if update.slideVelocity != 0 { simulation.spaceSlid(velocity: update.slideVelocity) }
         }
         let cursor = cursorLocation()
+        simulation.updateDockSnowSurface(dt: dt, cursor: cursor)
         automaticSculpting(cursor, TimeInterval(dt))
         let changed = simulation.step(dt: dt, cursor: cursor)
+        snowSurfaceUpdated()
         // The frame shown last stays up, as it would anyway with nothing to draw, without ticking over in vain.
         if !changed && simulation.isEmpty && !keepsUpdating() {
             rest()
@@ -365,6 +368,7 @@ final class Renderer: NSObject, MTKViewDelegate {
         let uniformsLength = MemoryLayout<Uniforms>.stride
         encoder.setRenderPipelineState(pilePipeline)
         for pile in piles {
+            uniforms.columnWidth = pile.columnWidth
             uniforms.columnCount = Int32(pile.count)
             uniforms.pileTop = pile.top + 2
             uniforms.pileBottom = pile.bottom

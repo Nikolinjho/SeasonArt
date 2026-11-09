@@ -90,6 +90,20 @@ final class DockSnowCollisionTests: XCTestCase {
         XCTAssertTrue(sprites(value).contains { body.contains(CGPoint(x: CGFloat($0.position.x), y: CGFloat($0.position.y))) })
     }
 
+    func testМетельНеПроталкиваетХлопьяСквозьDock() {
+        for fps in [30, 60, 120] {
+            let value = simulation(radius: 25)
+            value.blizzard = true
+            scatter(value, x: 98, y: 35, dx: 200)
+            scatter(value, x: 250, y: 130)
+            for _ in 0..<(fps * 5) {
+                _ = value.step(dt: 1 / Float(fps), cursor: away)
+                assertNoParticlesInside(value)
+            }
+            assertNoGroundUnderDock(value)
+        }
+    }
+
     func testКрупныеНеоседающиеХлопьяНеПроходятЧерезDock() {
         let value = SnowSimulation(width: 600, height: 200, snowfall: .heavy)
         value.thaws = false
@@ -153,6 +167,24 @@ final class DockSnowCollisionTests: XCTestCase {
         assertNoGroundUnderDock(value)
         XCTAssertEqual(ground.heights.reduce(0, +), before, accuracy: 0.001,
                        "Снег под появившимся Dock переносится к краю без потери массы")
+    }
+
+    func testСнегИзПодDockРаспределяетсяМягкоБезПиковУСамыхБоков() {
+        let value = simulation()
+        let ground = layers(value)[0]
+        for i in 55..<195 { ground.set(i, 8) }
+        let mass = ground.heights.reduce(0, +)
+        _ = value.step(dt: dt, cursor: away)
+        let left = (0..<ground.count).filter { ground.centerX($0) < 100 }
+        let right = (0..<ground.count).filter { ground.centerX($0) > 400 }
+        let leftPeak = left.map { ground.heights[$0] }.max() ?? 0
+        let rightPeak = right.map { ground.heights[$0] }.max() ?? 0
+        let nearLeft = left.filter { ground.centerX($0) > 88 }.map { ground.heights[$0] }.max() ?? 0
+        let nearRight = right.filter { ground.centerX($0) < 412 }.map { ground.heights[$0] }.max() ?? 0
+        XCTAssertLessThan(nearLeft, leftPeak * 0.25, "Масса не складывается высокой стенкой прямо у левого бока")
+        XCTAssertLessThan(nearRight, rightPeak * 0.25, "Масса не складывается высокой стенкой прямо у правого бока")
+        assertNoGroundUnderDock(value)
+        XCTAssertEqual(ground.heights.reduce(0, +), mass, accuracy: 0.01)
     }
 
     func testКороткаяПолкаDockНеОтбрасываетсяКакМаленькоеОкно() {

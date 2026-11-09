@@ -17,7 +17,8 @@ final class WinterObjectView: NSView {
 
     func display(object: WinterObject, shadows suppliedShadows: [WinterContactShadow]? = nil) {
         let shadows = suppliedShadows ?? WinterContactShadow.shadows(on: object, among: [])
-        let changed = self.object.radii != object.radii || self.object.rotation != object.rotation || self.shadows != shadows
+        let changed = self.object.radii != object.radii || self.object.rotation != object.rotation
+            || self.object.ballDamage != object.ballDamage || self.shadows != shadows
         self.object = object
         self.shadows = shadows
         if changed { needsDisplay = true }
@@ -81,8 +82,8 @@ final class WinterObjectView: NSView {
         }
         let gradient = NSGradient(starting: .white, ending: NSColor(calibratedRed: 0.65, green: 0.79, blue: 0.87, alpha: 1))!
         let frames = object.ballFrames
-        for (index, rect) in frames.enumerated() {
-            let ball = NSBezierPath(ovalIn: rect.insetBy(dx: 0.5, dy: 0.5))
+        for index in frames.indices {
+            let ball = object.ballPath(for: index)
             gradient.draw(in: ball, angle: -50)
             NSColor(calibratedWhite: 0.55, alpha: 0.4).setStroke()
             ball.lineWidth = 0.8
@@ -106,7 +107,7 @@ final class WinterObjectView: NSView {
         if object.radii.count == 1, let rect = frames.first {
             // Свет остаётся неподвижным, вращаются только маленькие снежные пятнышки.
             NSGraphicsContext.saveGraphicsState()
-            NSBezierPath(ovalIn: rect.insetBy(dx: 1, dy: 1)).addClip()
+            object.ballPath(for: 0).addClip()
             let radius = object.radii[0]
             NSColor(calibratedRed: 0.50, green: 0.66, blue: 0.74, alpha: 0.22).setFill()
             for (x, y, size): (CGFloat, CGFloat, CGFloat) in [(-0.35, 0.2, 0.10), (0.28, -0.32, 0.13), (0.4, 0.35, 0.07)] {

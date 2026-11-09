@@ -13,12 +13,14 @@ final class MenuBarEffectsTests: XCTestCase {
         Preferences.configure(defaults: defaults)
         Preferences.registerDefaults()
         Preferences.snowfall = .off
+        Preferences.blizzard = true
         defer {
             Preferences.configure(defaults: .standard)
             defaults.removePersistentDomain(forName: suite)
         }
         let snow = try XCTUnwrap(ScreenSnow(screen: screen, device: device, snowOnWindows: { true }))
         defer { snow.close() }
+        XCTAssertTrue(snow.simulation.blizzard, "Новый экран получает сохранённую настройку метели")
         let boundary = screen.frame.height - (screen.frame.maxY - screen.visibleFrame.maxY) - 38
         func surface(_ id: CGWindowID, top: CGFloat, dock: Bool = false) -> WindowSurface {
             WindowSurface(id: id, frame: CGRect(x: 0, y: top - 100, width: 600, height: 100),

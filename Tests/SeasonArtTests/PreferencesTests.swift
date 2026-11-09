@@ -63,6 +63,21 @@ final class PreferencesTests: XCTestCase {
         XCTAssertFalse(Preferences.behindWindows, "Настройки окон из другого профиля не наследуются")
     }
 
+    func testМетельВыключенаПоУмолчаниюИСохраняетсяПриПерезапуске() {
+        let (name, defaults) = makeProfile()
+        Preferences.configure(defaults: defaults)
+        Preferences.registerDefaults()
+        XCTAssertFalse(Preferences.blizzard)
+        Preferences.blizzard = true
+        Preferences.mode = .rain
+        defaults.synchronize()
+        Preferences.configure(defaults: UserDefaults(suiteName: name)!)
+        Preferences.registerDefaults()
+        XCTAssertTrue(Preferences.blizzard, "Выбор метели хранится независимо от режима")
+        Preferences.blizzard = false
+        XCTAssertFalse(Preferences.blizzard)
+    }
+
     func testAllModesAndIntensityOptionsPersist() {
         let (_, defaults) = makeProfile()
         Preferences.configure(defaults: defaults)

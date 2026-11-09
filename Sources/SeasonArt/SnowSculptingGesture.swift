@@ -12,10 +12,14 @@ struct SculptingSource {
     let heights: [Float]
     let visible: [Bool]
     let columnWidth: CGFloat
+    let displayLeft: CGFloat
+    let displayBed: [Float]
+    let displayTop: [Float]
+    var massColumnWidth: CGFloat { CGFloat(layer.columnWidth) }
     let isDock: Bool
     let face: Float
 
-    init(layer: SnowLayer, visible: [Bool]? = nil) {
+    init(layer: SnowLayer, visible: [Bool]? = nil, presentationFrame: CGRect? = nil, contour: [Float]? = nil) {
         self.layer = layer
         origin = layer.origin
         base = layer.base
@@ -24,20 +28,34 @@ struct SculptingSource {
         bed = layer.bed
         heights = layer.heights
         self.visible = visible ?? layer.visible
-        columnWidth = CGFloat(layer.columnWidth)
+        displayLeft = presentationFrame?.minX ?? CGFloat(layer.base.x)
+        columnWidth = presentationFrame.map { $0.width / CGFloat(layer.count) } ?? CGFloat(layer.columnWidth)
+        if let contour, contour.count == layer.count * 2 {
+            displayTop = Array(contour.prefix(layer.count))
+            displayBed = Array(contour.suffix(layer.count))
+        } else {
+            displayTop = zip(layer.bed, layer.heights).map(+)
+            displayBed = layer.bed
+        }
         isDock = layer.isDock
         face = layer.face
     }
 
     func column(at point: CGPoint) -> Int? {
-        guard point.x.isFinite, point.y.isFinite, columnWidth.isFinite, columnWidth > 0,
-              point.x >= CGFloat(base.x), point.x < CGFloat(base.x) + CGFloat(heights.count) * columnWidth else { return nil }
-        let index = Int(((point.x - CGFloat(base.x)) / columnWidth).rounded(.down))
+        guard point.y.isFinite, let index = column(atX: point.x) else { return nil }
         guard visible[index], heights[index].isFinite, heights[index] > 0 else { return nil }
-        let floor = CGFloat(base.y + bed[index])
-        guard point.y >= floor, point.y <= floor + CGFloat(heights[index]) + 8 else { return nil }
+        let floor = CGFloat(base.y + displayBed[index])
+        guard point.y >= floor, point.y <= surface(at: index) + 8 else { return nil }
         return index
     }
+
+    func column(atX x: CGFloat) -> Int? {
+        guard x.isFinite, columnWidth.isFinite, columnWidth > 0,
+              x >= displayLeft, x < displayLeft + CGFloat(heights.count) * columnWidth else { return nil }
+        return min(heights.count - 1, Int(((x - displayLeft) / columnWidth).rounded(.down)))
+    }
+
+    func surface(at index: Int) -> CGFloat { CGFloat(base.y + displayTop[index]) }
 }
 
 struct SculptedBall {
@@ -53,7 +71,7 @@ struct SnowSculptingGesture {
     static let largeArea: CGFloat = 220
     static let maximumColumnHeight: CGFloat = 2
 
-    let source: SculptingSource
+    private(set) var source: SculptingSource
     private(set) var columns: [Int] = []
     private(set) var collectedArea: CGFloat = 0
     private(set) var lastPoint: CGPoint
@@ -93,6 +111,13 @@ struct SnowSculptingGesture {
         CGPoint(x: collectedPoint.x, y: collectedPoint.y + (radius ?? WinterBallGeometry.minimumRadius))
     }
 
+    /// Изменение размеров иконок обновляет геометрию, сохраняя уже собранные колонки и темп жеста.
+    mutating func updateSource(_ fresh: SculptingSource) {
+        guard fresh.layer === source.layer, fresh.heights.count == source.heights.count else { return }
+        source = fresh
+        if let index = fresh.column(atX: collectedPoint.x) { collectedPoint.y = fresh.surface(at: index) }
+    }
+
     mutating func include(_ point: CGPoint, dt: TimeInterval = 0) {
         // События AppKit лежат в пределах экранов. Отсекаем нереальные координаты до интерполяции.
         guard point.x.isFinite, point.y.isFinite, abs(point.x) <= 1_000_000, abs(point.y) <= 1_000_000 else {
@@ -107,14 +132,14 @@ struct SnowSculptingGesture {
         lastPoint = point
         defer { previous = point }
         if let previous, previous.x != point.x {
-            let left = max(min(previous.x, point.x), CGFloat(source.base.x))
-            let right = min(max(previous.x, point.x), CGFloat(source.base.x) + CGFloat(source.heights.count) * source.columnWidth)
+            let left = max(min(previous.x, point.x), source.displayLeft)
+            let right = min(max(previous.x, point.x), source.displayLeft + CGFloat(source.heights.count) * source.columnWidth)
             if left < right {
                 // Итерация по конечному снимку безопасна даже при огромных координатах.
                 let dx = point.x - previous.x
                 if dx.isFinite {
                     for index in source.heights.indices {
-                        let x = CGFloat(source.base.x) + (CGFloat(index) + 0.5) * source.columnWidth
+                        let x = source.displayLeft + (CGFloat(index) + 0.5) * source.columnWidth
                         guard x >= left, x <= right else { continue }
                         let fraction = (x - previous.x) / dx
                         let y = previous.y * (1 - fraction) + point.y * fraction
@@ -125,13 +150,13 @@ struct SnowSculptingGesture {
         }
         collect(point)
         if let index = source.column(at: point) {
-            collectedPoint = CGPoint(x: point.x, y: CGFloat(source.base.y + source.bed[index] + source.heights[index]))
+            collectedPoint = CGPoint(x: point.x, y: source.surface(at: index))
         }
     }
 
     private mutating func collect(_ point: CGPoint) {
         guard collectedArea < Self.largeArea, let index = source.column(at: point), visited.insert(index).inserted else { return }
         columns.append(index)
-        collectedArea = min(Self.largeArea, collectedArea + min(Self.maximumColumnHeight, CGFloat(source.heights[index])) * source.columnWidth)
+        collectedArea = min(Self.largeArea, collectedArea + min(Self.maximumColumnHeight, CGFloat(source.heights[index])) * source.massColumnWidth)
     }
 }

@@ -34,6 +34,7 @@ struct WinterObject: Identifiable {
     var isDragged: Bool
 
     var rotation: CGFloat = 0
+    var ballDamage: [WinterBallDamage] = []
 
     /// Локальные границы шаров: стык перекрывает 30% диаметра меньшего из соседей.
     var ballFrames: [CGRect] {
@@ -137,7 +138,9 @@ final class WinterScene {
     var hasCapacity: Bool { objects.count < Self.maximumObjects }
     /// Абсолютная высота снега. nil использует геометрию опоры или землю.
     var surfaceHeight: (_ id: CGWindowID?, _ x: CGFloat) -> CGFloat? = { _, _ in nil }
+    var dockContact: (_ id: CGWindowID, _ x: CGFloat, _ radius: CGFloat) -> (top: CGFloat, floor: CGFloat)? = { _, _, _ in nil }
     var didLand: (WinterImpact) -> Void = { _ in }
+    var didChip: (WinterBallChip) -> Void = { _ in }
     var isMoving: Bool {
         !settledStacks.isEmpty || objects.contains { !$0.parked && ($0.isDragged || !resting.contains($0.id) || $0.velocity.dx != 0) }
     }
@@ -174,6 +177,7 @@ final class WinterScene {
                                   support: nil, parked: false, isDragged: false)
         clamp(&object)
         objects.append(object)
+        synchronizeDockSupports()
         return object.id
     }
 
@@ -310,6 +314,9 @@ final class WinterScene {
         guard let index = objects.firstIndex(where: { $0.id == base }) else { return }
         for id in ids {
             guard let held = objects.first(where: { $0.id == id }) else { continue }
+            // Порядок повреждений совпадает с порядком шаров, в том числе у целых шаров.
+            objects[index].ballDamage = objects[index].assembledDamage
+            objects[index].ballDamage.append(contentsOf: held.assembledDamage)
             objects[index].radii.append(contentsOf: held.radii)
             resting.remove(id)
             objectSupports.removeValue(forKey: id)
@@ -388,6 +395,32 @@ final class WinterScene {
         let steps = max(1, Int(ceil(duration * (objects.count > 1 ? 360 : 120))))
         for _ in 0..<steps { integrate(elapsed: CGFloat(duration / Double(steps))) }
         assembleSettledSnowmen(dt: duration)
+    }
+
+    /// Обновляет контакт в кадре Dock, не продвигая время физики повторно.
+    @discardableResult
+    func synchronizeDockSupports() -> Bool {
+        let before = objects.map(\.center)
+        let docks = surfaces.values.filter { $0.isDock && visibleSupports.contains($0.id) }
+        for index in objects.indices where !objects[index].parked && !objects[index].isDragged {
+            if resting.contains(objects[index].id), let id = objects[index].support,
+               let surface = surfaces[id], surface.isDock {
+                fit(&objects[index], on: surface)
+            }
+            // Увеличение расширяет Dock в стороны: горка может оказаться под шаром на земле.
+            for surface in docks {
+                guard let contact = dockContact(surface.id, objects[index].center.x, objects[index].radii[0]),
+                      contact.floor.isFinite, objects[index].frame.minY < contact.floor,
+                      contact.top + objects[index].frame.height <= height,
+                      supportHeight(surface, at: objects[index].center.x, radius: objects[index].radii[0]) != nil
+                else { continue }
+                land(&objects[index], on: surface.id, at: contact.top)
+            }
+        }
+        guard before != objects.map(\.center) else { return false }
+        wakeUnsupportedObjects()
+        resolveObjectContacts()
+        return true
     }
 
     private func integrate(elapsed: CGFloat) {
@@ -541,7 +574,7 @@ final class WinterScene {
     private func resolveObjectContacts() {
         let active = objects.indices.filter { !objects[$0].parked && !objects[$0].isDragged }
         guard active.count > 1 else { return }
-        let components = objects.map(\.ballFrames)
+        var components = objects.map(\.collisionBallFrames)
         let inverseMasses = objects.map { object in 1 / object.radii.reduce(0) { $0 + pow($1, 3) } }
         for _ in 0..<12 {
             var maximumOverlap: CGFloat = 0
@@ -556,16 +589,19 @@ final class WinterScene {
                        bounds[a].minY > bounds[b].maxY + 0.01 { continue }
                     let framesA = components[a]
                     let framesB = components[b]
-                    for frameA in framesA {
-                        for frameB in framesB {
-                            let dx = objects[b].center.x - objects[a].center.x
+                    for (componentA, frameA) in framesA.enumerated() {
+                        for (componentB, frameB) in framesB.enumerated() {
+                            let dx = objects[b].frame.minX + frameB.midX - objects[a].frame.minX - frameA.midX
                             let dy = objects[b].center.y - objects[b].radii[0] + frameB.midY -
                                 objects[a].center.y + objects[a].radii[0] - frameA.midY
                             let distance = hypot(dx, dy)
-                            let radius = (frameA.width + frameB.width) / 2
-                            guard distance < radius + 0.002 else { continue }
                             let nx: CGFloat = distance > 0.000001 ? dx / distance : 1
                             let ny: CGFloat = distance > 0.000001 ? dy / distance : 0
+                            func reach(_ frame: CGRect) -> CGFloat {
+                                1 / sqrt(pow(nx / (frame.width / 2), 2) + pow(ny / (frame.height / 2), 2))
+                            }
+                            let radius = reach(frameA) + reach(frameB)
+                            guard distance < radius + 0.002 else { continue }
                             let inverseA: CGFloat = ny > 0.8 && resting.contains(objects[a].id) ? 0 : inverseMasses[a]
                             let inverseB: CGFloat = ny < -0.8 && resting.contains(objects[b].id) ? 0 : inverseMasses[b]
                             let total = inverseA + inverseB
@@ -579,6 +615,15 @@ final class WinterScene {
                             let relative = (objects[b].velocity.dx - objects[a].velocity.dx) * nx +
                                 (objects[b].velocity.dy - objects[a].velocity.dy) * ny
                             if relative < 0 {
+                                if ny > 0.65 {
+                                    chip(&objects[b], component: componentB, speed: -relative, angle: atan2(-ny, -nx),
+                                         at: CGPoint(x: objects[b].center.x, y: objects[b].frame.minY + frameB.minY))
+                                    components[b] = objects[b].collisionBallFrames
+                                } else if ny < -0.65 {
+                                    chip(&objects[a], component: componentA, speed: -relative, angle: atan2(ny, nx),
+                                         at: CGPoint(x: objects[a].center.x, y: objects[a].frame.minY + frameA.minY))
+                                    components[a] = objects[a].collisionBallFrames
+                                }
                                 let restitution: CGFloat = relative < -220 ? 0.12 : 0
                                 let impulse = -(1 + restitution) * relative / total
                                 objects[a].velocity.dx -= impulse * inverseA * nx
@@ -673,13 +718,14 @@ final class WinterScene {
 
     private func ground(at x: CGFloat) -> CGFloat { surfaceHeight(nil, x) ?? 0 }
 
-    /// Свежий снег не поднимает неподвижную фигуру. Таяние опускает её, твёрдый Dock остаётся опорой.
+    /// Свежий снег не поднимает фигуру. Движущаяся иконка поднимает её вместе с лежащим на ней снегом.
     private func restingHeight(_ height: CGFloat, for object: WinterObject, on surface: WindowSurface? = nil) -> CGFloat {
         guard resting.contains(object.id), object.velocity == .zero else { return height }
         let physicalTop = surface.map {
             $0.isDock ? dockRestHeight($0, at: object.center.x, radius: object.radii[0]) : -CGFloat.infinity
         } ?? 0
-        return max(physicalTop, min(object.frame.minY, height))
+        let movingFloor = surface.flatMap { dockContact($0.id, object.center.x, object.radii[0]) }?.floor ?? -CGFloat.infinity
+        return max(physicalTop, movingFloor, min(object.frame.minY, height))
     }
 
     /// Физическая кромка повторяет superellipse основания SnowLayer, без высоты снега.
@@ -750,10 +796,11 @@ final class WinterScene {
     }
 
     private func supportHeight(_ surface: WindowSurface, at x: CGFloat, radius: CGFloat = 0) -> CGFloat? {
-        guard x >= surface.frame.minX, x <= surface.frame.maxX else { return nil }
+        let contact = dockContact(surface.id, x, radius)
+        guard contact != nil || (x >= surface.frame.minX && x <= surface.frame.maxX) else { return nil }
         let physicalTop = surface.isDock ? dockRestHeight(surface, at: x, radius: radius) : -CGFloat.infinity
         let fallback = surface.isDock ? physicalTop : surface.frame.maxY
-        let y = max(surfaceHeight(surface.id, x) ?? fallback, physicalTop)
+        let y = max(contact?.top ?? surfaceHeight(surface.id, x) ?? fallback, physicalTop)
         guard !surface.blockers.contains(where: { $0.contains(CGPoint(x: x, y: y + 1)) }) else { return nil }
         return y
     }
@@ -762,6 +809,8 @@ final class WinterScene {
         objectSupports.removeValue(forKey: object.id)
         let contact = WinterContact(support: support)
         if bouncing[object.id] != contact {
+            chip(&object, component: 0, speed: -object.velocity.dy, angle: -.pi / 2,
+                 at: CGPoint(x: object.center.x, y: y + 1))
             didLand(WinterImpact(support: support, x: object.center.x, radius: object.radii[0],
                              mass: object.radii.reduce(0) { $0 + pow($1 / WinterBallSize.small.radius, 3) },
                              velocity: object.velocity))
@@ -769,7 +818,8 @@ final class WinterScene {
         let physicalTop = support.flatMap { surfaces[$0] }.map {
             $0.isDock ? dockRestHeight($0, at: object.center.x, radius: object.radii[0]) : -CGFloat.infinity
         } ?? -CGFloat.infinity
-        object.center.y = max(surfaceHeight(support, object.center.x) ?? y, physicalTop) + object.radii[0]
+        let contactTop = support.flatMap { dockContact($0, object.center.x, object.radii[0]) }?.top
+        object.center.y = max(contactTop ?? surfaceHeight(support, object.center.x) ?? y, physicalTop) + object.radii[0]
         object.support = support
         let rebound = -object.velocity.dy * WinterMotion.restitution
         if object.velocity.dy < -WinterMotion.bounceThreshold {
@@ -783,6 +833,15 @@ final class WinterScene {
             if abs(object.velocity.dx) < WinterMotion.sleepSpeed { object.velocity.dx = 0 }
             resting.insert(object.id)
         }
+    }
+
+    private func chip(_ object: inout WinterObject, component: Int, speed: CGFloat, angle: CGFloat, at point: CGPoint) {
+        var damage = object.damage(for: component)
+        let amount = damage.hit(speed: speed, angle: angle - (object.radii.count == 1 ? object.rotation : 0))
+        guard amount > 0 else { return }
+        while object.ballDamage.count < object.radii.count { object.ballDamage.append(WinterBallDamage()) }
+        object.ballDamage[component] = damage
+        didChip(WinterBallChip(center: point, radius: object.radii[component], strength: amount))
     }
 
     private func fit(_ object: inout WinterObject, on surface: WindowSurface, clampToSupport: Bool = false) {

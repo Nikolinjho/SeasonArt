@@ -47,7 +47,18 @@ final class WinterSceneController {
         self.presentsWindows = presentsWindows
         scene = WinterScene(width: screenFrame.width, height: screenFrame.height)
         scene.surfaceHeight = { [weak simulation] id, x in simulation?.winterSurfaceY(at: x, on: id) }
+        scene.dockContact = { [weak simulation] id, x, radius in simulation?.winterDockContact(on: id, at: x, radius: radius) }
         scene.didLand = { [weak simulation] impact in simulation?.displaceSnow(for: impact) }
+        scene.didChip = { [weak simulation] chip in
+            let count = max(3, min(10, Int(chip.strength * 40)))
+            let pieces = (0..<count).map { index -> ScatterPiece in
+                let side = Float(index) / Float(count - 1) * 2 - 1
+                return ScatterPiece(
+                    position: SIMD2(Float(chip.center.x) + side * Float(chip.radius) * 0.55, Float(chip.center.y)),
+                    velocity: SIMD2(side * 100, 25 + (1 - abs(side)) * 65), color: SIMD3(repeating: 1))
+            }
+            simulation?.scatter(pieces)
+        }
     }
 
     @discardableResult
@@ -57,6 +68,11 @@ final class WinterSceneController {
         refresh()
         changed()
         return id
+    }
+
+    func updateDockContacts() {
+        guard !closed, isEnabled, isActive, !isSuppressed, hasObjects else { return }
+        if scene.synchronizeDockSupports() { refresh() }
     }
 
     /// Вызывается до шага симуляции, чтобы обычная расчистка не забирала снег черновика.
@@ -83,6 +99,9 @@ final class WinterSceneController {
             return
         }
         guard moved || isSculpting else { return }
+        if let gesture = sculptingGesture, gesture.source.isDock {
+            sculptingGesture?.updateSource(simulation.sculptingSource(for: gesture.source.layer))
+        }
         // При движении внутри снимка не копируем весь слой на каждом кадре.
         let source: SculptingSource?
         if let gesture = sculptingGesture, gesture.source.column(at: point) != nil {
@@ -157,10 +176,13 @@ final class WinterSceneController {
         }
         trackedSurfaces = update.surfaces
         shelf = update.surfaces.first { WinterPlowPass(surface: $0) != nil }
-        if let pass = plow, shelf?.id != pass.surfaceID || shelf?.frame != pass.shelf {
-            plow = nil
-            plowWindow?.close()
-            plowWindow = nil
+        if let pass = plow {
+            let waiting = shelf == nil && (update.elsewhere.contains(pass.surfaceID) || update.parked.contains(pass.surfaceID))
+            if !waiting && (shelf?.id != pass.surfaceID || shelf?.frame != pass.shelf) {
+                plow = nil
+                plowWindow?.close()
+                plowWindow = nil
+            }
         }
         scene.updateWindows(update)
         refresh()
@@ -267,7 +289,7 @@ final class WinterSceneController {
                 plowWindow?.showsInScreenshots = showsInScreenshots
             }
             plowWindow?.display(frame: frame)
-            if visible && presentsWindows {
+            if visible && presentsWindows && shelf?.id == pass.surfaceID {
                 if plowWindow?.isVisible == false { plowWindow?.orderFrontRegardless() }
             } else {
                 plowWindow?.orderOut(nil)
@@ -302,7 +324,7 @@ final class WinterSceneController {
         let dt = min(max(now - lastFrame, 0), 1.0 / 30)
         lastFrame = now
         scene.step(dt: dt)
-        if var pass = plow {
+        if var pass = plow, shelf?.id == pass.surfaceID {
             let before = pass.bladeX
             if let range = pass.advance(dt: dt) {
                 simulation.plowDock(id: pass.surfaceID, fromX: range.lowerBound, toX: range.upperBound)

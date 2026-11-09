@@ -6,9 +6,17 @@ final class OverlayWindow: NSWindow {
     static let aboveDockLevel = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.dockWindow)) + 1)
 
     private let frontLevel: NSWindow.Level
+    var belowDock = false {
+        didSet { updateLevel() }
+    }
 
     var behindWindows = false {
-        didSet { level = behindWindows ? Self.desktopLevel : frontLevel }
+        didSet { updateLevel() }
+    }
+
+    private func updateLevel() {
+        level = behindWindows ? Self.desktopLevel : belowDock
+            ? NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.dockWindow)) - 1) : frontLevel
     }
 
     var showsInScreenshots = false {

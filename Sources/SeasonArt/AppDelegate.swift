@@ -1,6 +1,7 @@
 import AppKit
 import MetalKit
 import ServiceManagement
+import ApplicationServices
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     enum StartupError {
@@ -35,6 +36,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let snowfallSlider = SnowfallSlider()
     private var accumulateItem: NSMenuItem!
     private var meltItem: NSMenuItem!
+    private var blizzardItem: NSMenuItem!
+    private var dockAccessItem: NSMenuItem!
+    private var dockPositionItem: NSMenuItem!
+    private var dockPositionItems: [DockSnowPosition: NSMenuItem] = [:]
     private var snowOnWindowsItem: NSMenuItem!
     private var skipSnowNearMenuBarItem: NSMenuItem!
     private var clearItem: NSMenuItem!
@@ -183,6 +188,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(withTitle: "Производительность", action: nil, keyEquivalent: "").submenu = performance
         accumulateItem = add("Накапливать", #selector(toggleAccumulate), to: menu)
         meltItem = add("Таяние снега", #selector(toggleMeltSnow), to: menu)
+        blizzardItem = add("Метель", #selector(toggleBlizzard), to: menu)
+        let dockPositionMenu = NSMenu()
+        dockPositionMenu.autoenablesItems = false
+        for position in DockSnowPosition.allCases {
+            let item = add(position.title, #selector(chooseDockSnowPosition), to: dockPositionMenu)
+            item.tag = position.rawValue
+            dockPositionItems[position] = item
+        }
+        dockPositionItem = menu.addItem(withTitle: "Расположение снега", action: nil, keyEquivalent: "")
+        dockPositionItem.submenu = dockPositionMenu
+        dockAccessItem = add("Снег на иконках: разрешить доступ…", #selector(allowDockGeometry), to: menu)
         snowOnWindowsItem = add("Снег на окнах", #selector(toggleSnowOnWindows), to: menu)
         skipSnowNearMenuBarItem = add("Пропускать окна у строки меню", #selector(toggleSkipSnowNearMenuBar), to: menu)
         deepInteractionItem = add("Взаимодействие с выделением", #selector(toggleDeepInteraction), to: menu)
@@ -230,6 +246,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let autumn = mode == .autumn
         let rain = mode == .rain
         let blossom = mode == .blossom
+        blizzardItem.isHidden = mode != .snow
+        dockPositionItem.isHidden = mode != .snow
+        for (position, item) in dockPositionItems {
+            item.state = position == Preferences.dockSnowPosition ? .on : .off
+        }
+        dockAccessItem.isHidden = mode != .snow || Preferences.dockSnowPosition == .below || DockIconGeometry.hasAccess
+        blizzardItem.state = Preferences.blizzard ? .on : .off
         for (choice, item) in modeItems { item.state = choice == mode ? .on : .off }
         // Дождь не накапливается, поэтому таяние и очистка ему не нужны.
         accumulateItem.isHidden = rain || mode.isNightEffect
@@ -284,6 +307,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         thaws.toggle()
         Preferences.meltSnow = thaws
         for snow in screens { snow.simulation.thaws = thaws }
+    }
+
+    @objc private func toggleBlizzard() {
+        Preferences.blizzard.toggle()
+        for snow in screens { snow.simulation.blizzard = Preferences.blizzard }
+    }
+
+    @objc private func chooseDockSnowPosition(_ sender: NSMenuItem) {
+        guard let position = DockSnowPosition(rawValue: sender.tag) else { return }
+        Preferences.dockSnowPosition = position
+        for snow in screens { snow.dockSnowPosition = position }
+    }
+
+    @objc private func allowDockGeometry() {
+        let alert = NSAlert()
+        alert.messageText = "Снег на иконках Dock"
+        alert.informativeText = "Для точного положения снежной шапки нужен доступ «Универсальный доступ». Он позволяет читать положение и размер иконок Dock. Разрешите SeasonArt в настройках macOS."
+        alert.addButton(withTitle: "Открыть настройки")
+        alert.addButton(withTitle: "Позже")
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        _ = AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary)
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     @objc private func toggleSnowOnWindows() {

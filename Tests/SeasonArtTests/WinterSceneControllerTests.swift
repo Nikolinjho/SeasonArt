@@ -3,6 +3,23 @@ import XCTest
 @testable import SeasonArt
 
 final class WinterSceneControllerTests: XCTestCase {
+    func testТракторНеТеряетПроходКогдаDockУходитНаДругойSpace() throws {
+        let (controller, _, update) = snowyController()
+        defer { controller.close() }
+        XCTAssertTrue(controller.startPlow())
+        let before = try XCTUnwrap(controller.plow).bladeX
+        controller.updateWindows(WindowUpdate(surfaces: [], interval: 0.1, parked: [],
+            elsewhere: [42], sliding: true, slideVelocity: 0))
+        XCTAssertNotNil(controller.plow, "Переход на другой Space приостанавливает проход")
+        RunLoop.current.run(until: Date().addingTimeInterval(0.06))
+        XCTAssertEqual(controller.plow?.bladeX, before, "Скрытый проход не продвигается")
+        controller.updateWindows(update)
+        XCTAssertNotNil(controller.plow, "При возвращении Dock продолжается прежний проход")
+        controller.updateWindows(WindowUpdate(surfaces: [], interval: 0.1, parked: [],
+            elsewhere: [], sliding: false, slideVelocity: 0))
+        XCTAssertNil(controller.plow, "Настоящее исчезновение полки отменяет проход")
+    }
+
     func testСистемныйВыборОкнаЗапрещаетНовыйПроходТрактора() {
         let (controller, _, _) = snowyController()
         defer { controller.close() }

@@ -104,6 +104,14 @@ final class WindowTrackerTests: XCTestCase {
     }
 
     func testDockSnowWaitsDuringFullscreenTransition() throws {
+        try checkDockSnowWaits(dockRemainsListed: true)
+    }
+
+    func testСугробСохраняетсяКогдаDockПолностьюПропалПриВходеВFullscreen() throws {
+        try checkDockSnowWaits(dockRemainsListed: false)
+    }
+
+    private func checkDockSnowWaits(dockRemainsListed: Bool) throws {
         let dockID = frontID + 2
         let dock = entry(dockID, screen).mutableCopy() as! NSMutableDictionary
         dock[kCGWindowOwnerName] = "Dock"
@@ -130,7 +138,7 @@ final class WindowTrackerTests: XCTestCase {
         layer.set(layer.count / 2, 8)
         let mass = layer.heights.reduce(0, +)
 
-        list = [entry(frontID, screen), dock]
+        list = dockRemainsListed ? [entry(frontID, screen), dock] : [entry(frontID, screen)]
         let entering = try XCTUnwrap(tracker.poll(now: 100.1, eager: true))
         XCTAssertFalse(entering.surfaces.contains { $0.isDock }, "Скрытый Dock не оставляет невидимую опору")
         XCTAssertTrue(entering.elsewhere.contains(dockID), "Снег Dock ожидает возвращения из полноэкранного Space")
@@ -144,6 +152,69 @@ final class WindowTrackerTests: XCTestCase {
         XCTAssertEqual(restored.heights.reduce(0, +), mass, accuracy: 0.001, "Масса сохраняется после перехода")
     }
 
+    func testПостоянныйDockСНулевойРезервнойВысотойОстаётсяОпоройБезНаведения() throws {
+        let dockID = frontID + 2
+        let dock = entry(dockID, screen).mutableCopy() as! NSMutableDictionary
+        dock[kCGWindowOwnerName] = "Dock"
+        dock[kCGWindowLayer] = NSNumber(value: CGWindowLevelForKey(.dockWindow))
+        var pointer = CGPoint(x: 700, y: 400)
+        let tracker = WindowTracker(windowListProvider: { [dock] as CFArray },
+            fullScreenSpaceProvider: { [] }, windowSpacesProvider: { _ in [] },
+            dockReservedProvider: { CGRect(x: 400, y: self.screen.maxY, width: 900, height: 0) },
+            pointerProvider: { pointer }, dockAutoHideProvider: { false })
+        tracker.screen = screen
+        tracker.primaryHeight = screen.height
+        let first = try XCTUnwrap(tracker.poll(now: 100, eager: true))
+        let shelf = try XCTUnwrap(first.surfaces.first { $0.isDock },
+                                 "CUA: видимый Dock при выключенном автоскрытии существует и без наведения")
+        for (index, y): (Int, CGFloat) in [20, 80, 400].enumerated() {
+            pointer.y = y
+            if let update = tracker.poll(now: 101 + Double(index), eager: true) {
+                XCTAssertEqual(update.surfaces.first { $0.isDock }?.frame, shelf.frame)
+                XCTAssertFalse(update.elsewhere.contains(dockID))
+            }
+        }
+    }
+
+    func testСкачокПоявленияDockНеПодбрасываетСнегКакРывокОкна() throws {
+        let dockID = frontID + 2
+        let dock = entry(dockID, screen).mutableCopy() as! NSMutableDictionary
+        dock[kCGWindowOwnerName] = "Dock"
+        dock[kCGWindowLayer] = NSNumber(value: CGWindowLevelForKey(.dockWindow))
+        var reserved = CGRect(x: 400, y: screen.maxY, width: 900, height: 0)
+        let tracker = WindowTracker(windowListProvider: { [dock] as CFArray },
+            fullScreenSpaceProvider: { [] }, windowSpacesProvider: { _ in [] },
+            dockReservedProvider: { reserved }, pointerProvider: { CGPoint(x: 700, y: 20) }, dockAutoHideProvider: { true })
+        tracker.screen = screen
+        tracker.primaryHeight = screen.height
+        let simulation = SnowSimulation(width: Float(screen.width), height: Float(screen.height), snowfall: .off)
+        simulation.thaws = false
+        simulation.cursorInteracts = false
+        func layers() -> [SnowLayer] {
+            Mirror(reflecting: simulation).children.first { $0.label == "layers" }!.value as! [SnowLayer]
+        }
+        func apply(_ now: Double) {
+            guard let update = tracker.poll(now: now, eager: true) else { return }
+            simulation.updateWindows(update.surfaces, interval: update.interval,
+                parked: update.parked, elsewhere: update.elsewhere, sliding: update.sliding)
+        }
+        apply(100)
+        apply(100.02)
+        let layer = try XCTUnwrap(layers().first { $0.isDock })
+        for i in 15..<(layer.count - 15) { layer.set(i, 8) }
+        layer.refreshTop()
+        let mass = layer.heights.reduce(0, +)
+        // Реальная запись: незавершённое появление сменяется полной рамкой одним быстрым обновлением.
+        reserved = CGRect(x: 400, y: screen.maxY - 67, width: 900, height: 67)
+        apply(100.04)
+        for _ in 0..<30 {
+            _ = simulation.step(dt: 1 / 60, cursor: SIMD2(-1_000, -1_000))
+            XCTAssertEqual(simulation.spriteCount, 0, "Появление Dock не стряхивает снег с его полки")
+            XCTAssertEqual(layer.heights.reduce(0, +), mass, accuracy: 0.01)
+            XCTAssertEqual(layer.offset.y, 0, accuracy: 0.001)
+        }
+    }
+
     func testUnknownWindowSpacesDoNotCreateFullscreenState() {
         let list = [entry(frontID, screen)]
         let tracker = WindowTracker(windowListProvider: { list as CFArray },
@@ -153,6 +224,79 @@ final class WindowTrackerTests: XCTestCase {
         tracker.primaryHeight = screen.height
         _ = tracker.poll(now: 100, eager: true)
         XCTAssertFalse(tracker.fullScreenInView)
+    }
+
+    func testУвеличеннаяИконкаНеСкрываетПолкуКогдаУказательВышеОбычногоDock() throws {
+        let dockID = frontID + 2
+        let dock = entry(dockID, screen).mutableCopy() as! NSMutableDictionary
+        dock[kCGWindowOwnerName] = "Dock"
+        dock[kCGWindowLayer] = NSNumber(value: CGWindowLevelForKey(.dockWindow))
+        var pointer = CGPoint(x: 700, y: 20)
+        let tracker = WindowTracker(windowListProvider: { [dock] as CFArray },
+            fullScreenSpaceProvider: { [] }, windowSpacesProvider: { _ in [] },
+            dockReservedProvider: { CGRect(x: 400, y: self.screen.maxY, width: 900, height: 0) },
+            pointerProvider: { pointer }, dockAutoHideProvider: { true })
+        tracker.screen = screen
+        tracker.primaryHeight = screen.height
+        tracker.menuBarHeight = 33
+        _ = tracker.poll(now: 100, eager: true)
+        let shown = try XCTUnwrap(tracker.poll(now: 100.3, eager: true)?.surfaces.first { $0.isDock })
+        // Видимый значок выше обычной полки. Это остаётся наведением на Dock.
+        tracker.dockInteractionFrame = shown.frame.insetBy(dx: -50, dy: -50)
+        pointer.y = shown.frame.maxY + 15
+        XCTAssertLessThan(pointer.y, tracker.dockInteractionFrame!.maxY)
+        let hovered = tracker.poll(now: 100.4, eager: true)
+        let retained = hovered?.surfaces.first { $0.isDock }
+        XCTAssertEqual(retained?.id ?? shown.id, shown.id)
+        XCTAssertFalse(hovered?.elsewhere.contains(dockID) ?? false)
+        XCTAssertTrue(hovered == nil || retained != nil, "Увеличенная иконка не удаляет видимую опору")
+    }
+
+    func testУходИВозвратКDockНеРассыпаетСугробПодНегоИКБокам() throws {
+        let dockID = frontID + 2
+        let dock = entry(dockID, screen).mutableCopy() as! NSMutableDictionary
+        dock[kCGWindowOwnerName] = "Dock"
+        dock[kCGWindowLayer] = NSNumber(value: CGWindowLevelForKey(.dockWindow))
+        var pointer = CGPoint(x: 700, y: 20)
+        let tracker = WindowTracker(windowListProvider: { [dock] as CFArray },
+            fullScreenSpaceProvider: { [] }, windowSpacesProvider: { _ in [] },
+            dockReservedProvider: { CGRect(x: 400, y: self.screen.maxY, width: 900, height: 0) },
+            pointerProvider: { pointer }, dockAutoHideProvider: { true })
+        tracker.screen = screen
+        tracker.primaryHeight = screen.height
+        let simulation = SnowSimulation(width: Float(screen.width), height: Float(screen.height), snowfall: .off)
+        simulation.thaws = false
+        simulation.cursorInteracts = false
+        func layers() -> [SnowLayer] {
+            Mirror(reflecting: simulation).children.first { $0.label == "layers" }!.value as! [SnowLayer]
+        }
+        func apply(_ update: WindowUpdate?) {
+            guard let update else { return }
+            simulation.updateWindows(update.surfaces, interval: update.interval,
+                parked: update.parked, elsewhere: update.elsewhere, sliding: update.sliding)
+        }
+        apply(tracker.poll(now: 100, eager: true))
+        apply(tracker.poll(now: 100.3, eager: true))
+        let layer = try XCTUnwrap(layers().first { $0.isDock })
+        layer.set(layer.count / 2, 8)
+        let heights = layer.heights
+        for cycle in 0..<4 {
+            let now = 101 + Double(cycle)
+            pointer.y = 400
+            let hidden = try XCTUnwrap(tracker.poll(now: now, eager: true))
+            XCTAssertTrue(hidden.elsewhere.contains(dockID), "Скрытие Dock сохраняет прежнюю опору в ожидании")
+            apply(hidden)
+            XCTAssertEqual(simulation.spriteCount, 0, "Уход указателя не превращает сугроб в падающие частицы")
+            for _ in 0..<120 { _ = simulation.step(dt: 1 / 60, cursor: SIMD2(-1_000, -1_000)) }
+            XCTAssertEqual(layers()[0].heights.reduce(0, +), 0, accuracy: 0.001,
+                           "Снег с полки не переезжает под Dock и к его боковым краям")
+            pointer.y = 20
+            apply(tracker.poll(now: now + 0.3, eager: true))
+            apply(tracker.poll(now: now + 0.6, eager: true))
+            let returned = try XCTUnwrap(layers().first { $0.isDock })
+            XCTAssertTrue(returned === layer)
+            XCTAssertEqual(returned.heights, heights)
+        }
     }
 
 }
