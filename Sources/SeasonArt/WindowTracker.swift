@@ -183,8 +183,8 @@ final class WindowTracker {
         // Windows carried off the screen by a sliding Space or shrunk by Mission Control are still listed,
         // but their snow should wait for them too.
         var elsewhere = sliding || exposing ? away.elsewhere.union(vanished.subtracting(away.parked)) : away.elsewhere
-        // The Dock stays behind as a full-screen app's Space slides in, and its snow falls.
-        if let dock = sinkingDock { elsewhere.remove(dock) }
+        // Dock скрывается при переходе в fullscreen, его сугроб ждёт возвращения опоры.
+        if let dock = sinkingDock { elsewhere.insert(dock) }
         let shown = lead == 0 ? surfaces : surfaces.map { $0.isDock || staying.contains($0.id) ? $0 : $0.shifted(by: lead) }
         let slideVelocity = shift.map { Float($0) / Float(max(interval, 1.0 / 120)) } ?? 0
         return WindowUpdate(surfaces: shown, interval: Float(min(interval, 0.25)), parked: away.parked, elsewhere: elsewhere, sliding: sliding, slideVelocity: slideVelocity)

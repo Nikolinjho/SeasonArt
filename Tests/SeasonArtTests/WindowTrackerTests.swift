@@ -103,6 +103,47 @@ final class WindowTrackerTests: XCTestCase {
         XCTAssertEqual(tracker.fullScreenShare, 1)
     }
 
+    func testDockSnowWaitsDuringFullscreenTransition() throws {
+        let dockID = frontID + 2
+        let dock = entry(dockID, screen).mutableCopy() as! NSMutableDictionary
+        dock[kCGWindowOwnerName] = "Dock"
+        dock[kCGWindowLayer] = NSNumber(value: CGWindowLevelForKey(.dockWindow))
+        var list: [NSDictionary] = [dock]
+        let tracker = WindowTracker(windowListProvider: { list as CFArray },
+                                    fullScreenSpaceProvider: { [22] },
+                                    windowSpacesProvider: { _ in [22] },
+                                    dockReservedProvider: { CGRect(x: 400, y: 1040, width: 900, height: 77) })
+        tracker.screen = screen
+        tracker.primaryHeight = screen.height
+        tracker.menuBarHeight = 33
+        let simulation = SnowSimulation(width: Float(screen.width), height: Float(screen.height), snowfall: .off)
+        simulation.thaws = false
+        func layers() -> [SnowLayer] {
+            Mirror(reflecting: simulation).children.first { $0.label == "layers" }!.value as! [SnowLayer]
+        }
+        func apply(_ update: WindowUpdate) {
+            simulation.updateWindows(update.surfaces, interval: update.interval,
+                                     parked: update.parked, elsewhere: update.elsewhere, sliding: update.sliding)
+        }
+        apply(try XCTUnwrap(tracker.poll(now: 100, eager: true)))
+        let layer = try XCTUnwrap(layers().first { $0.isDock })
+        layer.set(layer.count / 2, 8)
+        let mass = layer.heights.reduce(0, +)
+
+        list = [entry(frontID, screen), dock]
+        let entering = try XCTUnwrap(tracker.poll(now: 100.1, eager: true))
+        XCTAssertFalse(entering.surfaces.contains { $0.isDock }, "Скрытый Dock не оставляет невидимую опору")
+        XCTAssertTrue(entering.elsewhere.contains(dockID), "Снег Dock ожидает возвращения из полноэкранного Space")
+        apply(entering)
+        XCTAssertEqual(simulation.spriteCount, 0, "Переход не сбрасывает сугроб в падающие частицы")
+
+        list = [dock]
+        apply(try XCTUnwrap(tracker.poll(now: 101, eager: true)))
+        let restored = try XCTUnwrap(layers().first { $0.isDock })
+        XCTAssertTrue(restored === layer, "Возвращается прежний сугроб")
+        XCTAssertEqual(restored.heights.reduce(0, +), mass, accuracy: 0.001, "Масса сохраняется после перехода")
+    }
+
     func testUnknownWindowSpacesDoNotCreateFullscreenState() {
         let list = [entry(frontID, screen)]
         let tracker = WindowTracker(windowListProvider: { list as CFArray },
