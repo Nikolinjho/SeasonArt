@@ -15,7 +15,8 @@ struct DockSnowBadge: Equatable {
         let font = NSFont.systemFont(ofSize: 10, weight: .medium)
         let textWidth = (String(label.prefix(16)) as NSString).size(withAttributes: [.font: font]).width * side * 0.021
         let width = min(side * 1.4, max(diameter, textWidth + side * 0.08))
-        frame = CGRect(x: iconFrame.maxX - width, y: iconFrame.maxY - side * 0.08 - diameter,
+        // Рамка изображения включает прозрачные поля. Верх бейджа чуть выше её верхнего края.
+        frame = CGRect(x: iconFrame.maxX - width, y: iconFrame.maxY + side * 0.02 - diameter,
                        width: width, height: diameter)
     }
 

@@ -20,7 +20,7 @@ final class DockSnowSurfaceRenderingTests: XCTestCase {
             simulation.cursorInteracts = false
             simulation.dockMagnification = DockMagnificationSettings(enabled: raised, normalSize: 47, largeSize: 76)
             let names = ["com.apple.finder", "com.google.Chrome", "ru.keepcoder.Telegram", "com.tinyspeck.slackmacgap",
-                         "com.microsoft.VSCode", "md.obsidian", "com.apple.Safari", "com.apple.dt.Xcode", "com.apple.systempreferences"]
+                         "com.microsoft.VSCode", "md.obsidian", "com.apple.Safari", "com.apple.dt.Xcode", "trash"]
             let sizes: [CGFloat] = raised ? [47, 47, 53, 65, 76, 67, 55, 47, 47] : Array(repeating: 47, count: 9)
             var icons: [DockSnowIcon] = []
             var images: [NSImage] = []
@@ -28,10 +28,13 @@ final class DockSnowSurfaceRenderingTests: XCTestCase {
             for (name, side) in zip(names, sizes) {
                 let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: name)
                     ?? URL(fileURLWithPath: "/System/Library/CoreServices/Finder.app")
-                let image = NSWorkspace.shared.icon(forFile: url.path)
+                let image = name == "trash" ? try XCTUnwrap(NSImage(named: NSImage.trashEmptyName))
+                    : NSWorkspace.shared.icon(forFile: url.path)
                 images.append(image)
-                icons.append(DockSnowIcon(frame: CGRect(x: x, y: 11, width: side, height: side),
-                                         roof: try XCTUnwrap(DockIconGeometry.roofProfile(of: image))))
+                let frame = CGRect(x: x, y: 11, width: side, height: side)
+                icons.append(DockSnowIcon(frame: frame,
+                    roof: try XCTUnwrap(DockIconGeometry.roofProfile(of: image)),
+                    badge: name == "com.google.Chrome" ? DockSnowBadge(label: "19", iconFrame: frame) : nil))
                 x += side + 8
             }
             let body = CGRect(x: 155, y: 6, width: x - 155 + 8, height: 60)
@@ -80,6 +83,11 @@ final class DockSnowSurfaceRenderingTests: XCTestCase {
             XCTAssertNil(commands.error)
             var bytes = [UInt8](repeating: 0, count: 900 * 220 * 4)
             texture.getBytes(&bytes, bytesPerRow: 900 * 4, from: MTLRegionMake2D(0, 0, 800, 200), mipmapLevel: 0)
+            let badge = try XCTUnwrap(icons.compactMap(\.badge).first)
+            let badgeX = Int(badge.frame.midX)
+            let badgeY = Int(ceil(badge.frame.maxY + 1))
+            XCTAssertGreaterThan(bytes[((219 - badgeY) * 900 + badgeX) * 4 + 1], 100,
+                                 "Шейдер рисует белую шапку прямо на бейдже ниже общей полки")
             var upperSnow = 0
             for y in 82..<110 {
                 for x in 300..<600 {
@@ -118,6 +126,10 @@ final class DockSnowSurfaceRenderingTests: XCTestCase {
                 NSColor(calibratedWhite: 0.25, alpha: 1).setFill()
                 NSBezierPath(roundedRect: body, xRadius: 20, yRadius: 20).fill()
                 for (image, icon) in zip(images, icons) { image.draw(in: icon.frame) }
+                for badge in icons.compactMap(\.badge) {
+                    NSColor.systemRed.setFill()
+                    NSBezierPath(ovalIn: badge.frame).fill()
+                }
                 let snow = NSImage(size: NSSize(width: 900, height: 220))
                 snow.addRepresentation(bitmap)
                 snow.draw(in: NSRect(x: 0, y: 0, width: 900, height: 220))

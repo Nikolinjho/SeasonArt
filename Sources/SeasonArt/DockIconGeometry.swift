@@ -9,7 +9,7 @@ final class DockIconGeometry {
     private var profiles: [String: [Float]] = [:]
     private var nearAt: CFTimeInterval = -10
     private var presentationFrame: CGRect?
-    private var profilesPrepared = false
+    private var sampledAt: CFTimeInterval = -10
 
     static var hasAccess: Bool { AXIsProcessTrusted() }
 
@@ -31,7 +31,7 @@ final class DockIconGeometry {
             settings = DockMagnificationSettings(enabled: defaults?.bool(forKey: "magnification") ?? false,
                 normalSize: normal > 0 ? normal : 48, largeSize: large > 0 ? large : 128)
         }
-        guard settings.isActive, let dock else {
+        guard let dock else {
             frames = nil
             presentationFrame = nil
             return (settings, nil, nil)
@@ -41,16 +41,10 @@ final class DockIconGeometry {
             nearAt = now
         }
         let stillMagnified = frames?.contains { $0.frame.width > settings.normalSize + 0.5 } ?? false
-        guard now - nearAt < 0.4 || stillMagnified else {
-            // Чтение изображений при первом наведении даёт заметную паузу. Готовим кэш заранее.
-            if !profilesPrepared, Self.hasAccess {
-                _ = iconFrames(screen: screen, primaryHeight: primaryHeight, dock: dock)
-                profilesPrepared = true
-            }
-            frames = nil
-            presentationFrame = nil
-            return (settings, nil, nil)
+        if !settings.isActive || (now - nearAt >= 0.4 && !stillMagnified), now - sampledAt < 0.5 {
+            return (settings, frames, presentationFrame)
         }
+        sampledAt = now
         // Вызов идёт один раз на кадр. Дополнительный предел 30 Гц делал движение ступенчатым.
         frames = iconFrames(screen: screen, primaryHeight: primaryHeight, dock: dock)?.filter {
             $0.frame.width <= settings.largeSize * 1.8 && $0.frame.width > 0
@@ -95,12 +89,12 @@ final class DockIconGeometry {
                   AXValueGetValue(listPosition as! AXValue, .cgPoint, &origin),
                   AXValueGetValue(listSize as! AXValue, .cgSize, &span),
                   span.width > 0, span.width.isFinite, origin.x.isFinite else { continue }
-            var items: [(frame: CGRect, url: URL?, badge: String?)] = []
+            var items: [(frame: CGRect, url: URL?, badge: String?, subrole: String?)] = []
             for icon in children(list).prefix(100) {
-                let keys = [kAXRoleAttribute, kAXPositionAttribute, kAXSizeAttribute, kAXURLAttribute, "AXStatusLabel"] as CFArray
+                let keys = [kAXRoleAttribute, kAXPositionAttribute, kAXSizeAttribute, kAXURLAttribute, "AXStatusLabel", kAXSubroleAttribute] as CFArray
                 var values: CFArray?
                 guard AXUIElementCopyMultipleAttributeValues(icon, keys, [], &values) == .success,
-                      let values = values as? [Any], values.count == 5,
+                      let values = values as? [Any], values.count == 6,
                       values[0] as? String == "AXDockItem",
                       CFGetTypeID(values[1] as CFTypeRef) == AXValueGetTypeID(),
                       CFGetTypeID(values[2] as CFTypeRef) == AXValueGetTypeID() else { continue }
@@ -110,19 +104,30 @@ final class DockIconGeometry {
                       AXValueGetValue(values[2] as! AXValue, .cgSize, &size),
                       point.x.isFinite, point.y.isFinite, size.width.isFinite, size.height.isFinite,
                       size.width > 0, size.height > 0 else { continue }
-                items.append((CGRect(origin: point, size: size), values[3] as? URL, values[4] as? String))
+                items.append((CGRect(origin: point, size: size), values[3] as? URL, values[4] as? String, values[5] as? String))
             }
             guard !items.isEmpty else { continue }
             let laidOut = Self.laidOutFrames(in: CGRect(origin: origin, size: span), items: items.map(\.frame))
             presentationFrame = CGRect(x: origin.x - screen.minX, y: dock.minY, width: span.width, height: dock.height)
             for (item, bounds) in zip(items, laidOut) {
-                guard let url = item.url, url.isFileURL, bounds.width > 4 else { continue }
+                guard bounds.width > 4 else { continue }
+                let key: String
+                let loadImage: () -> NSImage?
+                if item.subrole == "AXTrashDockItem" {
+                    key = "AXTrashDockItem"
+                    loadImage = { NSImage(named: NSImage.trashEmptyName) }
+                } else if let url = item.url, url.isFileURL {
+                    key = url.path
+                    loadImage = { NSWorkspace.shared.icon(forFile: url.path) }
+                } else {
+                    continue
+                }
                 let profile: [Float]
-                if let existing = profiles[url.path] {
+                if let existing = profiles[key] {
                     profile = existing
                 } else {
-                    guard let measured = Self.roofProfile(of: NSWorkspace.shared.icon(forFile: url.path)) else { continue }
-                    profiles[url.path] = measured
+                    guard let image = loadImage(), let measured = Self.roofProfile(of: image) else { continue }
+                    profiles[key] = measured
                     profile = measured
                 }
                 // AXDockItem включает строку индикатора и свободное место над изображением.

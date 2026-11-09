@@ -422,6 +422,7 @@ final class SnowSimulation {
     private var dockSnowSurface = DockSnowSurface()
     private var dockGeometryChanged = false
     private var dockContactBuffer: [Float]?
+    private var dockBadges: [DockSnowBadge] = []
 
     /// Один и тот же контур используется для изображения и столкновений с увеличенными иконками.
     private func presentedDockBuffer(_ layer: SnowLayer) -> [Float]? {
@@ -981,7 +982,9 @@ final class SnowSimulation {
             + ledgeList.reduce(0) { $0 + $1.spray.count + $1.film.count }
     }
     /// Floats the renderer needs per frame: each layer's surface and bed.
-    var columnCount: Int { layers.reduce(0) { $0 + 2 * $1.count } }
+    var columnCount: Int {
+        layers.reduce(0) { $0 + 2 * $1.count } + badgeSnowCaps.reduce(0) { $0 + 2 * $1.top.count }
+    }
 
     func resize(width: Float, height: Float) {
         guard width != self.width || height != self.height else { return }
@@ -998,9 +1001,12 @@ final class SnowSimulation {
         let layer = ledgeList.first { $0.isDock }
         let frame = currentDockPresentationFrame
         let column = frame.map { Float($0.width) / Float(max(1, layer?.count ?? 1)) } ?? columnWidth
+        let badges = dockIconFrames?.compactMap(\.badge) ?? []
+        let badgeChanged = badges != dockBadges
+        dockBadges = badges
         let changed = dockSnowSurface.step(dt: dt, frame: mode == .snow && !snowBelowDock && (layer?.top ?? 0) > 0.05 ? frame : nil,
             columns: layer?.count ?? 0, columnWidth: column, cursor: point,
-            settings: dockMagnification, icons: dockIconFrames)
+            settings: dockMagnification, icons: dockIconFrames) || badgeChanged
         if changed {
             dockContactBuffer = nil
             dockGeometryChanged = true
@@ -1316,7 +1322,47 @@ final class SnowSimulation {
                 drift: layer.drift, columnWidth: drawnColumn))
             offset += 2 * layer.count
         }
+        for cap in badgeSnowCaps where offset + 2 * cap.top.count <= capacity {
+            let count = cap.top.count
+            for i in 0..<count {
+                buffer[offset + i] = cap.top[i]
+                buffer[offset + count + i] = cap.bed[i]
+            }
+            result.append(PileLayer(offset: offset, count: count, origin: cap.origin,
+                top: cap.top.max() ?? 0, bottom: cap.bed.min() ?? 0,
+                occluders: cap.occluders, isDock: true, drift: 0, columnWidth: cap.columnWidth))
+            offset += 2 * count
+        }
         return result
+    }
+
+    /// Бейдж бывает ниже полки: отдельный рисунок сохраняет снег на его округлом верхе.
+    private var badgeSnowCaps: [(origin: SIMD2<Float>, columnWidth: Float, top: [Float], bed: [Float], occluders: [SIMD4<Float>])] {
+        guard mode == .snow, !snowBelowDock, let layer = ledgeList.first(where: \.isDock),
+              layer.top > 0.05 else { return [] }
+        let frame = currentDockPresentationFrame
+        let left = frame.map { Float($0.minX) } ?? layer.base.x
+        let width = frame.map { Float($0.width) } ?? layer.width
+        guard width > 0 else { return [] }
+        return (dockIconFrames ?? []).compactMap { icon in
+            guard let badge = icon.badge else { return nil }
+            let x = Float(badge.frame.midX)
+            let column = Int((x - left) / width * Float(layer.count))
+            guard column >= 0, column < layer.count, layer.visible[column] else { return nil }
+            let depth = min(4, max(0, layer.heights[column] - layer.bed[column]) * 0.6)
+            guard depth > 0.05 else { return nil }
+            let count = max(8, Int(ceil(badge.frame.width / 2)))
+            let spacing = Float(badge.frame.width) / Float(count)
+            var top = [Float](repeating: 0, count: count)
+            var bed = top
+            for i in 0..<count {
+                let fraction = (Float(i) + 0.5) / Float(count)
+                let x = Float(badge.frame.minX) + (Float(i) + 0.5) * spacing
+                bed[i] = (badge.top(at: x) ?? Float(badge.frame.midY)) - Float(badge.frame.minY) - 0.8
+                top[i] = bed[i] + depth * pow(sin(.pi * fraction), 0.6)
+            }
+            return (SIMD2(Float(badge.frame.minX), Float(badge.frame.minY)), spacing, top, bed, layer.occluders)
+        }
     }
 
     // MARK: - Pumpkins

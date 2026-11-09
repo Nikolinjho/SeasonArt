@@ -3,9 +3,44 @@ import XCTest
 @testable import SeasonArt
 
 final class DockSnowBadgeTests: XCTestCase {
+    func testБейджНижеПолкиПолучаетОтдельнуюШапкуБезУвеличенияDock() throws {
+        let simulation = SnowSimulation(width: 600, height: 300, snowfall: .off)
+        simulation.thaws = false
+        simulation.cursorInteracts = false
+        let frame = CGRect(x: 200, y: 10, width: 47, height: 47)
+        let badge = try XCTUnwrap(DockSnowBadge(label: "19", iconFrame: frame))
+        simulation.dockIconFrames = [DockSnowIcon(frame: frame, roof: [0.95, 0.95], badge: badge)]
+        simulation.updateWindows([WindowSurface(id: 42, frame: CGRect(x: 100, y: 6, width: 400, height: 60),
+            blockers: [], cover: [], cornerRadius: 0, cornerExponent: 2.5, isDock: true)], interval: 1 / 60)
+        let layers = Mirror(reflecting: simulation).children.first { $0.label == "layers" }!.value as! [SnowLayer]
+        let shelf = try XCTUnwrap(layers.first { $0.isDock })
+        for i in 0..<shelf.count { shelf.set(i, 7) }
+        shelf.refreshTop()
+        let mass = shelf.heights.reduce(0, +)
+        simulation.updateDockSnowSurface(dt: 1 / 60, cursor: SIMD2(-1000, -1000))
+        let buffer = UnsafeMutablePointer<Float>.allocate(capacity: simulation.columnCount)
+        defer { buffer.deallocate() }
+        let piles = simulation.writeLayers(into: buffer, capacity: simulation.columnCount)
+        let cap = try XCTUnwrap(piles.first { $0.isDock && abs(CGFloat($0.origin.x) - badge.frame.minX) < 0.01 },
+                               "Бейдж ниже общего сугроба должен иметь отдельную видимую шапку")
+        let center = cap.count / 2
+        let bottom = buffer[cap.offset + cap.count + center] + cap.origin.y
+        let top = buffer[cap.offset + center] + cap.origin.y
+        XCTAssertEqual(bottom, try XCTUnwrap(badge.top(at: Float(badge.frame.midX))) - 0.8, accuracy: 0.2)
+        XCTAssertGreaterThan(top - bottom, 2)
+        XCTAssertLessThan(top - bottom, 6)
+        XCTAssertEqual(shelf.heights.reduce(0, +), mass)
+
+        simulation.dockIconFrames = nil
+        simulation.updateDockSnowSurface(dt: 1 / 60, cursor: SIMD2(-1000, -1000))
+        let cleared = simulation.writeLayers(into: buffer, capacity: simulation.columnCount)
+        XCTAssertEqual(cleared.filter(\.isDock).count, 1, "Исчезнувший бейдж не оставляет шапку")
+    }
+
     func testБейджСовпадаетСИзмереннымКружкомПриОбычномРазмере() throws {
         // Нативный снимок: значок 47 pt, красный кружок [564, 1058, 18, 18] на экране высотой 1117 pt.
-        let icon = CGRect(x: 535.475, y: 16, width: 47, height: 47)
+        // Полная рамка изображения начинается на 5 pt ниже видимого непрозрачного значка.
+        let icon = CGRect(x: 535.475, y: 11, width: 47, height: 47)
         for label in ["2", "19"] {
             let badge = try XCTUnwrap(DockSnowBadge(label: label, iconFrame: icon))
             XCTAssertEqual(badge.frame.width, 18, accuracy: 1.5)
