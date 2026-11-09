@@ -34,7 +34,8 @@ final class DockSnowSurfaceRenderingTests: XCTestCase {
                 let frame = CGRect(x: x, y: 11, width: side, height: side)
                 icons.append(DockSnowIcon(frame: frame,
                     roof: try XCTUnwrap(DockIconGeometry.roofProfile(of: image)),
-                    badge: name == "com.google.Chrome" ? DockSnowBadge(label: "19", iconFrame: frame) : nil))
+                    badge: ["com.google.Chrome", "com.microsoft.VSCode"].contains(name)
+                        ? DockSnowBadge(label: "19", iconFrame: frame) : nil))
                 x += side + 8
             }
             let body = CGRect(x: 155, y: 6, width: x - 155 + 8, height: 60)
@@ -83,11 +84,16 @@ final class DockSnowSurfaceRenderingTests: XCTestCase {
             XCTAssertNil(commands.error)
             var bytes = [UInt8](repeating: 0, count: 900 * 220 * 4)
             texture.getBytes(&bytes, bytesPerRow: 900 * 4, from: MTLRegionMake2D(0, 0, 800, 200), mipmapLevel: 0)
-            let badge = try XCTUnwrap(icons.compactMap(\.badge).first)
-            let badgeX = Int(badge.frame.midX)
-            let badgeY = Int(ceil(badge.frame.maxY + 1))
-            XCTAssertGreaterThan(bytes[((219 - badgeY) * 900 + badgeX) * 4 + 1], 100,
-                                 "Шейдер рисует белую шапку прямо на бейдже ниже общей полки")
+            for badge in icons.compactMap(\.badge) {
+                let badgeX = Int(badge.frame.midX)
+                let badgeY = Int(ceil(badge.frame.maxY + 1))
+                let pixel = bytes[((219 - badgeY) * 900 + badgeX) * 4 + 1]
+                if badge.frame.maxY > body.maxY + 0.8 {
+                    XCTAssertGreaterThan(pixel, 100, "Шапка видна на выступающем бейдже")
+                } else {
+                    XCTAssertEqual(pixel, 0, "Внутри Dock под общим сугробом отдельного снега нет")
+                }
+            }
             var upperSnow = 0
             for y in 82..<110 {
                 for x in 300..<600 {

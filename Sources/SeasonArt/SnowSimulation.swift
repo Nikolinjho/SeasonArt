@@ -1346,6 +1346,8 @@ final class SnowSimulation {
         guard width > 0 else { return [] }
         return (dockIconFrames ?? []).compactMap { icon in
             guard let badge = icon.badge else { return nil }
+            let shelfTop = frame.map { Float($0.maxY) } ?? layer.base.y
+            guard Float(badge.frame.maxY) > shelfTop + 0.8 else { return nil }
             let x = Float(badge.frame.midX)
             let column = Int((x - left) / width * Float(layer.count))
             guard column >= 0, column < layer.count, layer.visible[column] else { return nil }
@@ -1358,8 +1360,9 @@ final class SnowSimulation {
             for i in 0..<count {
                 let fraction = (Float(i) + 0.5) / Float(count)
                 let x = Float(badge.frame.minX) + (Float(i) + 0.5) * spacing
-                bed[i] = (badge.top(at: x) ?? Float(badge.frame.midY)) - Float(badge.frame.minY) - 0.8
-                top[i] = bed[i] + depth * pow(sin(.pi * fraction), 0.6)
+                let roof = (badge.top(at: x) ?? Float(badge.frame.midY)) - Float(badge.frame.minY) - 0.8
+                bed[i] = max(roof, shelfTop - Float(badge.frame.minY))
+                top[i] = max(bed[i], roof + depth * pow(sin(.pi * fraction), 0.6))
             }
             return (SIMD2(Float(badge.frame.minX), Float(badge.frame.minY)), spacing, top, bed, layer.occluders)
         }
@@ -2271,12 +2274,26 @@ final class SnowSimulation {
         let anchor = left ? max(0, Float(dock.minX) - columnWidth * 3)
             : min(width, Float(dock.maxX) + columnWidth * 3)
         let available = left ? anchor : width - anchor
-        let span = min(available, max(48, area.squareRoot() * 6))
+        // Повторные малые порции учитывают уже лежащий снег, а не растят один бугор шириной 48 pt.
+        var span = min(available, max(48, area.squareRoot() * 6))
         guard span > 0 else { return false }
+        for _ in 0..<12 {
+            let start = left ? anchor - span : anchor
+            let end = start + span
+            var accumulated = area
+            for i in ground.clampedIndex(at: start)...ground.clampedIndex(at: end) {
+                let x = ground.centerX(i)
+                if x >= start, x < end { accumulated += ground.heights[i] * columnWidth }
+            }
+            let wider = min(available, max(span, accumulated.squareRoot() * 6))
+            guard wider > span + columnWidth else { break }
+            span = wider
+        }
         let start = left ? anchor - span : anchor
         let end = start + span
         var columns: [(Int, Float)] = []
         var total: Float = 0
+        var redistributed = area
         for i in ground.clampedIndex(at: start)...ground.clampedIndex(at: end) {
             let x = ground.centerX(i)
             guard x >= start, x < end,
@@ -2285,10 +2302,11 @@ final class SnowSimulation {
             guard weight > 0 else { continue }
             columns.append((i, weight))
             total += weight
+            redistributed += ground.heights[i] * columnWidth
         }
         guard total > 0 else { return false }
         for (i, weight) in columns {
-            ground.set(i, ground.heights[i] + area * weight / (total * columnWidth))
+            ground.set(i, redistributed * weight / (total * columnWidth))
         }
         return true
     }

@@ -187,6 +187,23 @@ final class DockSnowCollisionTests: XCTestCase {
         XCTAssertEqual(ground.heights.reduce(0, +), mass, accuracy: 0.01)
     }
 
+    func testПовторноеВытеснениеНеСобираетВысокиеПикиПоБокамDock() {
+        let value = SnowSimulation(width: 1728, height: 400, snowfall: .off)
+        value.thaws = false
+        value.cursorInteracts = false
+        value.updateWindows([WindowSurface(id: 42, frame: CGRect(x: 400, y: 6, width: 928, height: 60),
+            blockers: [], cover: [], cornerRadius: 0, cornerExponent: 2.5, isDock: true)], interval: dt)
+        let ground = layers(value)[0]
+        for _ in 0..<300 {
+            ground.set(ground.clampedIndex(at: 410), 4)
+            ground.set(ground.clampedIndex(at: 1318), 4)
+            _ = value.step(dt: dt, cursor: away)
+        }
+        let peak = ground.heights.max() ?? 0
+        XCTAssertLessThan(peak, 30, "Повторные небольшие порции должны расходиться широким сугробом, а не расти в одном месте: \(peak)")
+        XCTAssertEqual(ground.heights.reduce(0, +) * ground.columnWidth, 4800, accuracy: 0.2)
+    }
+
     func testКороткаяПолкаDockНеОтбрасываетсяКакМаленькоеОкно() {
         let screen = CGRect(x: 0, y: 0, width: 600, height: 400)
         let entry: NSDictionary = [
