@@ -439,6 +439,8 @@ final class SnowSimulation {
     private var dockContactBuffer: [Float]?
     private var dockBadges: [DockSnowBadge] = []
     private var previousDockGroundFrame: CGRect?
+    /// Валы, которые грани Dock толкают перед собой, по сторонам −1 и 1.
+    private var dockBerms: [Int: [Int: Float]] = [:]
 
     /// Один и тот же контур используется для изображения и столкновений с увеличенными иконками.
     private func presentedDockBuffer(_ layer: SnowLayer) -> [Float]? {
@@ -1038,6 +1040,7 @@ final class SnowSimulation {
         guard mode == .snow, !snowBelowDock, dockMagnification.isActive,
               dockPresentationFrame != nil, let frame else {
             previousDockGroundFrame = nil
+            dockBerms = [:]
             return false
         }
         defer { previousDockGroundFrame = frame }
@@ -1058,8 +1061,12 @@ final class SnowSimulation {
                 ground.set(i, ground.heights[i] - amount)
                 area += amount * ground.columnWidth
             }
+            // Полоса уже расчищена: грань ничего не толкает, вал лежит на месте.
             guard area > 0 else { return false }
-            ground.heap(area, against: edge, inward: direction, slope: repose * ground.columnWidth)
+            // Грань толкает перед собой весь накопленный вал, как отвал: он укладывается заново одной пологой формой.
+            let carried = ground.take(dockBerms[direction] ?? [:])
+            dockBerms[direction] = ground.shove(area + carried, from: edge, outward: direction,
+                                                slope: repose * 0.4, minimumWidth: 48)
             return true
         }
 

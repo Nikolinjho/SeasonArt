@@ -39,6 +39,27 @@ final class DockGroundDisplacementTests: XCTestCase {
         XCTAssertEqual(mass(ground), before, accuracy: 0.05, "Раздвигание сохраняет массу")
     }
 
+    func testГраньСдвигаетСнегПологимВаломБезТреугольника() throws {
+        let (value, ground) = try scene()
+        let before = mass(ground)
+        // Увеличение идёт за несколько кадров, как при настоящем наведении.
+        for step in 1...10 {
+            let grow = CGFloat(step) * 2
+            value.dockPresentationFrame = body.insetBy(dx: -grow, dy: 0)
+            value.updateDockSnowSurface(dt: 1 / 60, cursor: away)
+        }
+        func surface(_ x: Float) -> Float { ground.heights[ground.clampedIndex(at: x)] }
+        var steepest: Float = 0
+        // Колонки под корпусом скрыты: склон меряется до последней видимой колонки у грани.
+        for x in stride(from: Float(4), to: 76, by: ground.columnWidth) {
+            steepest = max(steepest, abs(surface(x + ground.columnWidth) - surface(x)) / ground.columnWidth)
+        }
+        XCTAssertLessThan(steepest, 0.45, "Сдвинутый снег образует пологий вал, а не клин под углом откоса")
+        XCTAssertGreaterThan(surface(78), 40, "Вал начинается у самой грани")
+        XCTAssertGreaterThan(surface(40), 40, "Сдвинутый снег уходит вбок, а не копится у грани")
+        XCTAssertEqual(mass(ground), before, accuracy: 0.05)
+    }
+
     func testОтодвинутыйСнегНеСтекаетОбратноПодDock() throws {
         let (value, ground) = try scene()
         value.dockPresentationFrame = expanded

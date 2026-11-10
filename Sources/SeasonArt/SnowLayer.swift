@@ -198,6 +198,47 @@ final class SnowLayer {
 
     /// Piles snow against a wall just past column `edge`, as a plough heaps it: a wedge falling away from the wall
     /// at `slope` per column, the way `inward` points.
+    /// Профиль пологого вала у движущейся грани: у грани верх округлый, дальше плавно сходит на нет.
+    /// Ширина растёт с объёмом, чтобы склон не превышал `slope`. Возвращает добавленную высоту по колонкам.
+    @discardableResult
+    func shove(_ area: Float, from edge: Int, outward: Int, slope: Float, minimumWidth: Float) -> [Int: Float] {
+        let amount = area / columnWidth
+        guard amount > 0, slope > 0 else { return [:] }
+        // Профиль 1 − smoothstep: площадь W/2, наибольший наклон 1,5·h/W при h = 2A/W.
+        let width = max(minimumWidth, (3 * area / slope).squareRoot())
+        let columns = max(1, Int((width / columnWidth).rounded(.up)))
+        let reach = min(columns, outward > 0 ? heights.count - edge : edge + 1)
+        guard reach > 0 else { return [:] }
+        let weights = (0..<reach).map { k -> Float in
+            let x = (Float(k) + 0.5) / Float(columns)
+            return 1 - x * x * (3 - 2 * x)
+        }
+        let total = weights.reduce(0, +)
+        guard total > 0 else { return [:] }
+        var added: [Int: Float] = [:]
+        for k in 0..<reach {
+            let i = edge + outward * k
+            let share = amount * weights[k] / total
+            heights[i] += share
+            packed[i] += share
+            added[i] = share
+        }
+        return added
+    }
+
+    /// Снимает ранее насыпанный вал, сколько от него осталось. Возвращает снятую площадь.
+    func take(_ berm: [Int: Float]) -> Float {
+        var area: Float = 0
+        for (i, height) in berm where heights.indices.contains(i) {
+            let removed = min(heights[i], height)
+            guard removed > 0 else { continue }
+            packed[i] -= heights[i] > 0 ? min(packed[i], removed * packed[i] / heights[i]) : 0
+            heights[i] -= removed
+            area += removed * columnWidth
+        }
+        return area
+    }
+
     func heap(_ area: Float, against edge: Int, inward: Int, slope: Float) {
         let amount = area / columnWidth
         guard amount > 0 else { return }
