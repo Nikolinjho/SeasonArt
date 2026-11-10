@@ -14,3 +14,7 @@ The local controls now offer four Russian-language modes and translated intensit
 An explicit “Выбрать обои…” menu action now accepts a single local PNG, JPEG, HEIC, or TIFF image, validates it, and asks macOS to apply it to each connected display. Cancellation leaves the desktop unchanged. Per-display failures are reported in a native alert. Images are neither copied into the project nor applied automatically at launch or display connection. Generated temporary images and injected apply operations cover validation, cancellation, and partial failures without changing the test machine’s desktop.
 
 Local installation scripts now stage and strictly verify the signed SeasonArt bundle before stopping only its own bundle identity. Installation and rollback use an atomic macOS bundle exchange, retain timestamped backups, and restore the previous bundle after verification or registration failures. They target only `~/Applications/SeasonArt.app`, preserve preferences and privacy permissions, and do not enable login launch. Transaction tests use isolated temporary directories.
+
+## Box2D
+
+Snowball physics uses [Box2D](https://github.com/erincatto/box2d) v3.1.0 by Erin Catto, vendored unchanged in `Sources/CBox2D` (`include/box2d`, `src`). Archive SHA-256: `7fac19801485efb31ee3745b2284d9d4601f9e8138a3383a7b0df6d788ea5785`. License: MIT, preserved in [Sources/CBox2D/LICENSE](Sources/CBox2D/LICENSE). The only addition is `include/module.modulemap` for Swift Package Manager.
