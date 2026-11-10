@@ -4011,7 +4011,14 @@ final class SnowSimulation {
         }
     }
 
+    /// Время, ещё не пройденное шагами релаксации склонов.
+    private var pendingRelax: Float = 0
+    private var relaxSteps = 0
+
     private func settle(dt: Float) {
+        pendingRelax = min(pendingRelax + (dt.isFinite ? max(0, dt) : 0), 4.0 / 60)
+        relaxSteps = Int((pendingRelax * 60 + 1e-4).rounded(.down))
+        pendingRelax -= Float(relaxSteps) / 60
         // Melting nearly keeps pace with the snowfall, so heavier snowfall builds drifts only a little higher, and the
         // far sparser leaves wither as slowly.
         let falling = snowfall.flakesPerMegapoint * strength * density * (leafy ? leafShare : 1)
@@ -4034,7 +4041,10 @@ final class SnowSimulation {
             // Shaken harder than gravity, a granular pile fluidizes and slumps to a flatter slope.
             // Leaves catch on one another and heap up steeper than snow.
             let steepest = leafy ? repose * 1.8 : repose
-            if layer.relax(repose: layer.agitation > shaking ? steepest * 0.35 : steepest, rounding: rounding) { heightsChanged = true }
+            // Склон оседает фиксированными шагами: при 30 и 120 кадрах в секунду скорость одинакова.
+            for _ in 0..<relaxSteps {
+                if layer.relax(repose: layer.agitation > shaking ? steepest * 0.35 : steepest, rounding: rounding) { heightsChanged = true }
+            }
             if layer.spill.left > 1.5 {
                 release(layer.spill.left, at: edgePoint(of: layer, left: true), velocity: layer.trackVelocity + SIMD2(-6, -15), spread: SIMD2(0.25, 1))
                 layer.spill.left = 0
