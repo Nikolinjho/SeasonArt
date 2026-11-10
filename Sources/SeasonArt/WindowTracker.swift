@@ -92,8 +92,8 @@ final class WindowTracker {
     /// Whether each process seen with a window just above the desktop's icons is Notification Center, which shows
     /// the desktop's widgets there.
     private var widgetHosts: [Int32: Bool] = [:]
-    /// CursorUIViewService draws the input source badge next to the text caret.
-    private let ignoredOwners: Set<String> = ["Window Server", "CursorUIViewService"]
+    /// Системные холсты и окна XCTest не являются опорами и не скрывают снег.
+    private let ignoredOwners: Set<String> = ["Window Server", "CursorUIViewService", "xctest"]
     /// The Dock's windows (the Dock itself, the ⌘Tab switcher) hide snow behind them but don't collect any.
     private let coverOnlyOwners: Set<String> = ["Dock"]
     private var previous: [WindowSurface] = []

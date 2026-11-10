@@ -44,6 +44,18 @@ final class WindowTrackerTests: XCTestCase {
                       "Полноэкранное окно без видимой верхней границы не создаёт невидимый сугроб")
     }
 
+    func testОверлейТестовогоПроцессаНеСоздаётПолосуСнегаНадТерминалом() throws {
+        let overlay = entry(frontID + 1, CGRect(x: 0, y: 957, width: 1728, height: 160)).mutableCopy() as! NSMutableDictionary
+        overlay[kCGWindowOwnerName] = "xctest"
+        overlay[kCGWindowLayer] = NSNumber(value: OverlayWindow.aboveDockLevel.rawValue)
+        let behind = entry(frontID, CGRect(x: 200, y: 950, width: 600, height: 100))
+        let result = surfaces([overlay, behind])
+        XCTAssertFalse(result.contains { $0.id == frontID + 1 }, "Служебный холст XCTest не является опорой снега")
+        let normal = try XCTUnwrap(result.first { $0.id == frontID })
+        XCTAssertTrue(normal.blockers.isEmpty, "Прозрачный холст не скрывает опоры настоящих окон")
+        XCTAssertTrue(normal.cover.isEmpty, "Прозрачный холст не скрывает частицы на настоящих окнах")
+    }
+
     func testMaximizedFrontWindowStillOccludesWindowsBehindIt() throws {
         let backID = frontID + 1
         let result = surfaces([

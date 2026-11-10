@@ -421,6 +421,7 @@ final class SnowSimulation {
     private var dockGeometryChanged = false
     private var dockContactBuffer: [Float]?
     private var dockBadges: [DockSnowBadge] = []
+    private var previousDockGroundFrame: CGRect?
 
     /// Один и тот же контур используется для изображения и столкновений с увеличенными иконками.
     private func presentedDockBuffer(_ layer: SnowLayer) -> [Float]? {
@@ -998,19 +999,59 @@ final class SnowSimulation {
     func updateDockSnowSurface(dt: Float, cursor point: SIMD2<Float>) -> Bool {
         let layer = ledgeList.first { $0.isDock }
         let frame = currentDockPresentationFrame
+        let groundPushed = pushGroundSnow(with: frame)
         let column = frame.map { Float($0.width) / Float(max(1, layer?.count ?? 1)) } ?? columnWidth
         let badges = dockIconFrames?.compactMap(\.badge) ?? []
         let badgeChanged = badges != dockBadges
         dockBadges = badges
         let changed = dockSnowSurface.step(dt: dt, frame: mode == .snow && !snowBelowDock && (layer?.top ?? 0) > 0.05 ? frame : nil,
             columns: layer?.count ?? 0, columnWidth: column, cursor: point,
-            settings: dockMagnification, icons: dockIconFrames) || badgeChanged
+            settings: dockMagnification, icons: dockIconFrames) || badgeChanged || groundPushed
         if changed {
             dockContactBuffer = nil
             dockGeometryChanged = true
             restyled = true
         }
         return changed
+    }
+
+    /// Грани Dock выталкивают только снег на пройденном пути, не пересобирая весь нижний слой.
+    private func pushGroundSnow(with frame: CGRect?) -> Bool {
+        guard mode == .snow, !snowBelowDock, dockMagnification.isActive,
+              dockPresentationFrame != nil, let frame else {
+            previousDockGroundFrame = nil
+            return false
+        }
+        defer { previousDockGroundFrame = frame }
+        guard let previous = previousDockGroundFrame, previous.intersects(frame),
+              abs(previous.minY - frame.minY) < 2 else { return false }
+
+        func push(from left: Float, to right: Float, direction: Int) -> Bool {
+            guard left < right else { return false }
+            let edge = direction < 0
+                ? ground.heights.indices.last { ground.centerX($0) < Float(frame.minX) }
+                : ground.heights.indices.first { ground.centerX($0) >= Float(frame.maxX) }
+            // У края экрана снег сохраняется, если с этой стороны нет места для сугроба.
+            guard let edge else { return false }
+            var area: Float = 0
+            for i in ground.heights.indices where ground.centerX(i) >= left && ground.centerX(i) < right {
+                let below = max(0, Float(frame.minY) - ground.floor(i))
+                let amount = max(0, ground.heights[i] - below)
+                ground.set(i, ground.heights[i] - amount)
+                area += amount * ground.columnWidth
+            }
+            guard area > 0 else { return false }
+            ground.heap(area, against: edge, inward: direction, slope: repose * ground.columnWidth)
+            return true
+        }
+
+        let left = push(from: Float(frame.minX), to: Float(previous.minX), direction: -1)
+        let right = push(from: Float(previous.maxX), to: Float(frame.maxX), direction: 1)
+        guard left || right else { return false }
+        ground.refreshTop()
+        heightsChanged = true
+        dockMotionUntil = clock + 0.25
+        return true
     }
 
     /// Returns whether anything visible changed.
@@ -1315,8 +1356,16 @@ final class SnowSimulation {
                 bottom = presented.suffix(layer.count).min() ?? bottom
             }
             var occluders = layer.occluders
-            if layer === ground, mode == .snow, !snowBelowDock {
-                occluders += dockBodies.values.map {
+            if layer === ground, mode == .snow, !snowBelowDock, let body = currentDockPresentationFrame {
+                // Нижний снег уступает текущей раскладке Dock, не перемещая массу к его краям.
+                var frames = [body]
+                if dockMagnification.isActive {
+                    for icon in dockIconFrames ?? [] {
+                        if !body.contains(icon.frame) { frames.append(icon.frame) }
+                        if let badge = icon.badge, !body.contains(badge.frame) { frames.append(badge.frame) }
+                    }
+                }
+                occluders += frames.map {
                     SIMD4(Float($0.minX), Float($0.minY), Float($0.maxX), Float($0.maxY))
                 }
             }

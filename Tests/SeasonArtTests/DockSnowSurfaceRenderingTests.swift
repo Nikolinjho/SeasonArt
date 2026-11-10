@@ -4,6 +4,78 @@ import XCTest
 @testable import SeasonArt
 
 final class DockSnowSurfaceRenderingTests: XCTestCase {
+    func testГлубокийНижнийСнегУступаетРасширенномуDockИВозвращаетсяПослеСжатия() throws {
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        let queue = try XCTUnwrap(device.makeCommandQueue())
+        let simulation = SnowSimulation(width: 600, height: 200, snowfall: .off)
+        let body = CGRect(x: 100, y: 6, width: 300, height: 60)
+        let surface = WindowSurface(id: 42, frame: body, blockers: [], cover: [],
+            cornerRadius: 0, cornerExponent: 2, isDock: true)
+        simulation.updateWindows([surface], interval: 1 / 60)
+        simulation.dockMagnification = DockMagnificationSettings(enabled: true, normalSize: 48, largeSize: 100)
+        let ground = try XCTUnwrap(Mirror(reflecting: simulation).children.first { $0.label == "ground" }?.value as? SnowLayer)
+        for i in ground.heights.indices { ground.set(i, 100) }
+        ground.refreshTop()
+        let before = ground.heights
+        let renderer = try Renderer(device: device, pixelFormat: .bgra8Unorm, simulation: simulation)
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: 600, height: 200, mipmapped: false)
+        descriptor.usage = [.renderTarget]
+        descriptor.storageMode = .shared
+        let texture = try XCTUnwrap(device.makeTexture(descriptor: descriptor))
+
+        func render() throws -> [UInt8] {
+            let pass = MTLRenderPassDescriptor()
+            pass.colorAttachments[0].texture = texture
+            pass.colorAttachments[0].loadAction = .clear
+            pass.colorAttachments[0].storeAction = .store
+            pass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
+            let commands = try XCTUnwrap(queue.makeCommandBuffer())
+            renderer.encode(into: commands, pass: pass, scale: 1, time: 0)
+            commands.commit()
+            commands.waitUntilCompleted()
+            XCTAssertNil(commands.error)
+            var bytes = [UInt8](repeating: 0, count: 600 * 200 * 4)
+            texture.getBytes(&bytes, bytesPerRow: 600 * 4, from: MTLRegionMake2D(0, 0, 600, 200), mipmapLevel: 0)
+            XCTAssertEqual(ground.heights, before, "Наведение меняет только видимость накопленного снега")
+            return bytes
+        }
+        func alpha(_ pixels: [UInt8], _ x: Int, _ y: Int) -> UInt8 {
+            pixels[((199 - y) * 600 + x) * 4 + 3]
+        }
+
+        for _ in 0..<3 {
+            // Высота AX может отставать. Отсечение использует текущую высоту корпуса.
+            simulation.dockPresentationFrame = CGRect(x: 60, y: 150, width: 400, height: 60)
+            simulation.dockIconFrames = [DockSnowIcon(frame: CGRect(x: 65, y: 12, width: 100, height: 100), roof: [1, 1])]
+            let expanded = try render()
+            XCTAssertEqual(alpha(expanded, 80, 20), 0, "Снег слева уступает расширившемуся Dock")
+            XCTAssertEqual(alpha(expanded, 440, 20), 0, "Снег справа уступает расширившемуся Dock")
+            XCTAssertEqual(alpha(expanded, 80, 80), 0, "Высокая иконка не утопает в глубоком сугробе")
+            XCTAssertGreaterThan(alpha(expanded, 40, 20), 240, "Вне Dock снег остаётся виден")
+            XCTAssertGreaterThan(alpha(expanded, 480, 20), 240, "За правой границей снег остаётся виден")
+            XCTAssertGreaterThan(alpha(expanded, 440, 80), 240, "Над пустым участком корпуса лишнего выреза нет")
+
+            simulation.dockPresentationFrame = body
+            simulation.dockIconFrames = []
+            let contracted = try render()
+            XCTAssertGreaterThan(alpha(contracted, 80, 20), 240, "При сжатии левый снег возвращается")
+            XCTAssertGreaterThan(alpha(contracted, 440, 20), 240, "При сжатии правый снег возвращается")
+            XCTAssertEqual(alpha(contracted, 250, 20), 0, "Обычный корпус продолжает скрывать снег")
+        }
+
+        simulation.dockPresentationFrame = CGRect(x: 60, y: 6, width: 400, height: 60)
+        simulation.dockIconFrames = [DockSnowIcon(frame: CGRect(x: 65, y: 12, width: 100, height: 100), roof: [1, 1])]
+        simulation.dockSnowPosition = .below
+        let below = try render()
+        XCTAssertGreaterThan(alpha(below, 80, 20), 240, "Под Dock нижний слой остаётся виден")
+        XCTAssertGreaterThan(alpha(below, 80, 80), 240, "Под Dock иконки не вырезают нижний слой")
+        simulation.dockSnowPosition = .above
+        simulation.updateWindows([], interval: 1 / 60)
+        let hidden = try render()
+        XCTAssertGreaterThan(alpha(hidden, 80, 80), 240, "Скрытый Dock не оставляет вырез по старой геометрии AX")
+        XCTAssertGreaterThan(alpha(hidden, 250, 20), 240, "Скрытый корпус больше не скрывает снег")
+    }
+
     func testНастоящийRendererСкрываетЗемлюКорпусомDockБезПереносаМассы() throws {
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let queue = try XCTUnwrap(device.makeCommandQueue())
