@@ -264,6 +264,7 @@ final class WinterScene {
         let previous = objects[index].center
         objects[index].center = CGPoint(x: point.x + dragOffset.x, y: point.y + dragOffset.y)
         clamp(&objects[index])
+        restOnSupports(index)
         let dx = objects[index].center.x - previous.x
         let dy = objects[index].center.y - previous.y
         guard dt.isFinite, dt > 0 else {
@@ -295,6 +296,29 @@ final class WinterScene {
             appendDragSample(duration: dt, velocity: velocity)
         }
         objects[index].velocity = releaseVelocity
+    }
+
+    /// Шар в руке упирается в лежащую под ним фигуру сразу, а не следующим шагом: окно не показывает его внутри неё.
+    private func restOnSupports(_ index: Int) {
+        for _ in 0..<4 {
+            var moved = false
+            for other in objects.indices where other != index && !objects[other].parked && resting.contains(objects[other].id) {
+                for support in objects[other].ballCircles {
+                    for held in objects[index].ballCircles {
+                        let dx = held.center.x - support.center.x
+                        let dy = held.center.y - support.center.y
+                        let distance = hypot(dx, dy)
+                        let overlap = held.radius + support.radius - distance
+                        guard overlap > 0, distance > 0.000001, dy / distance > 0.8 else { continue }
+                        objects[index].center.x += dx / distance * overlap
+                        objects[index].center.y += dy / distance * overlap
+                        moved = true
+                    }
+                }
+            }
+            if !moved { break }
+            clamp(&objects[index])
+        }
     }
 
     private func isCoherent(_ previous: CGVector, with current: CGVector) -> Bool {

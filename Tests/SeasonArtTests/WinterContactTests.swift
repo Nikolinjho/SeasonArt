@@ -46,6 +46,30 @@ final class WinterContactTests: XCTestCase {
         XCTAssertLessThan(worstOverlap(scene), 0.2)
     }
 
+    func testШарВРукеСпокойноЛожитсяНаДругойБезДрожи() throws {
+        let scene = WinterScene(width: 800, height: 600)
+        _ = scene.create(radius: 28, at: CGPoint(x: 300, y: 28))
+        let id = try XCTUnwrap(scene.create(radius: 21, at: CGPoint(x: 200, y: 21)))
+        run(scene, seconds: 0.5)
+        scene.beginDragging(id, at: CGPoint(x: 200, y: 21))
+        var jumps: CGFloat = 0
+        // Курсор ведёт шар на верх нижнего и продолжает слегка давить вниз.
+        for step in 0..<90 {
+            let t = min(1, CGFloat(step) / 45)
+            let cursor = CGPoint(x: 200 + 100 * t, y: 21 + 70 * t - CGFloat(max(0, step - 45)) * 0.5)
+            scene.drag(id, to: cursor, dt: 1.0 / 60)
+            let shown = scene.objects.first { $0.id == id }!.center
+            XCTAssertLessThan(worstOverlap(scene), 0.5, "Окно не показывает шар внутри другого")
+            scene.step(dt: 1.0 / 60)
+            let stepped = scene.objects.first { $0.id == id }!.center
+            jumps = max(jumps, hypot(stepped.x - shown.x, stepped.y - shown.y))
+        }
+        XCTAssertLessThan(jumps, 0.5, "Шаг физики не дёргает шар в руке")
+        scene.endDragging(id, idleTime: 0.3)
+        run(scene, seconds: 1)
+        XCTAssertEqual(scene.objects.count, 1, "Поставленный шар собирается в фигуру")
+    }
+
     func testНовыйШарПоявляетсяВСвободномМесте() throws {
         let scene = WinterScene(width: 800, height: 600)
         _ = scene.create(radius: 30, at: CGPoint(x: 300, y: 30))
