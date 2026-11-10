@@ -10,6 +10,8 @@ final class SnowLayer {
     private(set) var heights: [Float]
     /// How much of each column's snow a wall has packed down already, so it isn't packed again.
     private(set) var packed: [Float]
+    /// Слепленный снег: снег клейкий и держит форму, которую ему придали. По склону течёт только рыхлый снег поверх него.
+    private(set) var cohesive: [Float]
     /// The bed under each column relative to `origin.y`; zero along a flat edge, negative where a corner rounds off.
     private(set) var bed: [Float]
     private(set) var capacity: [Float] = []
@@ -78,6 +80,7 @@ final class SnowLayer {
         self.phases = phases
         heights = Array(repeating: 0, count: columns)
         packed = Array(repeating: 0, count: columns)
+        cohesive = Array(repeating: 0, count: columns)
         bed = Array(repeating: 0, count: columns)
         visible = Array(repeating: true, count: columns)
         supported = Array(repeating: false, count: columns)
@@ -128,6 +131,8 @@ final class SnowLayer {
             heights.insert(0, at: 0)
             packed.removeLast()
             packed.insert(0, at: 0)
+            cohesive.removeLast()
+            cohesive.insert(0, at: 0)
             return (dropped, x, y)
         }
         let x = centerX(0)
@@ -136,6 +141,8 @@ final class SnowLayer {
         heights.append(0)
         packed.removeFirst()
         packed.append(0)
+        cohesive.removeFirst()
+        cohesive.append(0)
         return (dropped, x, y)
     }
 
@@ -146,11 +153,13 @@ final class SnowLayer {
     func set(_ i: Int, _ height: Float) {
         heights[i] = max(0, height)
         packed[i] = min(packed[i], heights[i])
+        cohesive[i] = min(cohesive[i], heights[i])
     }
 
     func replace(heights fresh: [Float]) {
         heights = fresh
         packed = Array(repeating: 0, count: fresh.count)
+        cohesive = Array(repeating: 0, count: fresh.count)
         visible = Array(repeating: true, count: fresh.count)
         supported = Array(repeating: false, count: fresh.count)
         supportedRange = nil
@@ -221,6 +230,8 @@ final class SnowLayer {
             let share = amount * weights[k] / total
             heights[i] += share
             packed[i] += share
+            // Отвал прессует весь столб, который толкает: срезанный край не оплывает.
+            cohesive[i] = heights[i]
             added[i] = share
         }
         return added
@@ -234,6 +245,7 @@ final class SnowLayer {
             guard removed > 0 else { continue }
             packed[i] -= heights[i] > 0 ? min(packed[i], removed * packed[i] / heights[i]) : 0
             heights[i] -= removed
+            cohesive[i] = min(max(0, cohesive[i] - removed), heights[i])
             area += removed * columnWidth
         }
         return area
@@ -310,10 +322,13 @@ final class SnowLayer {
         let open = opensAtEdges
         let outside = self.outside
 
+        let stuck = cohesive
         heights.withUnsafeMutableBufferPointer { h in
             packed.withUnsafeMutableBufferPointer { p in
                 bed.withUnsafeBufferPointer { b in
                     supported.withUnsafeBufferPointer { held in
+                        // Течёт только рыхлый снег поверх слепленного.
+                        func loose(_ i: Int) -> Float { max(0, h[i] - stuck[i]) }
                         // Moves snow between columns, packed snow in proportion.
                         func shift(_ amount: Float, from a: Int, to c: Int) {
                             let share = h[a] > 0 ? min(p[a], amount * p[a] / h[a]) : 0
@@ -333,25 +348,25 @@ final class SnowLayer {
                                 let ahead = limit + min(max(fall, 0), steepest)
                                 let behind = limit + min(max(-fall, 0), steepest)
                                 if difference > ahead + 0.01 {
-                                    let transfer = min((difference - ahead) * 0.5, h[i])
+                                    let transfer = min((difference - ahead) * 0.5, loose(i))
                                     shift(transfer, from: i, to: i + 1)
                                     if transfer > 0 { moved = true }
                                 } else if difference < -behind - 0.01 {
-                                    let transfer = min((-difference - behind) * 0.5, h[i + 1])
+                                    let transfer = min((-difference - behind) * 0.5, loose(i + 1))
                                     shift(transfer, from: i + 1, to: i)
                                     if transfer > 0 { moved = true }
                                 }
                             }
                             if open {
                                 if !held[0] && h[0] - outside.left > limit + 0.01 {
-                                    let transfer = (h[0] - outside.left - limit) * 0.5
+                                    let transfer = min((h[0] - outside.left - limit) * 0.5, loose(0))
                                     h[0] -= transfer
                                     p[0] = min(p[0], h[0])
                                     spilledLeft += transfer
                                     moved = true
                                 }
                                 if !held[count - 1] && h[count - 1] - outside.right > limit + 0.01 {
-                                    let transfer = (h[count - 1] - outside.right - limit) * 0.5
+                                    let transfer = min((h[count - 1] - outside.right - limit) * 0.5, loose(count - 1))
                                     h[count - 1] -= transfer
                                     p[count - 1] = min(p[count - 1], h[count - 1])
                                     spilledRight += transfer
@@ -365,7 +380,7 @@ final class SnowLayer {
                             let s0 = b[i - 1] + h[i - 1], s1 = b[i] + h[i], s2 = b[i + 1] + h[i + 1], s3 = b[i + 2] + h[i + 2]
                             let kink = (s1 - s2) - 0.5 * ((s0 - s1) + (s2 - s3))
                             guard abs(kink) > 0.02 else { continue }
-                            let transfer = kink > 0 ? min(kink * rounding, h[i]) : max(kink * rounding, -h[i + 1])
+                            let transfer = kink > 0 ? min(kink * rounding, loose(i)) : max(kink * rounding, -loose(i + 1))
                             if transfer > 0 { shift(transfer, from: i, to: i + 1) } else { shift(-transfer, from: i + 1, to: i) }
                             if abs(transfer) > 0.003 { moved = true }
                         }
@@ -387,6 +402,7 @@ final class SnowLayer {
             let loss = min(h, (rate + max(0, h - floor) / settle) * dt)
             heights[i] = h - loss
             packed[i] = min(packed[i], heights[i])
+            cohesive[i] = min(cohesive[i], heights[i])
             fastest = max(fastest, loss)
         }
         // Sub-pixel melting is picked up by the idle glint refresh instead of forcing full-rate frames.

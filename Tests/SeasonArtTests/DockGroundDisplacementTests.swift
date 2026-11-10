@@ -60,6 +60,21 @@ final class DockGroundDisplacementTests: XCTestCase {
         XCTAssertEqual(mass(ground), before, accuracy: 0.05)
     }
 
+    func testСлепленныйВалНеРассыпаетсяПослеСжатияDock() throws {
+        let (value, ground) = try scene()
+        for step in 1...10 {
+            value.dockPresentationFrame = body.insetBy(dx: -CGFloat(step) * 2, dy: 0)
+            value.updateDockSnowSurface(dt: 1 / 60, cursor: away)
+        }
+        let shaped = ground.heights
+        value.dockPresentationFrame = body
+        for _ in 0..<600 { _ = value.step(dt: 1 / 60, cursor: away) }
+        // Тонкий рыхлый слой на дне борозды отвал не прессовал, ему можно осесть.
+        let berm = ground.heights.indices.filter { ground.centerX($0) < 80 || ground.centerX($0) > 420 }
+        let worst = berm.map { abs(shaped[$0] - ground.heights[$0]) }.max() ?? 0
+        XCTAssertLessThan(worst, 0.01, "Клейкий снег держит форму, которую ему придал Dock")
+    }
+
     func testОтодвинутыйСнегНеСтекаетОбратноПодDock() throws {
         let (value, ground) = try scene()
         value.dockPresentationFrame = expanded
