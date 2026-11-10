@@ -322,7 +322,7 @@ final class WinterScene {
         def.target = SnowballWorld.meters(objects[index].center)
         def.hertz = 20
         def.dampingRatio = 1
-        def.maxForce = 1000 * b2Body_GetMass(figure.body) * SnowballWorld.meters(WinterMotion.gravity)
+        def.maxForce = 50 * b2Body_GetMass(figure.body) * SnowballWorld.meters(WinterMotion.gravity)
         figure.joint = b2CreateMouseJoint(physics.world, &def)
         wakeAround(index)
     }
@@ -710,6 +710,7 @@ final class WinterScene {
         }
         pendingTime = max(0, pendingTime)
         synchronizeObjects()
+        if let captured, let index = objects.firstIndex(where: { $0.id == captured }) { separateHeld(index) }
         removeLostObjects()
         if elapsed > 0 { assembleSettledSnowmen(dt: elapsed) }
     }
@@ -835,6 +836,34 @@ final class WinterScene {
             }
             objects[index].support = support
         }
+    }
+
+    /// Пружина вдавливает шар в руке в соседа на доли пункта. Окно показывает его уже снаружи.
+    private func separateHeld(_ index: Int) {
+        var center = objects[index].center
+        for _ in 0..<4 {
+            var moved = false
+            var held = objects[index]
+            held.center = center
+            for other in objects.indices where other != index && !objects[other].parked {
+                for (a, circle) in held.ballCircles.enumerated() {
+                    for (b, neighbor) in objects[other].ballCircles.enumerated() {
+                        let dx = circle.center.x - neighbor.center.x
+                        let dy = circle.center.y - neighbor.center.y
+                        let distance = hypot(dx, dy)
+                        let reach = circle.radius * (1 - held.damage(for: a).depth * 1.25)
+                            + neighbor.radius * (1 - objects[other].damage(for: b).depth * 1.25)
+                        guard distance > 0.0001, reach - distance > 0.05 else { continue }
+                        center.x += dx / distance * (reach - distance)
+                        center.y += dy / distance * (reach - distance)
+                        held.center = center
+                        moved = true
+                    }
+                }
+            }
+            if !moved { break }
+        }
+        if center != objects[index].center { teleport(index, to: center) }
     }
 
     private func removeLostObjects() {

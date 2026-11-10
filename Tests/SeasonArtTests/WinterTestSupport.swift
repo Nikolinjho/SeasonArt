@@ -13,10 +13,14 @@ func winterRestingBottom(snow: CGFloat, bed: CGFloat = 0, radius: CGFloat) -> CG
     max(bed, snow - radius * SnowballWorld.footSink)
 }
 
-/// Наибольшее перекрытие кругов шаров разных фигур.
+/// Наибольшее перекрытие кругов шаров разных фигур. Смятый шар законно заходит в соседа на глубину вмятины.
 func winterWorstOverlap(_ scene: WinterScene) -> CGFloat {
     var worst: CGFloat = 0
-    let circles = scene.objects.filter { !$0.parked }.map(\.ballCircles)
+    let circles = scene.objects.filter { !$0.parked }.map { object in
+        object.ballCircles.enumerated().map { index, circle in
+            (center: circle.center, radius: circle.radius * (1 - object.damage(for: index).depth * 1.25))
+        }
+    }
     for a in circles.indices {
         for b in circles.indices where b > a {
             for first in circles[a] {
