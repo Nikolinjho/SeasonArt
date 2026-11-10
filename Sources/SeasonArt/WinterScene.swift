@@ -158,6 +158,8 @@ final class WinterScene {
     /// Абсолютная высота снега. nil использует геометрию опоры или землю.
     var surfaceHeight: (_ id: CGWindowID?, _ x: CGFloat) -> CGFloat? = { _, _ in nil }
     var dockContact: (_ id: CGWindowID, _ x: CGFloat, _ radius: CGFloat) -> (top: CGFloat, floor: CGFloat)? = { _, _, _ in nil }
+    /// Текущий корпус Dock: при увеличении он шире рамки окна. nil оставляет рамку окна.
+    var dockBody: (_ id: CGWindowID) -> CGRect? = { _ in nil }
     var didLand: (WinterImpact) -> Void = { _ in }
     var didChip: (WinterBallChip) -> Void = { _ in }
     var isMoving: Bool {
@@ -179,6 +181,8 @@ final class WinterScene {
     private var fastDragSample: (duration: TimeInterval, velocity: CGVector)?
     /// Реальное время, ещё не пройденное фиксированными шагами.
     private var pendingTime: TimeInterval = 0
+    /// Корпуса Dock при последней синхронизации опор.
+    private var lastDockBodies: [CGWindowID: CGRect] = [:]
     /// Центры после последнего решения контактов.
     private var solvedCenters: [UUID: CGPoint] = [:]
 
@@ -513,6 +517,11 @@ final class WinterScene {
                 land(&objects[index], on: surface.id, at: contact.top)
             }
         }
+        // Расширяющийся Dock сдвигает шары сразу, а не на следующем шаге покоя. Шар, вставший на горку, уже снаружи.
+        let bodies = Dictionary(physicalDocks.map { ($0.id, $0.frame) }, uniquingKeysWith: { first, _ in first })
+        let widened = bodies.contains { id, body in lastDockBodies[id].map { $0 != body } ?? false }
+        lastDockBodies = bodies
+        if widened { resolveDockContacts() }
         guard before != objects.map(\.center) else { return false }
         wakeUnsupportedObjects()
         resolveObjectContacts()
@@ -584,8 +593,18 @@ final class WinterScene {
     }
 
     /// Dock имеет твёрдое тело: бок и низ не пропускают шары к земле под панелью.
+    /// Dock с текущей шириной: увеличенные иконки раздвигают корпус в стороны.
+    private var physicalDocks: [WindowSurface] {
+        surfaces.values.filter { $0.isDock && visibleSupports.contains($0.id) }.map { dock in
+            guard let body = dockBody(dock.id), body.width > 0, body.minX.isFinite, body.width.isFinite else { return dock }
+            return WindowSurface(id: dock.id, frame: CGRect(x: body.minX, y: dock.frame.minY, width: body.width, height: dock.frame.height),
+                                 blockers: dock.blockers, cover: dock.cover, cornerRadius: dock.cornerRadius,
+                                 cornerExponent: dock.cornerExponent, isDock: true)
+        }
+    }
+
     private func resolveDockContacts() {
-        let docks = surfaces.values.filter { $0.isDock && visibleSupports.contains($0.id) }
+        let docks = physicalDocks
         guard !docks.isEmpty else { return }
         for index in objects.indices where !objects[index].parked && !objects[index].isDragged {
             for dock in docks {

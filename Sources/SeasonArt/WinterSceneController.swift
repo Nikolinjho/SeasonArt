@@ -81,6 +81,7 @@ final class WinterSceneController {
         scene = WinterScene(width: screenFrame.width, height: screenFrame.height)
         scene.surfaceHeight = { [weak simulation] id, x in simulation?.winterSurfaceY(at: x, on: id) }
         scene.dockContact = { [weak simulation] id, x, radius in simulation?.winterDockContact(on: id, at: x, radius: radius) }
+        scene.dockBody = { [weak simulation] id in simulation?.winterDockBody(for: id) }
         scene.didLand = { [weak simulation] impact in simulation?.displaceSnow(for: impact) }
         scene.didChip = { [weak simulation] chip in
             let count = max(3, min(10, Int(chip.strength * 40)))

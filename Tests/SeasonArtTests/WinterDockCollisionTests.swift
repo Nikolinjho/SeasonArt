@@ -23,6 +23,25 @@ final class WinterDockCollisionTests: XCTestCase {
         }
     }
 
+    func testУвеличенныйDockОтталкиваетЛежащийРядомШар() throws {
+        let scene = scene()
+        var presented = CGRect(x: 100, y: 6, width: 300, height: 60)
+        scene.dockBody = { _ in presented }
+        let id = try XCTUnwrap(scene.create(.small, at: CGPoint(x: 420, y: 14)))
+        for _ in 0..<60 { scene.step(dt: 1 / 60) }
+        XCTAssertFalse(scene.isMoving)
+        // Наведение расширяет Dock за несколько кадров.
+        for step in 1...8 {
+            presented = CGRect(x: 100 - CGFloat(step) * 5, y: 6, width: 300 + CGFloat(step) * 10, height: 60)
+            scene.synchronizeDockSupports()
+            scene.step(dt: 1 / 60)
+        }
+        for _ in 0..<60 { scene.step(dt: 1 / 60) }
+        let ball = try XCTUnwrap(scene.objects.first { $0.id == id })
+        XCTAssertGreaterThanOrEqual(ball.frame.minX, presented.maxX - 0.5, "Грань увеличенного Dock сдвигает шар")
+        assertOutside(scene, body: presented)
+    }
+
     func testОтпущенныйВнутриDockШарВыбираетСвободнуюГраньВышеЗемли() {
         let scene = scene()
         _ = scene.create(.small, at: CGPoint(x: 200, y: 30))

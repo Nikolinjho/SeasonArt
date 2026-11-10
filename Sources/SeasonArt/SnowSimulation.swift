@@ -483,6 +483,11 @@ final class SnowSimulation {
     private var previousDockCursor: SIMD2<Float>?
     private var dockMotionUntil: Double = -10
     var dockFrame: CGRect? { dockBodies.values.first }
+    /// Корпус Dock для столкновений игрушек: ширина текущей раскладки, высота корпуса.
+    func winterDockBody(for id: CGWindowID) -> CGRect? {
+        guard mode == .snow, dockMagnification.isActive, dockBodies[id] != nil else { return nil }
+        return currentDockPresentationFrame
+    }
     /// AX задаёт ширину и раскладку значков, высота опоры берётся из снимка текущего кадра.
     private var currentDockPresentationFrame: CGRect? {
         guard let body = dockFrame else { return nil }
