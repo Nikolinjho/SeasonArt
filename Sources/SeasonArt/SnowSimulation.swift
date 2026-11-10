@@ -439,8 +439,8 @@ final class SnowSimulation {
     private var dockContactBuffer: [Float]?
     private var dockBadges: [DockSnowBadge] = []
     private var previousDockGroundFrame: CGRect?
-    /// Валы, которые грани Dock толкают перед собой, по сторонам −1 и 1.
-    private var dockBerms: [Int: [Int: Float]] = [:]
+    /// Снег, сдвинутый каждой гранью (−1 и 1) за текущее наведение: от него зависит ширина вала.
+    private var dockPushedArea: [Int: Float] = [:]
 
     /// Один и тот же контур используется для изображения и столкновений с увеличенными иконками.
     private func presentedDockBuffer(_ layer: SnowLayer) -> [Float]? {
@@ -1044,11 +1044,13 @@ final class SnowSimulation {
     private func pushGroundSnow(with frame: CGRect?) -> Bool {
         guard mode == .snow, !snowBelowDock, dockMagnification.isActive else {
             previousDockGroundFrame = nil
-            dockBerms = [:]
+            dockPushedArea = [:]
             return false
         }
         // Пропущенный AX-снимок не сбрасывает грань: следующий кадр продолжит расчистку с прежнего места.
         guard dockPresentationFrame != nil, let frame else { return false }
+        // Dock вернулся к обычной ширине: следующее наведение начинает новый вал.
+        if let body = dockFrame, frame.width <= body.width + 1 { dockPushedArea = [:] }
         defer { previousDockGroundFrame = frame }
         guard let previous = previousDockGroundFrame, previous.intersects(frame),
               abs(previous.minY - frame.minY) < 2 else { return false }
@@ -1069,10 +1071,11 @@ final class SnowSimulation {
             }
             // Полоса уже расчищена: грань ничего не толкает, вал лежит на месте.
             guard area > 0 else { return false }
-            // Грань толкает перед собой весь накопленный вал, как отвал: он укладывается заново одной пологой формой.
-            let carried = ground.take(dockBerms[direction] ?? [:])
-            dockBerms[direction] = ground.shove(area + carried, from: edge, outward: direction,
-                                                slope: repose * 0.4, minimumWidth: 48)
+            // К валу добавляется только снятое в этом кадре. Перекладка всего вала заставляла снег скакать.
+            let pushed = (dockPushedArea[direction] ?? 0) + area
+            dockPushedArea[direction] = pushed
+            let width = max(48, (3 * pushed / (repose * 0.4)).squareRoot())
+            ground.shove(area, from: edge, outward: direction, slope: repose * 0.4, minimumWidth: width)
             return true
         }
 

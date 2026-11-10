@@ -12,6 +12,8 @@ final class SnowLayer {
     private(set) var packed: [Float]
     /// Самый крутой склон слепленного снега, около 50°: он пластичен и оплывает мягким скатом.
     static let cohesiveSlope: Float = 1.2
+    /// Насколько быстро крутой слепленный снег сползает с колонки, pt/с.
+    static let cohesiveCreep: Float = 12
 
     /// Слепленный снег: снег клейкий и держит форму, которую ему придали. По склону течёт только рыхлый снег поверх него.
     private(set) var cohesive: [Float]
@@ -331,8 +333,11 @@ final class SnowLayer {
                         // Течёт только рыхлый снег поверх слепленного. Слепленный держит крутой склон, но не отвес.
                         let cohesiveLimit = Self.cohesiveSlope * columnWidth
                         func loose(_ i: Int) -> Float { max(0, h[i] - stuck[i]) }
+                        // Слепленный снег пластичен: сползает медленно, без рывка за один кадр.
+                        let creep = Self.cohesiveCreep / 60 / 6
                         func movable(_ i: Int, over difference: Float) -> Float {
-                            difference > cohesiveLimit + 0.01 ? min(h[i], (difference - cohesiveLimit) * 0.5 + loose(i)) : loose(i)
+                            guard difference > cohesiveLimit + 0.01 else { return loose(i) }
+                            return min(h[i], min((difference - cohesiveLimit) * 0.5, creep) + loose(i))
                         }
                         // Moves snow between columns, packed snow in proportion.
                         func shift(_ amount: Float, from a: Int, to c: Int) {

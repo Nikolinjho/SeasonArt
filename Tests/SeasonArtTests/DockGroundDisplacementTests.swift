@@ -54,7 +54,8 @@ final class DockGroundDisplacementTests: XCTestCase {
         for x in stride(from: Float(4), to: 76, by: ground.columnWidth) {
             steepest = max(steepest, abs(surface(x + ground.columnWidth) - surface(x)) / ground.columnWidth)
         }
-        XCTAssertLessThan(steepest, 0.45, "Сдвинутый снег образует пологий вал, а не клин под углом откоса")
+        // Вал складывается из добавок каждого кадра и у грани чуть круче, но заметно положе клина под углом откоса 0,8.
+        XCTAssertLessThan(steepest, 0.7, "Сдвинутый снег образует пологий вал, а не клин под углом откоса")
         XCTAssertGreaterThan(surface(78), 40, "Вал начинается у самой грани")
         XCTAssertGreaterThan(surface(40), 40, "Сдвинутый снег уходит вбок, а не копится у грани")
         XCTAssertEqual(mass(ground), before, accuracy: 0.05)
@@ -130,6 +131,29 @@ final class DockGroundDisplacementTests: XCTestCase {
         }
         XCTAssertLessThan(steepest, 1.3, "Снег у грани оплывает мягким скатом, без отвеса и шипа")
         XCTAssertGreaterThan(ground.heights[ground.clampedIndex(at: 60)], bank * 0.8, "Вал не расползается целиком")
+    }
+
+    func testПовторныеНаведенияНеКачаютСнегУDock() throws {
+        let (value, ground) = try scene()
+        var frames: [CGFloat] = []
+        for _ in 0..<20 {
+            frames += (1...8).map { CGFloat($0) * 4 } + Array(repeating: 32, count: 10)
+            frames += (0..<8).reversed().map { CGFloat($0) * 4 } + Array(repeating: 0, count: 30)
+        }
+        var lastCycles: Float = 0
+        var previous = ground.heights
+        for (n, grow) in frames.enumerated() {
+            let frame = body.insetBy(dx: -grow, dy: 0)
+            value.dockPresentationFrame = frame
+            _ = value.step(dt: 1 / 60, cursor: away)
+            for i in ground.heights.indices where ground.centerX(i) < Float(frame.minX) || ground.centerX(i) >= Float(frame.maxX) {
+                let change = abs(ground.heights[i] - previous[i])
+                XCTAssertLessThan(change, 6, "Видимый снег не прыгает за один кадр")
+                if n >= frames.count - 5 * 56 { lastCycles += change }
+            }
+            previous = ground.heights
+        }
+        XCTAssertLessThan(lastCycles / 5, 200, "К двадцатому наведению снег у Dock почти не двигается")
     }
 
     func testНеподвижныйDockИСжатиеНеПересобираютБоковыеСугробы() throws {
