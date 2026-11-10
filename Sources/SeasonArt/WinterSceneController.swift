@@ -97,7 +97,7 @@ final class WinterSceneController {
     @discardableResult
     func create(_ size: WinterBallSize, at point: CGPoint) -> UUID? {
         guard canCreate else { return nil }
-        let id = scene.create(size, at: point)
+        let id = scene.place(radius: size.radius, near: point)
         refresh()
         changed()
         return id
@@ -161,7 +161,11 @@ final class WinterSceneController {
                 sculptingGesture = SnowSculptingGesture(source: source, at: start, paced: true)
             }
             sculptingGesture?.include(point, dt: dt)
-            if sculptingGesture?.isFull == true {
+            // Черновик не врастает в соседний шар: лепка заканчивается на текущем размере.
+            let touches = sculptingGesture.flatMap { gesture in
+                gesture.radius.map { !scene.isFree(radius: $0, at: CGPoint(x: gesture.lastPoint.x, y: gesture.center.y)) }
+            } ?? false
+            if sculptingGesture?.isFull == true || touches {
                 finishSculpting(waitForExit: true)
             } else if let gesture = sculptingGesture, gesture.radius != nil {
                 if sculptingPreview == nil {
@@ -196,7 +200,7 @@ final class WinterSceneController {
         waitsForExit = false
         guard canCreate, let gesture, let ball = simulation.commitSculpting(gesture) else { return }
         waitsForExit = waitForExit
-        scene.create(radius: ball.radius, at: ball.center)
+        scene.place(radius: ball.radius, near: ball.center)
         refresh()
         changed()
     }

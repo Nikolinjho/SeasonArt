@@ -34,6 +34,8 @@ struct WinterObject: Identifiable {
     var isDragged: Bool
 
     var rotation: CGFloat = 0
+    /// Угловая скорость одиночного шара, рад/с, положительная против часовой стрелки.
+    var spin: CGFloat = 0
     var ballDamage: [WinterBallDamage] = []
 
     /// Локальные границы шаров: стык перекрывает 30% диаметра меньшего из соседей.
@@ -56,6 +58,12 @@ struct WinterObject: Identifiable {
     }
 
     var isSnowman: Bool { radii.count == 3 }
+
+    /// Круги шаров в координатах сцены.
+    var ballCircles: [(center: CGPoint, radius: CGFloat)] {
+        let origin = frame.origin
+        return ballFrames.map { (CGPoint(x: origin.x + $0.midX, y: origin.y + $0.midY), $0.width / 2) }
+    }
 }
 
 /// Геометрия украшений использует радиус соответствующего шара.
@@ -121,6 +129,13 @@ private enum WinterMotion {
     static let sleepSpeed: CGFloat = 2
     static let bounceThreshold: CGFloat = 220
     static let restitution: CGFloat = 0.17
+    /// Трение снега о снег.
+    static let ballFriction: CGFloat = 0.5
+    /// Липкий снег удерживает шар на шаре при отклонении до 20° и медленном движении.
+    static let stickyNormal: CGFloat = 0.94
+    static let stickySpeed: CGFloat = 40
+    /// Сопротивление качению по другому шару: снег мнётся в месте касания.
+    static let rollingDrag: CGFloat = 10
     /// Фиксированный шаг: на экранах 60 и 120 Гц в кадр помещается целое число шагов.
     static let fixedStep: TimeInterval = 1.0 / 240
     /// После сна или долгой задержки шары не пролетают экран за один кадр.
@@ -189,6 +204,41 @@ final class WinterScene {
         return object.id
     }
 
+    /// Ставит шар в ближайшее свободное место у точки, иначе кладёт его сверху на мешающие фигуры.
+    @discardableResult
+    func place(radius: CGFloat, near point: CGPoint) -> UUID? {
+        guard hasCapacity, WinterBallGeometry.isValid(radius), point.x.isFinite, point.y.isFinite else { return nil }
+        func blockers(at center: CGPoint) -> [Int] { self.blockers(radius: radius, at: center) }
+        func clampedX(_ x: CGFloat) -> CGFloat { min(max(x, radius), max(radius, width - radius)) }
+        // Сначала та же опора рядом, на расстоянии до трёх диаметров, затем сверху на мешающие фигуры.
+        for offset in 0...24 {
+            for side: CGFloat in offset == 0 ? [0] : [-1, 1] {
+                let center = CGPoint(x: clampedX(point.x + side * CGFloat(offset) * radius / 4), y: point.y)
+                if blockers(at: center).isEmpty { return create(radius: radius, at: center) }
+            }
+        }
+        var center = CGPoint(x: clampedX(point.x), y: point.y)
+        for _ in 0..<Self.maximumObjects {
+            let hits = blockers(at: center)
+            guard !hits.isEmpty else { break }
+            center.y = hits.map { objects[$0].frame.maxY }.max()! + radius + 0.5
+        }
+        // Экран заполнен до верха: шар появляется как раньше, решатель разведёт его с соседями.
+        guard center.y + radius <= height, blockers(at: center).isEmpty else { return create(radius: radius, at: point) }
+        return create(radius: radius, at: center)
+    }
+
+    /// Место занято шаром любой видимой фигуры.
+    func isFree(radius: CGFloat, at center: CGPoint) -> Bool { blockers(radius: radius, at: center).isEmpty }
+
+    private func blockers(radius: CGFloat, at center: CGPoint) -> [Int] {
+        objects.indices.filter { index in
+            !objects[index].parked && objects[index].ballCircles.contains {
+                hypot($0.center.x - center.x, $0.center.y - center.y) < $0.radius + radius - 0.01
+            }
+        }
+    }
+
     func beginDragging(_ id: UUID, at point: CGPoint) {
         guard captured != id, objects.contains(where: { $0.id == id && !$0.parked }) else { return }
         if let captured { cancelDragging(captured) }
@@ -200,6 +250,7 @@ final class WinterScene {
         objects[index].isDragged = true
         objects[index].support = nil
         objects[index].velocity = .zero
+        objects[index].spin = 0
         resting.remove(id)
         objectSupports.removeValue(forKey: id)
         wakeUnsupportedObjects()
@@ -458,6 +509,8 @@ final class WinterScene {
                 if !pushed.contains(objects[index].id) { clampX(&objects[index]) }
                 if objects[index].radii.count == 1 {
                     objects[index].rotation -= (objects[index].center.x - previousX) / objects[index].radii[0]
+                    // По земле шар катится без проскальзывания.
+                    objects[index].spin = -objects[index].velocity.dx / objects[index].radii[0]
                 }
                 if let support = objects[index].support, let surface = surfaces[support] {
                     fit(&objects[index], on: surface)
@@ -469,6 +522,7 @@ final class WinterScene {
                 if resting.contains(objects[index].id) { continue }
             }
             let beforeBottom = objects[index].frame.minY
+            if objects[index].radii.count == 1 { objects[index].rotation += objects[index].spin * elapsed }
             objects[index].center.x += objects[index].velocity.dx * elapsed
             objects[index].center.y += objects[index].velocity.dy * elapsed - WinterMotion.gravity * elapsed * elapsed / 2
             objects[index].velocity.dy -= WinterMotion.gravity * elapsed
@@ -595,7 +649,8 @@ final class WinterScene {
 
     /// Прямоугольники отсекают далёкие пары, контакт проверяется по каждому шару фигуры.
     private func resolveObjectContacts() {
-        let active = objects.indices.filter { !objects[$0].parked && !objects[$0].isDragged }
+        // Шар в руке — кинематическое тело: расталкивает соседей и упирается в то, что сдвинуть нельзя.
+        let active = objects.indices.filter { !objects[$0].parked }
         guard active.count > 1 else { return }
         // Спящий шар на месте прошлого решения уже разведён с такими же соседями.
         func sleeps(_ index: Int) -> Bool {
@@ -633,8 +688,13 @@ final class WinterScene {
                             }
                             let radius = reach(frameA) + reach(frameB)
                             guard distance < radius + 0.002 else { continue }
-                            let inverseA: CGFloat = ny > 0.8 && resting.contains(objects[a].id) ? 0 : inverseMasses[a]
-                            let inverseB: CGFloat = ny < -0.8 && resting.contains(objects[b].id) ? 0 : inverseMasses[b]
+                            var inverseA: CGFloat = ny > 0.8 && resting.contains(objects[a].id) ? 0 : inverseMasses[a]
+                            var inverseB: CGFloat = ny < -0.8 && resting.contains(objects[b].id) ? 0 : inverseMasses[b]
+                            let draggedA = objects[a].isDragged
+                            let draggedB = objects[b].isDragged
+                            if draggedA && draggedB { continue }
+                            if draggedA { inverseA = inverseB > 0 ? 0 : inverseMasses[a] }
+                            if draggedB { inverseB = inverseA > 0 ? 0 : inverseMasses[b] }
                             let total = inverseA + inverseB
                             guard total > 0 else { continue }
                             let overlap = max(0, radius - distance)
@@ -643,9 +703,14 @@ final class WinterScene {
                             objects[a].center.y -= ny * overlap * inverseA / total
                             objects[b].center.x += nx * overlap * inverseB / total
                             objects[b].center.y += ny * overlap * inverseB / total
+                            // Скорость шара в руке задаёт курсор, импульсы её не меняют.
+                            let velocityA: CGFloat = draggedA ? 0 : inverseA
+                            let velocityB: CGFloat = draggedB ? 0 : inverseB
+                            let velocityTotal = velocityA + velocityB
                             let relative = (objects[b].velocity.dx - objects[a].velocity.dx) * nx +
                                 (objects[b].velocity.dy - objects[a].velocity.dy) * ny
-                            if relative < 0 {
+                            var normalImpulse: CGFloat = 0
+                            if relative < 0, velocityTotal > 0 {
                                 if ny > 0.65 {
                                     chip(&objects[b], component: componentB, speed: -relative, angle: atan2(-ny, -nx),
                                          at: CGPoint(x: objects[b].center.x, y: objects[b].frame.minY + frameB.minY))
@@ -656,16 +721,20 @@ final class WinterScene {
                                     components[a] = objects[a].collisionBallFrames
                                 }
                                 let restitution: CGFloat = relative < -220 ? 0.12 : 0
-                                let impulse = -(1 + restitution) * relative / total
-                                objects[a].velocity.dx -= impulse * inverseA * nx
-                                objects[a].velocity.dy -= impulse * inverseA * ny
-                                objects[b].velocity.dx += impulse * inverseB * nx
-                                objects[b].velocity.dy += impulse * inverseB * ny
+                                normalImpulse = -(1 + restitution) * relative / velocityTotal
+                                objects[a].velocity.dx -= normalImpulse * velocityA * nx
+                                objects[a].velocity.dy -= normalImpulse * velocityA * ny
+                                objects[b].velocity.dx += normalImpulse * velocityB * nx
+                                objects[b].velocity.dy += normalImpulse * velocityB * ny
                             }
-                            constrainContact(a)
-                            constrainContact(b)
-                            if ny > 0.99 { restOnObject(b, base: a) }
-                            if ny < -0.99 { restOnObject(a, base: b) }
+                            if normalImpulse > 0 {
+                                applyFriction(a, b, nx: nx, ny: ny, reachA: reach(frameA), reachB: reach(frameB),
+                                              inverseA: velocityA, inverseB: velocityB, normalImpulse: normalImpulse)
+                            }
+                            if !draggedA { constrainContact(a) }
+                            if !draggedB { constrainContact(b) }
+                            if ny > WinterMotion.stickyNormal, !draggedB { restOnObject(b, base: a) }
+                            if ny < -WinterMotion.stickyNormal, !draggedA { restOnObject(a, base: b) }
                         }
                     }
                 }
@@ -693,11 +762,50 @@ final class WinterScene {
         }
     }
 
+    /// Кулоново трение в точке касания: скольжение переходит во вращение, качение по снегу быстро гаснет.
+    private func applyFriction(_ a: Int, _ b: Int, nx: CGFloat, ny: CGFloat, reachA: CGFloat, reachB: CGFloat,
+                               inverseA: CGFloat, inverseB: CGFloat, normalImpulse: CGFloat) {
+        let tx = -ny
+        let ty = nx
+        let rollsA = objects[a].radii.count == 1 && inverseA > 0
+        let rollsB = objects[b].radii.count == 1 && inverseB > 0
+        let spinA = rollsA ? objects[a].spin : 0
+        let spinB = rollsB ? objects[b].spin : 0
+        let pointA = CGVector(dx: objects[a].velocity.dx - spinA * ny * reachA, dy: objects[a].velocity.dy + spinA * nx * reachA)
+        let pointB = CGVector(dx: objects[b].velocity.dx + spinB * ny * reachB, dy: objects[b].velocity.dy - spinB * nx * reachB)
+        let sliding = (pointB.dx - pointA.dx) * tx + (pointB.dy - pointA.dy) * ty
+        // Для сплошного шара r²/I = 5/(2m).
+        let resistance = inverseA + inverseB + (rollsA ? 2.5 * inverseA : 0) + (rollsB ? 2.5 * inverseB : 0)
+        guard resistance > 0 else { return }
+        let limit = WinterMotion.ballFriction * normalImpulse
+        let impulse = min(max(-sliding / resistance, -limit), limit)
+        objects[a].velocity.dx -= impulse * inverseA * tx
+        objects[a].velocity.dy -= impulse * inverseA * ty
+        objects[b].velocity.dx += impulse * inverseB * tx
+        objects[b].velocity.dy += impulse * inverseB * ty
+        if rollsA { objects[a].spin -= 2.5 * impulse * inverseA / reachA }
+        if rollsB { objects[b].spin -= 2.5 * impulse * inverseB / reachB }
+        // Касание мнёт снег: качение шара по шару затухает.
+        let drag = exp(-WinterMotion.rollingDrag * CGFloat(WinterMotion.fixedStep))
+        for (index, rolls) in [(a, rollsA), (b, rollsB)] where rolls {
+            objects[index].spin *= drag
+        }
+        if inverseB > 0, ny > 0.5 {
+            let along = objects[b].velocity.dx * tx + objects[b].velocity.dy * ty
+            objects[b].velocity.dx -= along * (1 - drag) * tx
+            objects[b].velocity.dy -= along * (1 - drag) * ty
+        } else if inverseA > 0, ny < -0.5 {
+            let along = objects[a].velocity.dx * tx + objects[a].velocity.dy * ty
+            objects[a].velocity.dx -= along * (1 - drag) * tx
+            objects[a].velocity.dy -= along * (1 - drag) * ty
+        }
+    }
+
     private func restOnObject(_ index: Int, base: Int) {
         guard resting.contains(objects[base].id), objects[base].velocity == .zero,
-              abs(objects[index].velocity.dy) < WinterMotion.sleepSpeed,
-              objects[index].velocity.dx == 0 else { return }
+              hypot(objects[index].velocity.dx, objects[index].velocity.dy) < WinterMotion.stickySpeed else { return }
         objects[index].velocity = .zero
+        objects[index].spin = 0
         objects[index].support = nil
         resting.insert(objects[index].id)
         objectSupports[objects[index].id] = (objects[base].id, objects[base].center, objects[base].radii, objects[index].center)
