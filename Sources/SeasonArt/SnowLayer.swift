@@ -63,6 +63,8 @@ final class SnowLayer {
     private let phases: (Float, Float)
     private var corner: (radius: Float, exponent: Float) = (0, 2)
     private var supported: [Bool]
+    /// Колонки под твёрдым телом: релаксация не переносит в них снег и не вытягивает его оттуда.
+    var barrier: ClosedRange<Int>?
     private var supportedRange: ClosedRange<Int>?
     private var parity = false
 
@@ -284,6 +286,7 @@ final class SnowLayer {
                             for k in 0..<(count - 1) {
                                 let i = forward ? k : count - 2 - k
                                 if held[i] || held[i + 1] { continue }
+                                if let wall = barrier, wall.contains(i) || wall.contains(i + 1) { continue }
                                 let difference = (b[i] + h[i]) - (b[i + 1] + h[i + 1])
                                 let fall = b[i] - b[i + 1]
                                 let ahead = limit + min(max(fall, 0), steepest)
@@ -317,6 +320,7 @@ final class SnowLayer {
                         }
                         // Pulls each slope toward its neighbours' average: rounds crests and notches, leaves even slopes alone.
                         for i in 1..<max(1, count - 2) where !(held[i - 1] || held[i] || held[i + 1] || held[i + 2]) {
+                            if let wall = barrier, wall.contains(i) || wall.contains(i + 1) { continue }
                             let s0 = b[i - 1] + h[i - 1], s1 = b[i] + h[i], s2 = b[i + 1] + h[i + 1], s3 = b[i + 2] + h[i + 2]
                             let kink = (s1 - s2) - 0.5 * ((s0 - s1) + (s2 - s3))
                             guard abs(kink) > 0.02 else { continue }

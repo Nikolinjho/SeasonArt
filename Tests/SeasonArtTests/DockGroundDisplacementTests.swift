@@ -39,6 +39,18 @@ final class DockGroundDisplacementTests: XCTestCase {
         XCTAssertEqual(mass(ground), before, accuracy: 0.05, "Раздвигание сохраняет массу")
     }
 
+    func testОтодвинутыйСнегНеСтекаетОбратноПодDock() throws {
+        let (value, ground) = try scene()
+        value.dockPresentationFrame = expanded
+        value.updateDockSnowSurface(dt: 1 / 60, cursor: away)
+        let cleared = ground.heights[ground.clampedIndex(at: 90)]
+        let bank = ground.heights[ground.clampedIndex(at: 70)]
+        for _ in 0..<600 { _ = value.step(dt: 1 / 60, cursor: away) }
+        XCTAssertEqual(ground.heights[ground.clampedIndex(at: 90)], cleared, accuracy: 0.5,
+                       "Под расширенным Dock снег из боковой горки не появляется")
+        XCTAssertGreaterThan(ground.heights[ground.clampedIndex(at: 70)], bank * 0.8, "Горка у грани не утекает под корпус")
+    }
+
     func testНеподвижныйDockИСжатиеНеПересобираютБоковыеСугробы() throws {
         let (value, ground) = try scene()
         value.dockPresentationFrame = expanded

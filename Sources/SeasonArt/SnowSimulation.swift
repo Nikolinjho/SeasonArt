@@ -415,8 +415,25 @@ final class SnowSimulation {
     }
     private var blizzardWind = BlizzardWind()
     var dockMagnification = DockMagnificationSettings.disabled
-    var dockIconFrames: [DockSnowIcon]?
+    var dockIconFrames: [DockSnowIcon]? {
+        didSet {
+            // Одинаковые размеры значит, что Dock не увеличен: это раскладка покоя для привязки снега к иконкам.
+            guard let icons = dockIconFrames, !icons.isEmpty else { return }
+            let widths = icons.map(\.frame.width)
+            if widths.max()! - widths.min()! < 1 { dockRestCenters = icons.map(\.frame.midX) }
+        }
+    }
     var dockPresentationFrame: CGRect?
+    private var dockRestCenters: [CGFloat] = []
+
+    /// Колонки полки в обычной раскладке и в текущей, увеличенной.
+    private func dockColumnMap(for layer: SnowLayer) -> DockColumnMap? {
+        guard layer.isDock, let presentation = dockPresentationFrame, let icons = dockIconFrames else { return nil }
+        let left = CGFloat(layer.base.x)
+        let right = left + CGFloat(layer.columnWidth) * CGFloat(layer.count)
+        return DockColumnMap(body: left...right, presentation: presentation.minX...presentation.maxX,
+                             restCenters: dockRestCenters, presentedCenters: icons.map(\.frame.midX).sorted())
+    }
     private var dockSnowSurface = DockSnowSurface()
     private var dockGeometryChanged = false
     private var dockContactBuffer: [Float]?
@@ -431,8 +448,9 @@ final class SnowSimulation {
         let origin = dockPresentationFrame.map { Float($0.minX) } ?? layer.base.x
         let column = dockPresentationFrame.map { Float($0.width) / Float(layer.count) } ?? layer.columnWidth
         var values = [Float](repeating: 0, count: layer.count * 2)
+        values.withUnsafeMutableBufferPointer { layer.writeSmoothed(into: $0.baseAddress!) }
+        dockColumnMap(for: layer)?.resample(&values, count: layer.count)
         values.withUnsafeMutableBufferPointer {
-            layer.writeSmoothed(into: $0.baseAddress!)
             _ = dockSnowSurface.apply(to: $0.baseAddress!, columnWidth: column, originX: origin)
         }
         dockContactBuffer = values
@@ -1354,6 +1372,10 @@ final class SnowSimulation {
                 presented.withUnsafeBufferPointer { (buffer + offset).update(from: $0.baseAddress!, count: presented.count) }
                 top = presented.prefix(layer.count).max() ?? top
                 bottom = presented.suffix(layer.count).min() ?? bottom
+            } else if mode == .snow, let map = dockColumnMap(for: layer) {
+                var values = Array(UnsafeBufferPointer(start: buffer + offset, count: 2 * layer.count))
+                map.resample(&values, count: layer.count)
+                values.withUnsafeBufferPointer { (buffer + offset).update(from: $0.baseAddress!, count: values.count) }
             }
             var occluders = layer.occluders
             if layer === ground, mode == .snow, !snowBelowDock, let body = currentDockPresentationFrame {
@@ -3995,6 +4017,14 @@ final class SnowSimulation {
         let falling = snowfall.flakesPerMegapoint * strength * density * (leafy ? leafShare : 1)
         let meltPace = falling > 0 ? pow(falling / thawBalance, thawExponent) : 1
         for ledge in ledgeList { ledge.outside = (outside(of: ledge, left: true), outside(of: ledge, left: false)) }
+        // Отодвинутый гранями Dock снег не стекает обратно под корпус, пока Dock на месте.
+        ground.barrier = nil
+        if mode == .snow, !snowBelowDock, let frame = currentDockPresentationFrame {
+            let columns = ground.heights.indices.filter {
+                ground.centerX($0) >= Float(frame.minX) && ground.centerX($0) < Float(frame.maxX)
+            }
+            if let first = columns.first, let last = columns.last { ground.barrier = first...last }
+        }
         for layer in layers {
             if !accumulates || thaws {
                 // Withered leaves leave nothing behind.
