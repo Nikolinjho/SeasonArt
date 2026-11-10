@@ -1037,12 +1037,13 @@ final class SnowSimulation {
 
     /// Грани Dock выталкивают только снег на пройденном пути, не пересобирая весь нижний слой.
     private func pushGroundSnow(with frame: CGRect?) -> Bool {
-        guard mode == .snow, !snowBelowDock, dockMagnification.isActive,
-              dockPresentationFrame != nil, let frame else {
+        guard mode == .snow, !snowBelowDock, dockMagnification.isActive else {
             previousDockGroundFrame = nil
             dockBerms = [:]
             return false
         }
+        // Пропущенный AX-снимок не сбрасывает грань: следующий кадр продолжит расчистку с прежнего места.
+        guard dockPresentationFrame != nil, let frame else { return false }
         defer { previousDockGroundFrame = frame }
         guard let previous = previousDockGroundFrame, previous.intersects(frame),
               abs(previous.minY - frame.minY) < 2 else { return false }

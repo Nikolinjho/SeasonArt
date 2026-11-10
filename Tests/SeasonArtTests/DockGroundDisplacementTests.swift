@@ -62,6 +62,7 @@ final class DockGroundDisplacementTests: XCTestCase {
 
     func testСлепленныйВалНеРассыпаетсяПослеСжатияDock() throws {
         let (value, ground) = try scene()
+        let before = mass(ground)
         for step in 1...10 {
             value.dockPresentationFrame = body.insetBy(dx: -CGFloat(step) * 2, dy: 0)
             value.updateDockSnowSurface(dt: 1 / 60, cursor: away)
@@ -69,10 +70,48 @@ final class DockGroundDisplacementTests: XCTestCase {
         let shaped = ground.heights
         value.dockPresentationFrame = body
         for _ in 0..<600 { _ = value.step(dt: 1 / 60, cursor: away) }
-        // Тонкий рыхлый слой на дне борозды отвал не прессовал, ему можно осесть.
-        let berm = ground.heights.indices.filter { ground.centerX($0) < 80 || ground.centerX($0) > 420 }
+        // Срез у бывшей грани может стать крутым округлым краем, сам вал держит форму.
+        let berm = ground.heights.indices.filter { ground.centerX($0) < 50 || ground.centerX($0) > 450 }
         let worst = berm.map { abs(shaped[$0] - ground.heights[$0]) }.max() ?? 0
         XCTAssertLessThan(worst, 0.01, "Клейкий снег держит форму, которую ему придал Dock")
+        var steepest: Float = 0
+        for i in ground.heights.indices.dropLast() where ground.centerX(i) < 98 {
+            steepest = max(steepest, abs(ground.heights[i + 1] - ground.heights[i]) / ground.columnWidth)
+        }
+        XCTAssertLessThan(steepest, 2.2, "Срез у борозды крутой, но не отвесный")
+        XCTAssertEqual(mass(ground), before, accuracy: 0.05)
+    }
+
+    func testБыстроеРасширениеНеОставляетСтолбиковВБорозде() throws {
+        let (value, ground) = try scene()
+        // Крупные шаги, не кратные ширине колонки, как при быстром жесте.
+        for grow: CGFloat in [7, 19, 33] {
+            value.dockPresentationFrame = body.insetBy(dx: -grow, dy: 0)
+            value.updateDockSnowSurface(dt: 1 / 60, cursor: away)
+        }
+        for i in ground.heights.indices where ground.centerX(i) >= 67 && ground.centerX(i) < 100 {
+            XCTAssertLessThanOrEqual(ground.heights[i], 6.01, "Колонка x=\(ground.centerX(i)) осталась в полосе грани")
+        }
+    }
+
+    func testПропущенныйСнимокDockНеСоздаётВторойВал() throws {
+        let (value, ground) = try scene()
+        let before = mass(ground)
+        value.dockPresentationFrame = body.insetBy(dx: -10, dy: 0)
+        value.updateDockSnowSurface(dt: 1 / 60, cursor: away)
+        value.dockPresentationFrame = nil
+        value.updateDockSnowSurface(dt: 1 / 60, cursor: away)
+        value.dockPresentationFrame = body.insetBy(dx: -20, dy: 0)
+        value.updateDockSnowSurface(dt: 1 / 60, cursor: away)
+        for i in ground.heights.indices where ground.centerX(i) >= 81 && ground.centerX(i) < 100 {
+            XCTAssertLessThanOrEqual(ground.heights[i], 6.01, "После пропуска грань продолжает расчищать полосу")
+        }
+        var peaks = 0
+        for i in ground.heights.indices.dropFirst().dropLast() where ground.centerX(i) < 80 {
+            if ground.heights[i] > ground.heights[i - 1] + 0.01 && ground.heights[i] > ground.heights[i + 1] + 0.01 { peaks += 1 }
+        }
+        XCTAssertEqual(peaks, 1, "Слева один пологий вал: единственный гребень у грани")
+        XCTAssertEqual(mass(ground), before, accuracy: 0.05)
     }
 
     func testОтодвинутыйСнегНеСтекаетОбратноПодDock() throws {

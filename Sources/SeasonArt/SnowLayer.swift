@@ -10,6 +10,9 @@ final class SnowLayer {
     private(set) var heights: [Float]
     /// How much of each column's snow a wall has packed down already, so it isn't packed again.
     private(set) var packed: [Float]
+    /// Самый крутой склон слепленного снега, около 63°.
+    static let cohesiveSlope: Float = 2
+
     /// Слепленный снег: снег клейкий и держит форму, которую ему придали. По склону течёт только рыхлый снег поверх него.
     private(set) var cohesive: [Float]
     /// The bed under each column relative to `origin.y`; zero along a flat edge, negative where a corner rounds off.
@@ -327,8 +330,12 @@ final class SnowLayer {
             packed.withUnsafeMutableBufferPointer { p in
                 bed.withUnsafeBufferPointer { b in
                     supported.withUnsafeBufferPointer { held in
-                        // Течёт только рыхлый снег поверх слепленного.
+                        // Течёт только рыхлый снег поверх слепленного. Слепленный держит крутой склон, но не отвес.
+                        let cohesiveLimit = Self.cohesiveSlope * columnWidth
                         func loose(_ i: Int) -> Float { max(0, h[i] - stuck[i]) }
+                        func movable(_ i: Int, over difference: Float) -> Float {
+                            difference > cohesiveLimit + 0.01 ? min(h[i], (difference - cohesiveLimit) * 0.5 + loose(i)) : loose(i)
+                        }
                         // Moves snow between columns, packed snow in proportion.
                         func shift(_ amount: Float, from a: Int, to c: Int) {
                             let share = h[a] > 0 ? min(p[a], amount * p[a] / h[a]) : 0
@@ -348,11 +355,11 @@ final class SnowLayer {
                                 let ahead = limit + min(max(fall, 0), steepest)
                                 let behind = limit + min(max(-fall, 0), steepest)
                                 if difference > ahead + 0.01 {
-                                    let transfer = min((difference - ahead) * 0.5, loose(i))
+                                    let transfer = min((difference - ahead) * 0.5, movable(i, over: difference))
                                     shift(transfer, from: i, to: i + 1)
                                     if transfer > 0 { moved = true }
                                 } else if difference < -behind - 0.01 {
-                                    let transfer = min((-difference - behind) * 0.5, loose(i + 1))
+                                    let transfer = min((-difference - behind) * 0.5, movable(i + 1, over: -difference))
                                     shift(transfer, from: i + 1, to: i)
                                     if transfer > 0 { moved = true }
                                 }
@@ -376,7 +383,8 @@ final class SnowLayer {
                         }
                         // Pulls each slope toward its neighbours' average: rounds crests and notches, leaves even slopes alone.
                         for i in 1..<max(1, count - 2) where !(held[i - 1] || held[i] || held[i + 1] || held[i + 2]) {
-                            if let wall = barrier, wall.contains(i) || wall.contains(i + 1) { continue }
+                            // Высота под корпусом не участвует в сглаживании соседей, иначе снег подкачивается к стене.
+                            if let wall = barrier, (i - 1...i + 2).contains(where: wall.contains) { continue }
                             let s0 = b[i - 1] + h[i - 1], s1 = b[i] + h[i], s2 = b[i + 1] + h[i + 1], s3 = b[i + 2] + h[i + 2]
                             let kink = (s1 - s2) - 0.5 * ((s0 - s1) + (s2 - s3))
                             guard abs(kink) > 0.02 else { continue }
@@ -388,6 +396,8 @@ final class SnowLayer {
                 }
             }
         }
+        // Оплывший слепленный снег уходит вместе с высотой столба.
+        for i in cohesive.indices where cohesive[i] > heights[i] { cohesive[i] = heights[i] }
         spill.left += spilledLeft * columnWidth
         spill.right += spilledRight * columnWidth
         return moved
