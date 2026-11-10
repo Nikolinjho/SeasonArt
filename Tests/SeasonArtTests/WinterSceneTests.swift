@@ -40,7 +40,7 @@ final class WinterSceneTests: XCTestCase {
         scene.surfaceHeight = { _, _ in 30 }
         _ = scene.create(.medium, at: CGPoint(x: 200, y: 500))
         scene.step(dt: 100)
-        XCTAssertGreaterThan(scene.objects[0].center.y, 490, "После паузы шаг ограничен")
+        XCTAssertEqual(scene.objects[0].center.y, 462.5, accuracy: 1, "После паузы догоняется не больше четверти секунды")
         settle(scene)
         XCTAssertEqual(scene.objects[0].frame.minY, 30, accuracy: 0.01)
     }

@@ -33,6 +33,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var snowfallHeld = false
     private var halloween = false
     private var statusItem: NSStatusItem!
+    /// Без строки в Dock приложение считается фоновым: App Nap сдвигает его таймеры и физика подтормаживает.
+    private var animationActivity: NSObjectProtocol?
     private let snowfallSlider = SnowfallSlider()
     private var accumulateItem: NSMenuItem!
     private var meltItem: NSMenuItem!
@@ -72,6 +74,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Preferences.registerDefaults()
+        animationActivity = ProcessInfo.processInfo.beginActivity(
+            options: [.userInitiatedAllowingIdleSystemSleep, .latencyCritical],
+            reason: "Сезонные эффекты анимируются поверх рабочего стола")
         guard let device = MTLCreateSystemDefaultDevice() else {
             NSApp.activate()
             Self.startupErrorAlert(.metalUnavailable).runModal()

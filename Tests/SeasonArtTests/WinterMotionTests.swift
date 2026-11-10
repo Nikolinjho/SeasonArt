@@ -90,9 +90,10 @@ final class WinterMotionTests: XCTestCase {
             scene.endDragging(id)
             scene.step(dt: 1 / 120)
             let start = scene.objects[0].center.x
+            let startRotation = scene.objects[0].rotation
             for _ in 0..<fps { scene.step(dt: 1 / Double(fps)) }
             positions.append(scene.objects[0].center.x)
-            XCTAssertEqual(scene.objects[0].rotation, -(scene.objects[0].center.x - start) / 14, accuracy: 0.001)
+            XCTAssertEqual(scene.objects[0].rotation - startRotation, -(scene.objects[0].center.x - start) / 14, accuracy: 0.001)
         }
         XCTAssertLessThan(try XCTUnwrap(positions.max()) - XCTUnwrap(positions.min()), 0.01)
     }

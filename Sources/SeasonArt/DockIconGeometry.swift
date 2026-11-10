@@ -6,10 +6,16 @@ final class DockIconGeometry {
     private var refreshedAt: CFTimeInterval = -10
     private var settings = DockMagnificationSettings.disabled
     private var frames: [DockSnowIcon]?
-    private var profiles: [String: [Float]] = [:]
     private var nearAt: CFTimeInterval = -10
     private var presentationFrame: CGRect?
     private var sampledAt: CFTimeInterval = -10
+    /// AX-ответ Dock может идти десятки миллисекунд: опрос идёт в фоне, кадр берёт последний готовый снимок.
+    private let queue = DispatchQueue(label: "dev.nikoko.SeasonArt.dock-geometry", qos: .userInteractive)
+    private let lock = NSLock()
+    private var sampling = false
+    private var sampled: (icons: [DockSnowIcon]?, dock: CGRect?)?
+    /// Профили крыш меняются только в фоновой очереди.
+    private var queueProfiles: [String: [Float]] = [:]
 
     static var hasAccess: Bool { AXIsProcessTrusted() }
 
@@ -34,7 +40,18 @@ final class DockIconGeometry {
         guard let dock else {
             frames = nil
             presentationFrame = nil
+            lock.withLock { sampled = nil }
             return (settings, nil, nil)
+        }
+        if let ready = lock.withLock({ () -> (icons: [DockSnowIcon]?, dock: CGRect?)? in
+            defer { sampled = nil }
+            return sampled
+        }) {
+            frames = ready.icons?.filter {
+                $0.frame.width <= settings.largeSize * 1.8 && $0.frame.width > 0
+                    && $0.frame.maxX >= dock.minX && $0.frame.minX <= dock.maxX
+            }
+            presentationFrame = ready.dock
         }
         if cursor.x >= dock.minX - settings.largeSize, cursor.x <= dock.maxX + settings.largeSize,
            cursor.y >= dock.minY - 4, cursor.y <= dock.maxY + settings.largeSize - settings.normalSize + 12 {
@@ -44,14 +61,23 @@ final class DockIconGeometry {
         if !settings.isActive || (now - nearAt >= 0.4 && !stillMagnified), now - sampledAt < 0.5 {
             return (settings, frames, presentationFrame)
         }
+        // Новый запрос уходит, только когда предыдущий ответ уже получен: очередь не копит устаревшие опросы.
+        guard !lock.withLock({ sampling }) else { return (settings, frames, presentationFrame) }
         sampledAt = now
-        // Вызов идёт один раз на кадр. Дополнительный предел 30 Гц делал движение ступенчатым.
-        frames = iconFrames(screen: screen, primaryHeight: primaryHeight, dock: dock)?.filter {
-            $0.frame.width <= settings.largeSize * 1.8 && $0.frame.width > 0
-                && $0.frame.maxX >= dock.minX && $0.frame.minX <= dock.maxX
+        lock.withLock { sampling = true }
+        queue.async { [weak self] in
+            guard let self else { return }
+            let result = sample(screen: screen, primaryHeight: primaryHeight, dock: dock)
+            lock.withLock {
+                self.sampled = result
+                self.sampling = false
+            }
         }
         return (settings, frames, presentationFrame)
     }
+
+    /// Дожидается фонового опроса. Нужен проверкам, кадр никогда не ждёт.
+    func finishPendingSample() { queue.sync {} }
 
     /// Dock обновляет размеры значков раньше части AXPosition. Их текущая раскладка задаётся рамкой списка.
     static func laidOutFrames(in list: CGRect, items: [CGRect]) -> [CGRect] {
@@ -64,8 +90,13 @@ final class DockIconGeometry {
         }
     }
 
-    private func iconFrames(screen: CGRect, primaryHeight: CGFloat, dock: CGRect) -> [DockSnowIcon]? {
-        presentationFrame = nil
+    private func sample(screen: CGRect, primaryHeight: CGFloat, dock: CGRect) -> (icons: [DockSnowIcon]?, dock: CGRect?) {
+        var presentationFrame: CGRect?
+        let icons = iconFrames(screen: screen, primaryHeight: primaryHeight, dock: dock, presentationFrame: &presentationFrame)
+        return (icons, presentationFrame)
+    }
+
+    private func iconFrames(screen: CGRect, primaryHeight: CGFloat, dock: CGRect, presentationFrame: inout CGRect?) -> [DockSnowIcon]? {
         guard AXIsProcessTrusted(),
               let pid = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.dock").first?.processIdentifier
         else { return nil }
@@ -123,11 +154,11 @@ final class DockIconGeometry {
                     continue
                 }
                 let profile: [Float]
-                if let existing = profiles[key] {
+                if let existing = queueProfiles[key] {
                     profile = existing
                 } else {
                     guard let image = loadImage(), let measured = Self.roofProfile(of: image) else { continue }
-                    profiles[key] = measured
+                    queueProfiles[key] = measured
                     profile = measured
                 }
                 // AXDockItem включает строку индикатора и свободное место над изображением.

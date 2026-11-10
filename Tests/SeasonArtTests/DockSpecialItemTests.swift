@@ -34,9 +34,14 @@ final class DockSpecialItemTests: XCTestCase {
         let trash = try XCTUnwrap(items.first { $0.subrole == "AXTrashDockItem" })
         let screen = try XCTUnwrap(NSScreen.screens.first)
         let geometry = DockIconGeometry()
-        let sample = geometry.update(now: 1, screen: screen.frame, primaryHeight: screen.frame.maxY,
-            dock: CGRect(x: 0, y: 6, width: screen.frame.width, height: 60),
-            cursor: CGPoint(x: trash.frame.midX, y: 30))
+        func sampleNear(at now: CFTimeInterval) -> (settings: DockMagnificationSettings, icons: [DockSnowIcon]?, dock: CGRect?) {
+            geometry.update(now: now, screen: screen.frame, primaryHeight: screen.frame.maxY,
+                dock: CGRect(x: 0, y: 6, width: screen.frame.width, height: 60),
+                cursor: CGPoint(x: trash.frame.midX, y: 30))
+        }
+        _ = sampleNear(at: 1)
+        geometry.finishPendingSample()
+        let sample = sampleNear(at: 1.01)
         guard sample.settings.isActive else { throw XCTSkip("Нужно включённое увеличение Dock") }
         let icons = try XCTUnwrap(sample.icons)
         XCTAssertTrue(icons.contains { abs($0.frame.midX - trash.frame.midX) < 4 },
@@ -48,12 +53,18 @@ final class DockSpecialItemTests: XCTestCase {
         _ = try nativeItems()
         let geometry = DockIconGeometry()
         let dock = CGRect(x: 0, y: 6, width: screen.frame.width, height: 60)
-        let near = geometry.update(now: 1, screen: screen.frame, primaryHeight: screen.frame.maxY,
+        _ = geometry.update(now: 1, screen: screen.frame, primaryHeight: screen.frame.maxY,
+                            dock: dock, cursor: CGPoint(x: screen.frame.midX, y: 30))
+        geometry.finishPendingSample()
+        let near = geometry.update(now: 1.01, screen: screen.frame, primaryHeight: screen.frame.maxY,
                                    dock: dock, cursor: CGPoint(x: screen.frame.midX, y: 30))
         guard near.icons?.contains(where: { $0.badge != nil }) == true else {
             throw XCTSkip("Нужен видимый бейдж Dock и включённое увеличение")
         }
-        let away = geometry.update(now: 3, screen: screen.frame, primaryHeight: screen.frame.maxY,
+        _ = geometry.update(now: 3, screen: screen.frame, primaryHeight: screen.frame.maxY,
+                            dock: dock, cursor: CGPoint(x: -1000, y: -1000))
+        geometry.finishPendingSample()
+        let away = geometry.update(now: 3.01, screen: screen.frame, primaryHeight: screen.frame.maxY,
                                    dock: dock, cursor: CGPoint(x: -1000, y: -1000))
         XCTAssertTrue(away.icons?.contains(where: { $0.badge != nil }) == true,
                       "Уведомления остаются опорой для снега без наведения")

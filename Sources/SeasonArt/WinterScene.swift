@@ -121,6 +121,10 @@ private enum WinterMotion {
     static let sleepSpeed: CGFloat = 2
     static let bounceThreshold: CGFloat = 220
     static let restitution: CGFloat = 0.17
+    /// Фиксированный шаг: на экранах 60 и 120 Гц в кадр помещается целое число шагов.
+    static let fixedStep: TimeInterval = 1.0 / 240
+    /// После сна или долгой задержки шары не пролетают экран за один кадр.
+    static let maximumCatchUp: TimeInterval = 0.25
 }
 
 private enum WinterContact: Equatable {
@@ -158,6 +162,10 @@ final class WinterScene {
     private var captured: UUID?
     private var dragHistory: [(duration: TimeInterval, velocity: CGVector)] = []
     private var fastDragSample: (duration: TimeInterval, velocity: CGVector)?
+    /// Реальное время, ещё не пройденное фиксированными шагами.
+    private var pendingTime: TimeInterval = 0
+    /// Центры после последнего решения контактов.
+    private var solvedCenters: [UUID: CGPoint] = [:]
 
     init(width: CGFloat, height: CGFloat) {
         self.width = max(0, width)
@@ -389,12 +397,25 @@ final class WinterScene {
         wakeUnsupportedObjects()
     }
 
+    /// Продвигает физику на реальное время кадра фиксированными шагами. Задержка догоняется, а не замедляет движение.
     func step(dt: TimeInterval) {
         guard dt.isFinite, dt > 0 else { return }
-        let duration = min(dt, 1.0 / 30)
-        let steps = max(1, Int(ceil(duration * (objects.count > 1 ? 360 : 120))))
-        for _ in 0..<steps { integrate(elapsed: CGFloat(duration / Double(steps))) }
-        assembleSettledSnowmen(dt: duration)
+        pendingTime = min(pendingTime + dt, WinterMotion.maximumCatchUp)
+        guard isMoving else {
+            // Спящим шарам достаточно одной проверки опор: снег под ними мог осесть.
+            pendingTime = 0
+            integrate(elapsed: 0)
+            assembleSettledSnowmen(dt: dt)
+            return
+        }
+        var elapsed: TimeInterval = 0
+        while pendingTime >= WinterMotion.fixedStep - 1e-9 {
+            integrate(elapsed: CGFloat(WinterMotion.fixedStep))
+            pendingTime -= WinterMotion.fixedStep
+            elapsed += WinterMotion.fixedStep
+        }
+        pendingTime = max(0, pendingTime)
+        if elapsed > 0 { assembleSettledSnowmen(dt: elapsed) }
     }
 
     /// Обновляет контакт в кадре Dock, не продвигая время физики повторно.
@@ -551,17 +572,19 @@ final class WinterScene {
     }
 
     private func wakeUnsupportedObjects() {
+        guard !objectSupports.isEmpty else { return }
         var changed = true
         while changed {
             changed = false
-            for index in objects.indices {
-                let id = objects[index].id
-                guard let support = objectSupports[id] else { continue }
-                if let base = objects.first(where: { $0.id == support.id }),
-                   !base.parked, !base.isDragged, base.center == support.center, base.radii == support.radii,
-                   objects[index].center == support.carriedCenter,
-                   resting.contains(base.id), base.velocity.dx == 0, objects[index].velocity.dx == 0 {
-                    continue
+            let indices = Dictionary(objects.indices.map { (objects[$0].id, $0) }, uniquingKeysWith: { first, _ in first })
+            for (id, support) in objectSupports {
+                if let index = indices[id], let baseIndex = indices[support.id] {
+                    let base = objects[baseIndex]
+                    if !base.parked, !base.isDragged, base.center == support.center, base.radii == support.radii,
+                       objects[index].center == support.carriedCenter,
+                       resting.contains(base.id), base.velocity.dx == 0, objects[index].velocity.dx == 0 {
+                        continue
+                    }
                 }
                 objectSupports.removeValue(forKey: id)
                 resting.remove(id)
@@ -574,6 +597,13 @@ final class WinterScene {
     private func resolveObjectContacts() {
         let active = objects.indices.filter { !objects[$0].parked && !objects[$0].isDragged }
         guard active.count > 1 else { return }
+        // Спящий шар на месте прошлого решения уже разведён с такими же соседями.
+        func sleeps(_ index: Int) -> Bool {
+            resting.contains(objects[index].id) && objects[index].velocity == .zero
+                && solvedCenters[objects[index].id] == objects[index].center
+        }
+        defer { solvedCenters = Dictionary(objects.map { ($0.id, $0.center) }, uniquingKeysWith: { first, _ in first }) }
+        guard active.contains(where: { !sleeps($0) }) else { return }
         var components = objects.map(\.collisionBallFrames)
         let inverseMasses = objects.map { object in 1 / object.radii.reduce(0) { $0 + pow($1, 3) } }
         for _ in 0..<12 {
@@ -587,6 +617,7 @@ final class WinterScene {
                     if bounds[b].minX > bounds[a].maxX + 0.01 { break }
                     if bounds[b].minY > bounds[a].maxY + 0.01 ||
                        bounds[a].minY > bounds[b].maxY + 0.01 { continue }
+                    if sleeps(a) && sleeps(b) { continue }
                     let framesA = components[a]
                     let framesB = components[b]
                     for (componentA, frameA) in framesA.enumerated() {
@@ -686,6 +717,7 @@ final class WinterScene {
 
     func removeAll() {
         objects.removeAll()
+        pendingTime = 0
         settledStacks.removeAll()
         resting.removeAll()
         objectSupports.removeAll()

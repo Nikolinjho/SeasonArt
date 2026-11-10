@@ -1,6 +1,39 @@
 import AppKit
 import QuartzCore
 
+/// Тикает от экрана, пока сцена движется, и редким таймером в покое.
+private final class WinterTicker: NSObject {
+    /// 0 означает синхронизацию с обновлением экрана.
+    let interval: TimeInterval
+    private var link: CADisplayLink?
+    private var timer: Timer?
+    private let action: () -> Void
+
+    init(interval: TimeInterval, screen: NSScreen?, action: @escaping () -> Void) {
+        self.interval = interval
+        self.action = action
+        super.init()
+        if interval == 0, let screen {
+            let link = screen.displayLink(target: self, selector: #selector(fire))
+            link.add(to: .main, forMode: .common)
+            self.link = link
+        } else {
+            let timer = Timer(timeInterval: interval > 0 ? interval : 1.0 / 60, repeats: true) { [weak self] _ in self?.fire() }
+            RunLoop.main.add(timer, forMode: .common)
+            self.timer = timer
+        }
+    }
+
+    @objc private func fire() { action() }
+
+    func invalidate() {
+        link?.invalidate()
+        link = nil
+        timer?.invalidate()
+        timer = nil
+    }
+}
+
 /// Связывает чистую модель с небольшими интерактивными окнами одного экрана.
 final class WinterSceneController {
     let scene: WinterScene
@@ -10,7 +43,7 @@ final class WinterSceneController {
     private var windows: [UUID: WinterObjectWindow] = [:]
     private var plowWindow: WinterPlowWindow?
     private var shelf: WindowSurface?
-    private var timer: Timer?
+    private var timer: WinterTicker?
     private var lastFrame: CFTimeInterval = 0
     private var syncing = false
     private var closed = false
@@ -307,13 +340,12 @@ final class WinterSceneController {
             timer = nil
             return
         }
-        let interval = scene.isMoving || plow != nil ? 1.0 / 60 : 0.2
-        guard timer == nil || abs(timer!.timeInterval - interval) > 0.001 else { return }
+        let interval: TimeInterval = scene.isMoving || plow != nil ? 0 : 0.2
+        guard timer?.interval != interval else { return }
         timer?.invalidate()
         lastFrame = CACurrentMediaTime()
-        let next = Timer(timeInterval: interval, repeats: true) { [weak self] _ in self?.tick() }
-        RunLoop.main.add(next, forMode: .common)
-        timer = next
+        let screen = NSScreen.screens.first { $0.frame == screenFrame } ?? NSScreen.main
+        timer = WinterTicker(interval: interval, screen: screen) { [weak self] in self?.tick() }
     }
 
     private func tick() {
@@ -321,7 +353,8 @@ final class WinterSceneController {
             cancelSculpting()
         }
         let now = CACurrentMediaTime()
-        let dt = min(max(now - lastFrame, 0), 1.0 / 30)
+        // Сцена сама ограничивает догонку. Здесь время не обрезается, иначе задержка превращается в замедление.
+        let dt = min(max(now - lastFrame, 0), 0.25)
         lastFrame = now
         scene.step(dt: dt)
         if var pass = plow, shelf?.id == pass.surfaceID {
