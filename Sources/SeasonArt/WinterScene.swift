@@ -214,7 +214,10 @@ final class WinterScene {
         guard hasCapacity, WinterBallGeometry.isValid(radius), point.x.isFinite, point.y.isFinite else { return nil }
         func blockers(at center: CGPoint) -> [Int] { self.blockers(radius: radius, at: center) }
         func clampedX(_ x: CGFloat) -> CGFloat { min(max(x, radius), max(radius, width - radius)) }
-        // Сначала та же опора рядом, на расстоянии до трёх диаметров, затем сверху на мешающие фигуры.
+        // Новый шар появляется там, где его лепили, и отодвигает соседей, если за ними есть место.
+        let spot = CGPoint(x: clampedX(point.x), y: point.y)
+        if makeRoom(radius: radius, at: spot) { return create(radius: radius, at: spot) }
+        // Иначе та же опора рядом, на расстоянии до трёх диаметров, затем сверху на мешающие фигуры.
         for offset in 0...24 {
             for side: CGFloat in offset == 0 ? [0] : [-1, 1] {
                 let center = CGPoint(x: clampedX(point.x + side * CGFloat(offset) * radius / 4), y: point.y)
@@ -230,6 +233,55 @@ final class WinterScene {
         // Экран заполнен до верха: шар появляется как раньше, решатель разведёт его с соседями.
         guard center.y + radius <= height, blockers(at: center).isEmpty else { return create(radius: radius, at: point) }
         return create(radius: radius, at: center)
+    }
+
+    /// Отодвигает фигуры вбок от круга, по цепочке. Если цепочка упирается в край экрана, ничего не меняет и возвращает false.
+    @discardableResult
+    func makeRoom(radius: CGFloat, at center: CGPoint) -> Bool {
+        let saved = objects
+        var pushers: [(center: CGPoint, radius: CGFloat, direction: CGFloat?, owner: UUID?)] = [(center, radius, nil, nil)]
+        var moved: Set<UUID> = []
+        while let pusher = pushers.popLast() {
+            for index in objects.indices where !objects[index].parked && !objects[index].isDragged && objects[index].id != pusher.owner {
+                var shift: CGFloat = 0
+                var direction = pusher.direction ?? (objects[index].center.x >= pusher.center.x ? 1 : -1)
+                for circle in objects[index].ballCircles {
+                    let dy = circle.center.y - pusher.center.y
+                    let reach = circle.radius + pusher.radius
+                    guard abs(dy) < reach - 0.01 else { continue }
+                    let dx = circle.center.x - pusher.center.x
+                    guard hypot(dx, dy) < reach - 0.01 else { continue }
+                    if pusher.direction == nil, abs(dx) < 0.01 { direction = 1 }
+                    // Сдвиг вдоль направления до касания кругов.
+                    let needed = sqrt(reach * reach - dy * dy) - dx * direction
+                    shift = max(shift, needed + 0.01)
+                }
+                guard shift > 0 else { continue }
+                if moved.contains(objects[index].id) && pusher.direction == nil { continue }
+                let half = objects[index].frame.width / 2
+                let target = objects[index].center.x + shift * direction
+                guard target - half >= -0.01, target + half <= width + 0.01, moved.count < Self.maximumObjects * 2 else {
+                    objects = saved
+                    return false
+                }
+                objects[index].center.x = target
+                objects[index].velocity = .zero
+                moved.insert(objects[index].id)
+                for circle in objects[index].ballCircles { pushers.append((circle.center, circle.radius, direction, objects[index].id)) }
+            }
+        }
+        for index in objects.indices where moved.contains(objects[index].id) {
+            resting.remove(objects[index].id)
+            objectSupports.removeValue(forKey: objects[index].id)
+            if let support = objects[index].support, let surface = surfaces[support],
+               objects[index].center.x - objects[index].frame.width / 2 < surface.frame.minX
+                || objects[index].center.x + objects[index].frame.width / 2 > surface.frame.maxX {
+                // Отодвинутый с края окна шар падает.
+                objects[index].support = nil
+            }
+        }
+        wakeUnsupportedObjects()
+        return true
     }
 
     /// Место занято шаром любой видимой фигуры.

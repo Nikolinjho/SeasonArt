@@ -70,17 +70,27 @@ final class WinterContactTests: XCTestCase {
         XCTAssertEqual(scene.objects.count, 1, "Поставленный шар собирается в фигуру")
     }
 
-    func testНовыйШарПоявляетсяВСвободномМесте() throws {
+    func testНовыйШарОтталкиваетСоседаИПоявляетсяНаМестеЛепки() throws {
         let scene = WinterScene(width: 800, height: 600)
         _ = scene.create(radius: 30, at: CGPoint(x: 300, y: 30))
-        let before = scene.objects[0].center
-        let id = try XCTUnwrap(scene.place(radius: 20, near: CGPoint(x: 310, y: 20)))
+        run(scene, seconds: 0.5)
+        let id = try XCTUnwrap(scene.place(radius: 20, near: CGPoint(x: 270, y: 20)))
         XCTAssertLessThan(worstOverlap(scene), 0.01, "Шар не создаётся внутри другого")
         let placed = try XCTUnwrap(scene.objects.first { $0.id == id })
-        XCTAssertLessThan(abs(placed.center.x - 310), 130, "Свободное место ищется рядом с местом лепки")
+        XCTAssertEqual(placed.center.x, 270, accuracy: 0.01, "Новый шар появляется там, где его лепили")
+        XCTAssertGreaterThan(scene.objects[0].center.x, 300, "Готовый шар отодвинут дальше")
         run(scene, seconds: 1)
-        XCTAssertEqual(scene.objects[0].center.x, before.x, accuracy: 0.5, "Соседний шар не отскакивает")
         XCTAssertLessThan(worstOverlap(scene), 0.2)
+    }
+
+    func testНовыйШарТолкаетЦепочкуШаров() throws {
+        let scene = WinterScene(width: 800, height: 600)
+        _ = scene.create(radius: 20, at: CGPoint(x: 300, y: 20))
+        _ = scene.create(radius: 20, at: CGPoint(x: 340, y: 20))
+        run(scene, seconds: 0.5)
+        let id = try XCTUnwrap(scene.place(radius: 20, near: CGPoint(x: 280, y: 20)))
+        XCTAssertEqual(scene.objects.first { $0.id == id }!.center.x, 280, accuracy: 0.01)
+        XCTAssertLessThan(worstOverlap(scene), 0.01, "Толкаемый шар толкает следующий")
     }
 
     func testШарБезМестаЛожитсяСверху() throws {

@@ -162,10 +162,15 @@ final class WinterSceneController {
                 sculptingGesture = SnowSculptingGesture(source: source, at: start, paced: true)
             }
             sculptingGesture?.include(point, dt: dt)
-            // Черновик не врастает в соседний шар: лепка заканчивается на текущем размере.
-            let touches = sculptingGesture.flatMap { gesture in
-                gesture.radius.map { !scene.isFree(radius: $0, at: CGPoint(x: gesture.lastPoint.x, y: gesture.center.y)) }
-            } ?? false
+            // Растущий снежок отталкивает соседей. Лепка заканчивается, только если толкать их некуда.
+            var touches = false
+            if let gesture = sculptingGesture, let radius = gesture.radius {
+                let center = CGPoint(x: gesture.lastPoint.x, y: gesture.center.y)
+                if !scene.isFree(radius: radius, at: center) {
+                    touches = !scene.makeRoom(radius: radius, at: center)
+                    if !touches { refresh() }
+                }
+            }
             if sculptingGesture?.isFull == true || touches {
                 finishSculpting(waitForExit: true)
             } else if let gesture = sculptingGesture, gesture.radius != nil {
