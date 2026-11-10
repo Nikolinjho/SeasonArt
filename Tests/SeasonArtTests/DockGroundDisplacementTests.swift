@@ -114,16 +114,22 @@ final class DockGroundDisplacementTests: XCTestCase {
         XCTAssertEqual(mass(ground), before, accuracy: 0.05)
     }
 
-    func testОтодвинутыйСнегНеСтекаетОбратноПодDock() throws {
+    func testУГраниDockНетНевидимойСтены() throws {
         let (value, ground) = try scene()
         value.dockPresentationFrame = expanded
         value.updateDockSnowSurface(dt: 1 / 60, cursor: away)
-        let cleared = ground.heights[ground.clampedIndex(at: 90)]
-        let bank = ground.heights[ground.clampedIndex(at: 70)]
+        let bank = ground.heights[ground.clampedIndex(at: 60)]
+        // Рыхлый снег, насыпанный вплотную к грани, ложится пластично, а не стоит столбом.
+        let edge = ground.clampedIndex(at: 79)
+        ground.set(edge, ground.heights[edge] + 40)
+        ground.refreshTop()
         for _ in 0..<600 { _ = value.step(dt: 1 / 60, cursor: away) }
-        XCTAssertEqual(ground.heights[ground.clampedIndex(at: 90)], cleared, accuracy: 0.5,
-                       "Под расширенным Dock снег из боковой горки не появляется")
-        XCTAssertGreaterThan(ground.heights[ground.clampedIndex(at: 70)], bank * 0.8, "Горка у грани не утекает под корпус")
+        var steepest: Float = 0
+        for i in ground.heights.indices.dropLast() where ground.centerX(i) > 40 && ground.centerX(i) < 100 {
+            steepest = max(steepest, abs(ground.heights[i + 1] - ground.heights[i]) / ground.columnWidth)
+        }
+        XCTAssertLessThan(steepest, 1.3, "Снег у грани оплывает мягким скатом, без отвеса и шипа")
+        XCTAssertGreaterThan(ground.heights[ground.clampedIndex(at: 60)], bank * 0.8, "Вал не расползается целиком")
     }
 
     func testНеподвижныйDockИСжатиеНеПересобираютБоковыеСугробы() throws {

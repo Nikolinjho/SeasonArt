@@ -10,8 +10,8 @@ final class SnowLayer {
     private(set) var heights: [Float]
     /// How much of each column's snow a wall has packed down already, so it isn't packed again.
     private(set) var packed: [Float]
-    /// Самый крутой склон слепленного снега, около 63°.
-    static let cohesiveSlope: Float = 2
+    /// Самый крутой склон слепленного снега, около 50°: он пластичен и оплывает мягким скатом.
+    static let cohesiveSlope: Float = 1.2
 
     /// Слепленный снег: снег клейкий и держит форму, которую ему придали. По склону течёт только рыхлый снег поверх него.
     private(set) var cohesive: [Float]
@@ -68,8 +68,6 @@ final class SnowLayer {
     private let phases: (Float, Float)
     private var corner: (radius: Float, exponent: Float) = (0, 2)
     private var supported: [Bool]
-    /// Колонки под твёрдым телом: релаксация не переносит в них снег и не вытягивает его оттуда.
-    var barrier: ClosedRange<Int>?
     private var supportedRange: ClosedRange<Int>?
     private var parity = false
 
@@ -349,7 +347,6 @@ final class SnowLayer {
                             for k in 0..<(count - 1) {
                                 let i = forward ? k : count - 2 - k
                                 if held[i] || held[i + 1] { continue }
-                                if let wall = barrier, wall.contains(i) || wall.contains(i + 1) { continue }
                                 let difference = (b[i] + h[i]) - (b[i + 1] + h[i + 1])
                                 let fall = b[i] - b[i + 1]
                                 let ahead = limit + min(max(fall, 0), steepest)
@@ -383,8 +380,6 @@ final class SnowLayer {
                         }
                         // Pulls each slope toward its neighbours' average: rounds crests and notches, leaves even slopes alone.
                         for i in 1..<max(1, count - 2) where !(held[i - 1] || held[i] || held[i + 1] || held[i + 2]) {
-                            // Высота под корпусом не участвует в сглаживании соседей, иначе снег подкачивается к стене.
-                            if let wall = barrier, (i - 1...i + 2).contains(where: wall.contains) { continue }
                             let s0 = b[i - 1] + h[i - 1], s1 = b[i] + h[i], s2 = b[i + 1] + h[i + 1], s3 = b[i + 2] + h[i + 2]
                             let kink = (s1 - s2) - 0.5 * ((s0 - s1) + (s2 - s3))
                             guard abs(kink) > 0.02 else { continue }
