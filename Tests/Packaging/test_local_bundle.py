@@ -108,7 +108,7 @@ exit 99
         self.assertEqual(info["LSMinimumSystemVersion"], "14.0")
         self.assertFalse([key for key in info if key.startswith("SU")])
         self.assertFalse(list(bundle.rglob("*Sparkle*")))
-        for name in ("LICENSE", "THIRD_PARTY.md"):
+        for name in ("LICENSE", "THIRD_PARTY.md", "Box2D-LICENSE"):
             self.assertEqual((bundle / "Contents/Resources" / name).read_bytes(),
                              (ROOT / name).read_bytes())
         verified = subprocess.run(["codesign", "--verify", "--deep", "--strict", str(bundle)],

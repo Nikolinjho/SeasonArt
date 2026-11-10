@@ -26,6 +26,7 @@ mkdir -p "$seasonart_staging/Contents/MacOS" "$seasonart_staging/Contents/Resour
 cp "$seasonart_binary_dir/SeasonArt" "$seasonart_staging/Contents/MacOS/SeasonArt"
 cp "$seasonart_root/Resources/Info.plist" "$seasonart_staging/Contents/Info.plist"
 cp "$seasonart_root/LICENSE" "$seasonart_root/THIRD_PARTY.md" "$seasonart_staging/Contents/Resources/"
+cp "$seasonart_root/Sources/CBox2D/LICENSE" "$seasonart_staging/Contents/Resources/Box2D-LICENSE"
 mkdir -p "$seasonart_staging/Contents/Resources/Wallpapers"
 cp "$seasonart_root/Resources/Wallpapers/winter-lake-v1.png" "$seasonart_staging/Contents/Resources/Wallpapers/"
 bash "$seasonart_root/Scripts/sign.sh" "$seasonart_staging"
