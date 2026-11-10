@@ -53,8 +53,13 @@ final class WinterSceneControllerTests: XCTestCase {
         _ = controller.create(.large, at: CGPoint(x: 240, y: 300))
         for _ in 0..<120 { controller.scene.step(dt: 1 / 60) }
         XCTAssertLessThan(layer.heights[80], before[80], "Удар проминает центр сугроба")
-        XCTAssertEqual(controller.scene.objects[0].frame.minY,
-                       try XCTUnwrap(simulation.winterSurfaceY(at: 240, on: 42)), accuracy: 0.001)
+        let ball = controller.scene.objects[0]
+        let under = stride(from: ball.center.x - 28, through: ball.center.x + 28, by: 2).compactMap {
+            simulation.winterSurfaceY(at: $0, on: 42)
+        }
+        XCTAssertGreaterThanOrEqual(ball.visibleBottom, max(60, try XCTUnwrap(under.min()) - 28 * SnowballWorld.footSink) - 0.6,
+                                    "Шар лежит в примятом снегу не глубже утопления")
+        XCTAssertLessThanOrEqual(ball.visibleBottom, try XCTUnwrap(under.max()) + 0.6, "Шар не висит над снегом")
         let settled = layer.heights
         for _ in 0..<120 { controller.scene.step(dt: 1 / 60) }
         XCTAssertEqual(layer.heights, settled, "Покой не повторяет удар")

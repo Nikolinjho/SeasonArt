@@ -51,9 +51,8 @@ struct WinterBallDamage: Equatable {
             points.append(CGPoint(x: rect.midX + cos(angle) * distance,
                                   y: rect.midY + sin(angle) * distance))
         }
-        // После смятия шар продолжает касаться опоры, а не висит над ней.
-        let lift = (points.map(\.y).min() ?? rect.minY) - rect.minY
-        return points.map { CGPoint(x: $0.x, y: $0.y - lift) }
+        // Смятый шар касается опоры физически: Box2D опускает тело на вмятину.
+        return points
     }
 }
 
@@ -64,15 +63,40 @@ struct WinterBallChip {
 }
 
 extension WinterObject {
-    /// Контакты учитывают высоту смятого силуэта. Целые шары сохраняют прежнюю геометрию.
-    var collisionBallFrames: [CGRect] {
-        ballFrames.enumerated().map { index, frame in
-            guard damage(for: index).depth > 0 else { return frame }
-            let points = outline(for: index)
-            let left = points.map(\.x).min() ?? frame.minX
-            let bottom = points.map(\.y).min() ?? frame.minY
-            return CGRect(x: left, y: bottom, width: (points.map(\.x).max() ?? frame.maxX) - left,
-                          height: (points.map(\.y).max() ?? frame.maxY) - bottom)
+    /// Шары фигуры для Box2D в координатах тела с началом в центре нижнего шара.
+    /// Смятый шар — скруглённый многоугольник: над каждой из трёх глубоких вмятин плоская хорда по её краям,
+    /// остальное — дуга. Шар ложится на края вмятины, как и нарисованный силуэт.
+    var physicalParts: [SnowballPart] {
+        let frames = ballFrames
+        guard let base = frames.first else { return [] }
+        return frames.enumerated().map { index, frame in
+            let radius = frame.width / 2
+            var part = SnowballPart(center: CGPoint(x: frame.midX - base.midX, y: frame.midY - base.midY), radius: radius)
+            let damage = damage(for: index)
+            guard damage.depth > 0 else { return part }
+            let contour = damage.contour(in: CGRect(x: -radius, y: -radius, width: radius * 2, height: radius * 2), rotation: 0)
+            let rounding = radius * 0.75
+            let inner = radius - rounding
+            var angles: [CGFloat] = []
+            var spans: [(angle: CGFloat, width: CGFloat)] = []
+            for dent in damage.dents.sorted(by: { $0.depth > $1.depth }).prefix(3) {
+                // Опорная функция контура вдоль вмятины даёт расстояние до хорды по её краям.
+                let support = contour.map { $0.x * cos(dent.angle) + $0.y * sin(dent.angle) }.max() ?? radius
+                let width = acos(min(1, max(-1, (support - rounding) / inner)))
+                spans.append((dent.angle, width))
+                angles += [dent.angle - width, dent.angle + width]
+            }
+            func covered(_ angle: CGFloat) -> Bool {
+                spans.contains { abs(atan2(sin(angle - $0.angle), cos(angle - $0.angle))) < $0.width + 0.05 }
+            }
+            let free = (0..<64).map { CGFloat($0) * .pi / 32 }.filter { !covered($0) }
+            let count = 8 - angles.count
+            if !free.isEmpty {
+                for k in 0..<count { angles.append(free[k * free.count / count]) }
+            }
+            part.rounding = rounding
+            part.hull = angles.map { CGPoint(x: cos($0) * inner, y: sin($0) * inner) }
+            return part
         }
     }
 

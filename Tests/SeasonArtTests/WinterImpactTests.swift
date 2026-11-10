@@ -204,7 +204,8 @@ final class WinterImpactTests: XCTestCase {
         for _ in 0..<120 { scene.step(dt: 1 / 60) }
         XCTAssertEqual(events.count, 1)
         XCTAssertLessThan(events[0].velocity.dy, 0)
-        XCTAssertEqual(scene.objects[0].frame.minY, 20)
+        XCTAssertEqual(scene.objects[0].visibleBottom, winterRestingBottom(snow: 20, radius: 28), accuracy: 0.6,
+                       "Примятый снег опускает шар")
         for size in [WinterBallSize.medium, .small] {
             let y = try XCTUnwrap(scene.objects.first).frame.maxY + size.radius
             let id = try XCTUnwrap(scene.create(size, at: CGPoint(x: 400, y: 400)))

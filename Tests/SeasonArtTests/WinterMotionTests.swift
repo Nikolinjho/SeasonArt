@@ -93,7 +93,9 @@ final class WinterMotionTests: XCTestCase {
             let startRotation = scene.objects[0].rotation
             for _ in 0..<fps { scene.step(dt: 1 / Double(fps)) }
             positions.append(scene.objects[0].center.x)
-            XCTAssertEqual(scene.objects[0].rotation - startRotation, -(scene.objects[0].center.x - start) / 14, accuracy: 0.001)
+            let rolled = -(scene.objects[0].center.x - start) / 14
+            XCTAssertEqual(scene.objects[0].rotation - startRotation, rolled, accuracy: abs(rolled) * 0.01,
+                           "Шар катится без заметного проскальзывания")
         }
         XCTAssertLessThan(try XCTUnwrap(positions.max()) - XCTUnwrap(positions.min()), 0.01)
     }

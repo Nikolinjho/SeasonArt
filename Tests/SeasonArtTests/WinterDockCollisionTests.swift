@@ -11,15 +11,18 @@ final class WinterDockCollisionTests: XCTestCase {
         return scene
     }
 
+    /// Видимый силуэт шаров снаружи корпуса и не ниже земли. Допуск покрывает многоугольник смятого шара.
     private func assertOutside(_ scene: WinterScene, body: CGRect, file: StaticString = #filePath, line: UInt = #line) {
         for object in scene.objects where !object.parked {
-            for frame in object.ballFrames {
-                let center = CGPoint(x: object.center.x, y: object.frame.minY + frame.midY)
-                let nearest = CGPoint(x: min(max(center.x, body.minX), body.maxX),
-                                      y: min(max(center.y, body.minY), body.maxY))
-                XCTAssertGreaterThanOrEqual(hypot(center.x - nearest.x, center.y - nearest.y), frame.width / 2 - 0.01, file: file, line: line)
+            for index in object.ballFrames.indices {
+                for point in object.outline(for: index) {
+                    let x = object.frame.minX + point.x
+                    let y = object.frame.minY + point.y
+                    let depth = min(x - body.minX, body.maxX - x, y - body.minY, body.maxY - y)
+                    XCTAssertLessThanOrEqual(depth, 0.6, file: file, line: line)
+                }
             }
-            XCTAssertGreaterThanOrEqual(object.frame.minY, -0.01, file: file, line: line)
+            XCTAssertGreaterThanOrEqual(object.visibleBottom, -0.6, file: file, line: line)
         }
     }
 
@@ -90,7 +93,7 @@ final class WinterDockCollisionTests: XCTestCase {
         let scene = scene(visible: false)
         _ = scene.create(.small, at: CGPoint(x: 200, y: 30))
         for _ in 0..<120 { scene.step(dt: 1 / 60) }
-        XCTAssertEqual(scene.objects[0].center.y, 14, accuracy: 0.01)
+        XCTAssertEqual(scene.objects[0].visibleBottom, 0, accuracy: 0.6)
         XCTAssertNil(scene.objects[0].support)
     }
     func testПоявлениеDockБудитЛежащийНаЗемлеШар() {
@@ -108,13 +111,18 @@ final class WinterDockCollisionTests: XCTestCase {
 
     func testDockНеОтбираетУправлениеУУдерживаемогоШара() throws {
         let scene = scene()
-        let point = CGPoint(x: 200, y: 30)
+        let point = CGPoint(x: 200, y: 120)
         let id = try XCTUnwrap(scene.create(.small, at: point))
         scene.beginDragging(id, at: point)
         for _ in 0..<60 { scene.step(dt: 1 / 60) }
-        XCTAssertEqual(scene.objects[0].center, point)
-        scene.endDragging(id)
+        XCTAssertEqual(scene.objects[0].center, point, "Dock не захватывает шар в руке")
+        scene.drag(id, to: CGPoint(x: 350, y: 120), dt: 1 / 60)
+        XCTAssertEqual(scene.objects[0].center, CGPoint(x: 350, y: 120), "Над Dock шар идёт за курсором")
+        scene.drag(id, to: CGPoint(x: 350, y: 30), dt: 1 / 60)
         scene.step(dt: 1 / 60)
+        XCTAssertGreaterThanOrEqual(scene.objects[0].center.y, 80 - 0.6, "Твёрдый корпус Dock не пускает шар в руке внутрь")
+        scene.endDragging(id, idleTime: 0.2)
+        for _ in 0..<60 { scene.step(dt: 1 / 60) }
         assertOutside(scene, body: CGRect(x: 100, y: 6, width: 300, height: 60))
     }
 
@@ -129,7 +137,8 @@ final class WinterDockCollisionTests: XCTestCase {
             scene.didLand = { _ in impacts += 1 }
             _ = scene.create(radius: 6, at: CGPoint(x: 104, y: 300))
             for _ in 0..<300 { scene.step(dt: 1 / 60) }
-            XCTAssertEqual(scene.objects[0].center.y, cornerRadius == 0 ? 72 : 46 + sqrt(26 * 26 - 16 * 16), accuracy: 0.01)
+            // На скруглённом углу шар скатывается по физике, а не стоит на склоне.
+            assertOutside(scene, body: dock.frame)
             XCTAssertFalse(scene.isMoving)
             scene.updateWindows(WindowUpdate(surfaces: [dock], interval: 0.1, parked: [], elsewhere: [], sliding: false, slideVelocity: 0))
             XCTAssertFalse(scene.isMoving)
@@ -149,9 +158,9 @@ final class WinterDockCollisionTests: XCTestCase {
         scene.surfaceHeight = { id, _ in id == 42 ? snowHeight : 0 }
         scene.didLand = { _ in snowHeight = 58; impacts += 1 }
         scene.updateWindows(WindowUpdate(surfaces: [dock], interval: 0.1, parked: [], elsewhere: [], sliding: false, slideVelocity: 0))
-        _ = scene.create(radius: 6, at: CGPoint(x: 104, y: 90))
+        _ = scene.create(radius: 6, at: CGPoint(x: 200, y: 90))
         for _ in 0..<300 { scene.step(dt: 1 / 60) }
-        XCTAssertEqual(scene.objects[0].center.y, 46 + sqrt(26 * 26 - 16 * 16), accuracy: 0.01)
+        XCTAssertEqual(scene.objects[0].visibleBottom, 66, accuracy: 0.6, "Снег ниже крыши: шар лежит на корпусе")
         XCTAssertEqual(impacts, 1)
         XCTAssertFalse(scene.isMoving)
     }

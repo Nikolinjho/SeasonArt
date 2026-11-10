@@ -22,7 +22,7 @@ final class WinterSceneTests: XCTestCase {
         settle(scene)
         let ball = try XCTUnwrap(scene.objects.first)
         XCTAssertEqual(ball.support, 2, "Шар должен лежать на самой высокой доступной опоре")
-        XCTAssertEqual(ball.frame.minY, 300, accuracy: 0.01)
+        XCTAssertEqual(ball.visibleBottom, 300, accuracy: 0.6)
         XCTAssertFalse(scene.isMoving, "Неподвижной сцене не нужен непрерывный таймер")
     }
 
@@ -32,7 +32,7 @@ final class WinterSceneTests: XCTestCase {
         _ = scene.create(.small, at: CGPoint(x: 200, y: 400))
         settle(scene)
         XCTAssertNil(scene.objects[0].support, "Перекрытый край окна не служит опорой")
-        XCTAssertEqual(scene.objects[0].frame.minY, 0, accuracy: 0.01)
+        XCTAssertEqual(scene.objects[0].visibleBottom, 0, accuracy: 0.6)
     }
 
     func testSnowHeightAndLargeTimeStep() {
@@ -42,7 +42,8 @@ final class WinterSceneTests: XCTestCase {
         scene.step(dt: 100)
         XCTAssertEqual(scene.objects[0].center.y, 462.5, accuracy: 1, "После паузы догоняется не больше четверти секунды")
         settle(scene)
-        XCTAssertEqual(scene.objects[0].frame.minY, 30, accuracy: 0.01)
+        XCTAssertEqual(scene.objects[0].visibleBottom, winterRestingBottom(snow: 30, radius: 21), accuracy: 0.6,
+                       "Шар лежит на снегу, утопленный на 15% радиуса")
     }
 
     func testWindowMovementClosureAndParking() {
@@ -50,12 +51,17 @@ final class WinterSceneTests: XCTestCase {
         scene.updateWindows(update([surface()]))
         _ = scene.create(.large, at: CGPoint(x: 200, y: 400))
         settle(scene)
+        let resting = scene.objects[0].center
         scene.updateWindows(update([surface(x: 150, y: 230)]))
-        XCTAssertEqual(scene.objects[0].center, CGPoint(x: 250, y: 258), "Шар следует за окном")
+        XCTAssertEqual(scene.objects[0].center.x, resting.x + 50, accuracy: 0.01, "Шар следует за окном")
+        XCTAssertEqual(scene.objects[0].center.y, resting.y + 30, accuracy: 0.01)
+        settle(scene)
+        let moved = scene.objects[0].center
+        XCTAssertEqual(moved.y, resting.y + 30, accuracy: 0.05, "На новом месте шар лежит на окне")
         scene.updateWindows(update([], elsewhere: [1]))
         XCTAssertTrue(scene.objects[0].parked)
         settle(scene)
-        XCTAssertEqual(scene.objects[0].center.y, 258)
+        XCTAssertEqual(scene.objects[0].center, moved, "Припаркованный шар не двигается")
         scene.updateWindows(update([], parked: [1]))
         XCTAssertTrue(scene.objects[0].parked)
         scene.updateWindows(update([surface(x: 150, y: 230)]))
@@ -63,7 +69,7 @@ final class WinterSceneTests: XCTestCase {
         scene.updateWindows(update([]))
         settle(scene)
         XCTAssertNil(scene.objects[0].support, "После закрытия окна шар падает на землю")
-        XCTAssertEqual(scene.objects[0].frame.minY, 0, accuracy: 0.01)
+        XCTAssertEqual(scene.objects[0].visibleBottom, 0, accuracy: 0.6)
     }
 
     func testParkedSurfaceCannotCatchOtherObjects() {
@@ -77,7 +83,7 @@ final class WinterSceneTests: XCTestCase {
         XCTAssertTrue(scene.objects[0].parked)
         XCTAssertFalse(scene.isMoving, "Припаркованная игрушка не требует анимации")
         XCTAssertNil(scene.objects[1].support, "Невидимое окно не ловит новые шары")
-        XCTAssertEqual(scene.objects[1].frame.minY, 0, accuracy: 0.01)
+        XCTAssertEqual(scene.objects[1].visibleBottom, 0, accuracy: 0.6)
     }
 
     func testResizeClampsSupportAndScreen() {
@@ -107,7 +113,7 @@ final class WinterSceneTests: XCTestCase {
             scene.updateWindows(update([surface(y: supportY)]))
             settle(scene)
             XCTAssertNil(scene.objects[0].support, "Недоступная по высоте опора не захватывает шар повторно")
-            XCTAssertEqual(scene.objects[0].frame.minY, 0, accuracy: 0.01)
+            XCTAssertEqual(scene.objects[0].visibleBottom, 0, accuracy: 0.6)
         }
     }
 

@@ -480,6 +480,21 @@ final class SnowSimulation {
         }
         return top.isFinite ? (top, floor) : nil
     }
+    /// Весь видимый контур горки Dock по колонкам: верх снега и колонки, поднятые иконкой.
+    func winterDockProfile(on id: CGWindowID) -> WinterSurfaceProfile? {
+        guard let layer = ledges[id], let values = presentedDockBuffer(layer) else { return nil }
+        let origin = dockPresentationFrame.map { Float($0.minX) } ?? layer.base.x
+        let column = dockPresentationFrame.map { Float($0.width) / Float(layer.count) } ?? layer.columnWidth
+        var tops: [CGFloat?] = []
+        var lifted: [Bool] = []
+        tops.reserveCapacity(layer.count)
+        lifted.reserveCapacity(layer.count)
+        for i in 0..<layer.count {
+            tops.append(layer.visible[i] ? CGFloat(layer.base.y + values[i]) : nil)
+            lifted.append(dockSnowSurface.offsets[i] > 0)
+        }
+        return WinterSurfaceProfile(left: CGFloat(origin), columnWidth: CGFloat(column), tops: tops, lifted: lifted)
+    }
     private var previousDockCursor: SIMD2<Float>?
     private var dockMotionUntil: Double = -10
     var dockFrame: CGRect? { dockBodies.values.first }

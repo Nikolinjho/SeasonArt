@@ -123,7 +123,8 @@ final class DockSnowSurfaceTests: XCTestCase {
         let visible = CGFloat(pile.origin.y + buffer[pile.offset + i])
         XCTAssertEqual(try XCTUnwrap(simulation.winterSurfaceY(at: 350, on: 42)), visible, accuracy: 0.1,
             "Физика и отрисовка используют один контур")
-        XCTAssertGreaterThanOrEqual(raised, visible - 0.1, "Шар не проваливается внутрь видимой горки")
+        XCTAssertGreaterThanOrEqual(raised, visible - 7 * SnowballWorld.footSink - 0.6,
+                                    "Шар утоплен в видимую горку не глубже 15% радиуса")
         controller.scene.removeAll()
         XCTAssertNotNil(controller.scene.create(.small, at: CGPoint(x: 310, y: 250)))
         for _ in 0..<180 { controller.scene.step(dt: 1 / 60) }
@@ -135,10 +136,15 @@ final class DockSnowSurfaceTests: XCTestCase {
             let distance = abs(sample - landed.center.x)
             let radius = landed.radii[0]
             guard distance <= radius else { continue }
-            let circleBottom = landed.center.y - sqrt(max(0, radius * radius - distance * distance))
+            // Утопление одинаково по всему касанию: в снег не уходит круг радиуса 0,85 r.
+            let foot = radius * (1 - SnowballWorld.footSink)
+            guard distance <= foot else { continue }
+            let footBottom = landed.center.y - sqrt(max(0, foot * foot - distance * distance))
             // Удар может примять снег, поэтому читаем текущую поверхность.
             let contact = try XCTUnwrap(simulation.winterSurfaceY(at: sample, on: 42))
-            XCTAssertGreaterThanOrEqual(circleBottom, contact - 0.2, "Край шара не прорезает склон горки")
+            // Валик, выбитый ударом, растёт в мёртвой зоне 2 pt и не толкает лежащий шар.
+            XCTAssertGreaterThanOrEqual(footBottom, contact - WinterChainProfile.deadband - 0.1,
+                                        "Край шара не прорезает склон горки глубже утопления и мёртвой зоны")
         }
         controller.scene.removeAll()
         XCTAssertNotNil(controller.scene.create(.small, at: CGPoint(x: 350, y: 200)))
@@ -146,9 +152,13 @@ final class DockSnowSurfaceTests: XCTestCase {
         simulation.dockIconFrames = nil
         _ = simulation.step(dt: 1 / 60, cursor: SIMD2(-1000, -1000))
         for _ in 0..<120 { controller.scene.step(dt: 1 / 60) }
-        XCTAssertEqual(controller.scene.objects[0].frame.minY,
-            try XCTUnwrap(simulation.winterSurfaceY(at: 350, on: 42)), accuracy: 0.2,
-            "После уменьшения иконки шар возвращается на обычную опору")
+        let ball = controller.scene.objects[0]
+        let under = stride(from: ball.center.x - 12, through: ball.center.x + 12, by: 2).compactMap {
+            simulation.winterSurfaceY(at: $0, on: 42)
+        }
+        XCTAssertGreaterThanOrEqual(ball.visibleBottom, winterRestingBottom(snow: try XCTUnwrap(under.min()), bed: frame.maxY, radius: 14) - 0.6)
+        XCTAssertLessThanOrEqual(ball.visibleBottom, winterRestingBottom(snow: try XCTUnwrap(under.max()), bed: frame.maxY, radius: 14) + 0.6,
+                                 "После уменьшения иконки шар возвращается на обычную опору")
         XCTAssertLessThan(controller.scene.objects[0].frame.minY, raised - 20)
     }
 

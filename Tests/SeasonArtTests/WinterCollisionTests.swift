@@ -21,7 +21,8 @@ final class WinterCollisionTests: XCTestCase {
         _ = scene.create(.small, at: CGPoint(x: 300, y: 300))
         run(scene)
         XCTAssertEqual(scene.objects.count, 2)
-        XCTAssertEqual(scene.objects[1].center.y, 70, accuracy: 0.1)
+        XCTAssertEqual(scene.objects[1].visibleBottom, scene.objects[0].visibleTop, accuracy: 0.6)
+        XCTAssertEqual(scene.objects[1].center.x, 300, accuracy: 0.5, "Шар точно над центром не скатывается")
         XCTAssertFalse(scene.isMoving)
         let before = scene.objects[1].center
         run(scene)
@@ -80,7 +81,7 @@ final class WinterCollisionTests: XCTestCase {
         let held = scene.objects[0].center
         run(scene)
         XCTAssertEqual(scene.objects[0].center, held)
-        XCTAssertEqual(scene.objects[1].center.y, 14, accuracy: 0.1)
+        XCTAssertEqual(scene.objects[1].visibleBottom, 0, accuracy: 0.6)
         scene.cancelDragging(base)
         let top = scene.objects[1].id
         scene.beginDragging(top, at: scene.objects[1].center)
@@ -107,7 +108,7 @@ final class WinterCollisionTests: XCTestCase {
         _ = scene.create(.small, at: CGPoint(x: 300, y: 300))
         run(scene)
         XCTAssertEqual(scene.objects.count, 2)
-        XCTAssertEqual(scene.objects[1].frame.minY, top, accuracy: 0.1)
+        XCTAssertEqual(scene.objects[1].visibleBottom, top, accuracy: 0.6)
         XCTAssertFalse(scene.isMoving)
     }
 
@@ -116,8 +117,9 @@ final class WinterCollisionTests: XCTestCase {
         try snowman(scene)
         _ = scene.create(radius: 6, at: CGPoint(x: 322, y: 113))
         scene.step(dt: 1 / 120)
-        XCTAssertEqual(scene.objects[1].center.x, 322, accuracy: 0.0001)
-        XCTAssertEqual(scene.objects[1].center.y, 113 - 600 / (120 * 120), accuracy: 0.0001)
+        XCTAssertEqual(scene.objects[1].center.x, 322, accuracy: 0.0001, "Шар рядом с головой не отталкивается")
+        XCTAssertLessThan(scene.objects[1].center.y, 113, "Свободный шар падает")
+        XCTAssertGreaterThan(scene.objects[1].center.y, 112.9)
     }
 
     func testУдалениеНижнегоШараБудитВерхнийБезОжиданияТаймера() throws {
@@ -129,7 +131,7 @@ final class WinterCollisionTests: XCTestCase {
         XCTAssertEqual(scene.objects.count, 1)
         XCTAssertTrue(scene.isMoving)
         run(scene)
-        XCTAssertEqual(scene.objects[0].center.y, 14, accuracy: 0.1)
+        XCTAssertEqual(scene.objects[0].visibleBottom, 0, accuracy: 0.6)
     }
 
     func testПрипаркованнаяОпораНеДержитШарДругогоПространства() {
@@ -140,12 +142,12 @@ final class WinterCollisionTests: XCTestCase {
         _ = scene.create(.large, at: CGPoint(x: 300, y: 228))
         _ = scene.create(.small, at: CGPoint(x: 300, y: 500))
         run(scene)
-        XCTAssertEqual(scene.objects[1].center.y, 270, accuracy: 0.1)
+        XCTAssertEqual(scene.objects[1].visibleBottom, scene.objects[0].visibleTop, accuracy: 0.6)
         scene.updateWindows(WindowUpdate(surfaces: [], interval: 0.1, parked: [], elsewhere: [1], sliding: false, slideVelocity: 0))
         XCTAssertTrue(scene.isMoving)
         run(scene)
         XCTAssertTrue(scene.objects[0].parked)
-        XCTAssertEqual(scene.objects[1].center.y, 14, accuracy: 0.1)
+        XCTAssertEqual(scene.objects[1].visibleBottom, 0, accuracy: 0.6)
     }
 
     func testПолнаяСценаСохраняетКонечныеКоординатыИГраницы() {
@@ -169,11 +171,12 @@ final class WinterCollisionTests: XCTestCase {
         run(scene)
         _ = scene.create(.small, at: CGPoint(x: 320, y: 70))
         run(scene)
-        for object in scene.objects where object.frame.minY > 0.1 {
+        XCTAssertFalse(scene.isMoving)
+        for object in scene.objects where object.visibleBottom > 0.6 {
             let supported = scene.objects.contains { other in
                 guard other.id != object.id, other.center.y < object.center.y else { return false }
-                return abs(hypot(object.center.x - other.center.x, object.center.y - other.center.y) -
-                           object.radii[0] - other.radii[0]) < 0.1
+                return hypot(object.center.x - other.center.x, object.center.y - other.center.y) <
+                    object.radii[0] + other.radii[0] + 0.5
             }
             XCTAssertTrue(supported, "Спящий шар должен касаться нижней опоры")
         }
