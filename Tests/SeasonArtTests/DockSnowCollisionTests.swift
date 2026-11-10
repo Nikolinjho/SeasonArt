@@ -38,10 +38,14 @@ final class DockSnowCollisionTests: XCTestCase {
                        "Частицы не проходят через тело Dock: \(sprites(value).filter { body.contains(CGPoint(x: CGFloat($0.position.x), y: CGFloat($0.position.y))) }.map { "\($0.position) size=\($0.size)" })", file: file, line: line)
     }
 
-    private func assertNoGroundUnderDock(_ value: SnowSimulation, file: StaticString = #filePath, line: UInt = #line) {
-        let ground = layers(value)[0]
-        XCTAssertFalse((0..<ground.count).contains { ground.centerX($0) > 100 && ground.centerX($0) < 400 && ground.heights[$0] > 0.001 },
-                       "Снег не оседает на земле под Dock: \((0..<ground.count).filter { ground.centerX($0) > 100 && ground.centerX($0) < 400 && ground.heights[$0] > 0.001 }.map { ground.centerX($0) })", file: file, line: line)
+    private func assertGroundHiddenByDock(_ value: SnowSimulation, file: StaticString = #filePath, line: UInt = #line) {
+        let buffer = UnsafeMutablePointer<Float>.allocate(capacity: value.columnCount)
+        defer { buffer.deallocate() }
+        let piles = value.writeLayers(into: buffer, capacity: value.columnCount)
+        for pile in piles where !pile.isDock {
+            XCTAssertTrue(pile.occluders.contains { $0.x <= 100 && $0.z >= 400 && $0.y <= 6 && $0.w >= 66 },
+                          "Нижний снег скрывается корпусом Dock", file: file, line: line)
+        }
     }
 
     func testБоковойВлётНижеПолкиНеПроходитВТелоDock() {
@@ -51,7 +55,7 @@ final class DockSnowCollisionTests: XCTestCase {
             _ = value.step(dt: dt, cursor: away)
             assertNoParticlesInside(value)
         }
-        assertNoGroundUnderDock(value)
+        assertGroundHiddenByDock(value)
     }
 
     func testСнегВнутриDockВыходитЧерезБлижайшуюБоковуюГрань() {
@@ -61,7 +65,7 @@ final class DockSnowCollisionTests: XCTestCase {
         assertNoParticlesInside(value)
         XCTAssertTrue(sprites(value).allSatisfy { $0.position.x < 100 }, "Снег у левой грани выходит вбок, а не переносится на крышу")
         for _ in 0..<120 { _ = value.step(dt: dt, cursor: away) }
-        assertNoGroundUnderDock(value)
+        assertGroundHiddenByDock(value)
     }
 
     func testОбычноеПадениеСверхуСохраняетОседаниеНаПолке() {
@@ -69,7 +73,7 @@ final class DockSnowCollisionTests: XCTestCase {
         scatter(value, x: 250, y: 130)
         for _ in 0..<240 { _ = value.step(dt: dt, cursor: away) }
         XCTAssertGreaterThan(layers(value).first { $0.isDock }!.heights.reduce(0, +), 0)
-        assertNoGroundUnderDock(value)
+        assertGroundHiddenByDock(value)
     }
 
     func testВлётПодСкруглённымКраемНеВозвращаетСнегВDock() {
@@ -79,7 +83,7 @@ final class DockSnowCollisionTests: XCTestCase {
             _ = value.step(dt: dt, cursor: away)
             assertNoParticlesInside(value)
         }
-        assertNoGroundUnderDock(value)
+        assertGroundHiddenByDock(value)
     }
 
     func testСкрытыйDockНеОставляетНевидимуюСтену() {
@@ -100,7 +104,7 @@ final class DockSnowCollisionTests: XCTestCase {
                 _ = value.step(dt: 1 / Float(fps), cursor: away)
                 assertNoParticlesInside(value)
             }
-            assertNoGroundUnderDock(value)
+            assertGroundHiddenByDock(value)
         }
     }
 
@@ -158,50 +162,72 @@ final class DockSnowCollisionTests: XCTestCase {
         XCTAssertFalse(sprites(value).contains { $0.size >= 8 }, "Мягкие хлопья не образуют постоянную полосу над Dock")
     }
 
-    func testПереносСуществующегоСнегаИзПодDockСохраняетМассу() {
+    func testСкрытиеСуществующегоСнегаКорпусомDockСохраняетМассу() {
         let value = simulation()
         let ground = layers(value)[0]
         for i in 65..<85 { ground.set(i, 4) }
         let before = ground.heights.reduce(0, +)
         _ = value.step(dt: dt, cursor: away)
-        assertNoGroundUnderDock(value)
+        assertGroundHiddenByDock(value)
         XCTAssertEqual(ground.heights.reduce(0, +), before, accuracy: 0.001,
-                       "Снег под появившимся Dock переносится к краю без потери массы")
+                       "Снег остаётся на месте без потери массы")
     }
 
-    func testСнегИзПодDockРаспределяетсяМягкоБезПиковУСамыхБоков() {
+    func testДесятьМинутСнегопадаСНакопленнымСлоемНеСоздаютБоковыхГор() {
+        let value = simulation()
+        value.cursorInteracts = false
+        value.snowfall = .heavy
+        let ground = layers(value)[0]
+        for i in ground.heights.indices { ground.set(i, 30) }
+        ground.refreshTop()
+        let seconds = Double(ProcessInfo.processInfo.environment["SEASONART_LONG_SNOW_SECONDS"] ?? "600") ?? 600
+        for _ in 0..<Int(seconds * 30) { _ = value.step(dt: 1 / 30, cursor: away) }
+        let outside = ground.heights.indices.filter { ground.centerX($0) < 100 || ground.centerX($0) > 400 }
+        let outsidePeak = outside.map { ground.heights[$0] }.max() ?? 0
+        let peakIndex = ground.heights.indices.max { ground.heights[$0] < ground.heights[$1] }!
+        XCTAssertLessThan(outsidePeak, Float(body.maxY) + 20,
+                          "Видимый пик \(outsidePeak), полный пик \(ground.heights[peakIndex]) при x=\(ground.centerX(peakIndex))")
+        if seconds > 600 { print("Длительность \(seconds) с, боковой максимум \(outsidePeak) pt") }
+        assertGroundHiddenByDock(value)
+    }
+
+    func testНакопленныйНижнийСнегНеСобираетсяВБоковыеГорыПриПоявленииDock() {
         let value = simulation()
         let ground = layers(value)[0]
-        for i in 55..<195 { ground.set(i, 8) }
-        let mass = ground.heights.reduce(0, +)
+        for i in ground.heights.indices { ground.set(i, 40) }
+        ground.refreshTop()
+        let before = ground.heights
         _ = value.step(dt: dt, cursor: away)
-        let left = (0..<ground.count).filter { ground.centerX($0) < 100 }
-        let right = (0..<ground.count).filter { ground.centerX($0) > 400 }
-        let leftPeak = left.map { ground.heights[$0] }.max() ?? 0
-        let rightPeak = right.map { ground.heights[$0] }.max() ?? 0
-        let nearLeft = left.filter { ground.centerX($0) > 88 }.map { ground.heights[$0] }.max() ?? 0
-        let nearRight = right.filter { ground.centerX($0) < 412 }.map { ground.heights[$0] }.max() ?? 0
-        XCTAssertLessThan(nearLeft, leftPeak * 0.25, "Масса не складывается высокой стенкой прямо у левого бока")
-        XCTAssertLessThan(nearRight, rightPeak * 0.25, "Масса не складывается высокой стенкой прямо у правого бока")
-        assertNoGroundUnderDock(value)
-        XCTAssertEqual(ground.heights.reduce(0, +), mass, accuracy: 0.01)
+        XCTAssertEqual(ground.heights, before, "Ровный накопленный слой остаётся на месте под Dock")
+        XCTAssertLessThanOrEqual(ground.heights.max() ?? 0, 40.1)
     }
 
-    func testПовторноеВытеснениеНеСобираетВысокиеПикиПоБокамDock() {
-        let value = SnowSimulation(width: 1728, height: 400, snowfall: .off)
-        value.thaws = false
-        value.cursorInteracts = false
-        value.updateWindows([WindowSurface(id: 42, frame: CGRect(x: 400, y: 6, width: 928, height: 60),
-            blockers: [], cover: [], cornerRadius: 0, cornerExponent: 2.5, isDock: true)], interval: dt)
+    func testДвижениеDockНеПерестраиваетНижнийСугробРывками() {
+        let value = simulation()
         let ground = layers(value)[0]
-        for _ in 0..<300 {
-            ground.set(ground.clampedIndex(at: 410), 4)
-            ground.set(ground.clampedIndex(at: 1318), 4)
+        for i in ground.heights.indices { ground.set(i, 30) }
+        ground.refreshTop()
+        let before = ground.heights
+        for step in 0..<300 {
+            let dx = CGFloat(step % 2 == 0 ? -2 : 2)
+            value.updateWindows([WindowSurface(id: 42, frame: body.offsetBy(dx: dx, dy: 0),
+                blockers: [], cover: [], cornerRadius: 0, cornerExponent: 2.5, isDock: true)], interval: dt)
             _ = value.step(dt: dt, cursor: away)
         }
-        let peak = ground.heights.max() ?? 0
-        XCTAssertLessThan(peak, 30, "Повторные небольшие порции должны расходиться широким сугробом, а не расти в одном месте: \(peak)")
-        XCTAssertEqual(ground.heights.reduce(0, +) * ground.columnWidth, 4800, accuracy: 0.2)
+        XCTAssertEqual(ground.heights, before, "Перемещение Dock не должно тасовать уже лежащий снег")
+    }
+
+    func testКорпусDockСкрываетНижнийСнегВБуфереОтрисовки() throws {
+        let value = simulation()
+        let ground = layers(value)[0]
+        for i in ground.heights.indices { ground.set(i, 30) }
+        ground.refreshTop()
+        let buffer = UnsafeMutablePointer<Float>.allocate(capacity: value.columnCount)
+        defer { buffer.deallocate() }
+        let piles = value.writeLayers(into: buffer, capacity: value.columnCount)
+        let pile = try XCTUnwrap(piles.first { !$0.isDock })
+        XCTAssertTrue(pile.occluders.contains { $0.x <= 100 && $0.z >= 400 && $0.y <= 6 && $0.w >= 66 },
+                      "Корпус Dock скрывает лежащий под ним снег без переноса массы")
     }
 
     func testКороткаяПолкаDockНеОтбрасываетсяКакМаленькоеОкно() {
@@ -224,7 +250,7 @@ final class DockSnowCollisionTests: XCTestCase {
         XCTAssertEqual(surfaces.first?.isDock, true)
     }
 
-    func testПереполненныйБуферНеСбрасываетМассуПодDock() throws {
+    func testПереполненныйБуферСохраняетСкрытуюМассуНаЗемле() throws {
         let value = SnowSimulation(width: 9_000, height: 400, snowfall: .off)
         value.thaws = false
         let flood = WindowSurface(id: 43, frame: CGRect(x: 0, y: 100, width: 9_000, height: 100),
@@ -244,9 +270,9 @@ final class DockSnowCollisionTests: XCTestCase {
         for i in 0..<lowLayer.count { lowLayer.set(i, 4) }
         let expected = lowLayer.heights.reduce(0, +) * lowLayer.columnWidth
         value.updateWindows([dock()], interval: dt)
-        assertNoGroundUnderDock(value)
+        assertGroundHiddenByDock(value)
         XCTAssertEqual(ground.heights.reduce(0, +) * ground.columnWidth, expected, accuracy: 0.01,
-                       "Масса при полном буфере переносится на свободную землю")
+                       "Масса при полном буфере сохраняется на земле без бокового переноса")
     }
 
     func testБыстрыйБоковойБросокНеТуннелируетЧерезВесьDock() {
@@ -271,7 +297,7 @@ final class DockSnowCollisionTests: XCTestCase {
             _ = value.step(dt: dt, cursor: away)
             assertNoParticlesInside(value)
         }
-        assertNoGroundUnderDock(value)
+        assertGroundHiddenByDock(value)
         let area = layers(value).reduce(Float(0)) { $0 + $1.heights.reduce(0, +) * $1.columnWidth }
         XCTAssertEqual(area, 8, accuracy: 0.01, "Зёрна сохраняют массу при вытеснении из Dock")
     }
@@ -287,7 +313,7 @@ final class DockSnowCollisionTests: XCTestCase {
         }
     }
 
-    func testВытеснениеУКраяЭкранаНеТеряетМассу() {
+    func testСкрытиеСнегаDockУКраяЭкранаНеТеряетМассу() {
         let value = simulation()
         let edgeDock = WindowSurface(id: 42, frame: CGRect(x: 0, y: 6, width: 400, height: 60),
                                      blockers: [], cover: [], cornerRadius: 0, cornerExponent: 2, isDock: true)
@@ -296,11 +322,12 @@ final class DockSnowCollisionTests: XCTestCase {
         ground.set(5, 4)
         _ = value.step(dt: dt, cursor: away)
         XCTAssertEqual(ground.heights.reduce(0, +), 4, accuracy: 0.001,
-                       "Если левый край закрыт экраном, вся масса выходит справа")
-        XCTAssertTrue((0..<200).allSatisfy { ground.heights[$0] == 0 })
+                       "Скрытая масса остаётся на месте даже у края экрана")
+        XCTAssertEqual(ground.heights.dropFirst(200).reduce(0, +), 0,
+                       "Снег не перебрасывается к противоположному краю Dock")
     }
 
-    func testПриЗакрытыхБоковыхВыходахМассаОстаётсяНаДоступнойПолке() {
+    func testDockВоВсюШиринуНеПоднимаетНижнийСнегНаПолку() {
         let value = simulation()
         let full = WindowSurface(id: 42, frame: CGRect(x: 0, y: 6, width: 600, height: 60),
                                  blockers: [], cover: [], cornerRadius: 0, cornerExponent: 2, isDock: true)
@@ -308,7 +335,8 @@ final class DockSnowCollisionTests: XCTestCase {
         layers(value)[0].set(5, 4)
         _ = value.step(dt: dt, cursor: away)
         XCTAssertEqual(layers(value).reduce(Float(0)) { $0 + $1.heights.reduce(0, +) }, 4, accuracy: 0.001)
-        XCTAssertEqual(layers(value)[0].heights.reduce(0, +), 0)
+        XCTAssertEqual(layers(value)[0].heights.reduce(0, +), 4, accuracy: 0.001)
+        XCTAssertEqual(layers(value).first { $0.isDock }!.heights.reduce(0, +), 0)
     }
 
     func testПустойУголНадСкруглениемНеПоднимаетСнегНаПлоскуюКрышу() {

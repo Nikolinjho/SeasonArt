@@ -4,6 +4,47 @@ import XCTest
 @testable import SeasonArt
 
 final class DockSnowSurfaceRenderingTests: XCTestCase {
+    func testНастоящийRendererСкрываетЗемлюКорпусомDockБезПереносаМассы() throws {
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        let queue = try XCTUnwrap(device.makeCommandQueue())
+        let simulation = SnowSimulation(width: 600, height: 200, snowfall: .off)
+        simulation.updateWindows([WindowSurface(id: 42, frame: CGRect(x: 100, y: 6, width: 300, height: 60),
+            blockers: [], cover: [], cornerRadius: 0, cornerExponent: 2, isDock: true)], interval: 1 / 60)
+        let ground = try XCTUnwrap(Mirror(reflecting: simulation).children.first { $0.label == "ground" }?.value as? SnowLayer)
+        for i in ground.heights.indices { ground.set(i, 30) }
+        ground.refreshTop()
+        let before = ground.heights
+        let renderer = try Renderer(device: device, pixelFormat: .bgra8Unorm, simulation: simulation)
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: 600, height: 200, mipmapped: false)
+        descriptor.usage = [.renderTarget]
+        descriptor.storageMode = .shared
+        let texture = try XCTUnwrap(device.makeTexture(descriptor: descriptor))
+        for position in [DockSnowPosition.above, .below] {
+            simulation.dockSnowPosition = position
+            let pass = MTLRenderPassDescriptor()
+            pass.colorAttachments[0].texture = texture
+            pass.colorAttachments[0].loadAction = .clear
+            pass.colorAttachments[0].storeAction = .store
+            pass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0)
+            let commands = try XCTUnwrap(queue.makeCommandBuffer())
+            renderer.encode(into: commands, pass: pass, scale: 1, time: 0)
+            commands.commit()
+            commands.waitUntilCompleted()
+            XCTAssertNil(commands.error)
+            var bytes = [UInt8](repeating: 0, count: 600 * 200 * 4)
+            texture.getBytes(&bytes, bytesPerRow: 600 * 4, from: MTLRegionMake2D(0, 0, 600, 200), mipmapLevel: 0)
+            let rowOffset: Int = 179 * 600 * 4
+            XCTAssertGreaterThan(bytes[rowOffset + 203], 240, "Сбоку снег остаётся виден")
+            let coveredAlpha: UInt8 = bytes[rowOffset + 1003]
+            if position == .above {
+                XCTAssertEqual(coveredAlpha, 0, "Корпус скрывает нижний снег")
+            } else {
+                XCTAssertGreaterThan(coveredAlpha, 240, "В режиме Под Dock земля остаётся в нижнем слое")
+            }
+            XCTAssertEqual(ground.heights, before, "Отсечение не меняет массу")
+        }
+    }
+
     func testMetalРисуетЦельныйСугробРазнойТолщины() throws {
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let library = try device.makeLibrary(source: shaderSource, options: nil)

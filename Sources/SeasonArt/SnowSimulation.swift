@@ -388,8 +388,6 @@ final class SnowSimulation {
             guard dockSnowPosition != oldValue else { return }
             if snowBelowDock {
                 for layer in ledgeList where layer.isDock { moveDockSnowToGround(layer) }
-            } else if mode == .snow {
-                clearGroundUnderDock()
             }
             dockContactBuffer = nil
             restyled = true
@@ -1055,7 +1053,6 @@ final class SnowSimulation {
         tendGlass(dt: dt)
         haunt(dt: dt)
         settle(dt: dt)
-        clearGroundUnderDock()
         tendLeaves(dt: dt)
         if let next = nextMode, gust == nil, grains.isEmpty || clock - switchedAt > 6 {
             nextMode = nil
@@ -1317,8 +1314,14 @@ final class SnowSimulation {
                 top = presented.prefix(layer.count).max() ?? top
                 bottom = presented.suffix(layer.count).min() ?? bottom
             }
+            var occluders = layer.occluders
+            if layer === ground, mode == .snow, !snowBelowDock {
+                occluders += dockBodies.values.map {
+                    SIMD4(Float($0.minX), Float($0.minY), Float($0.maxX), Float($0.maxY))
+                }
+            }
             result.append(PileLayer(offset: offset, count: layer.count, origin: origin, top: top,
-                bottom: bottom, occluders: layer.occluders, isDock: layer.isDock,
+                bottom: bottom, occluders: occluders, isDock: layer.isDock,
                 drift: layer.drift, columnWidth: drawnColumn))
             offset += 2 * layer.count
         }
@@ -2192,123 +2195,21 @@ final class SnowSimulation {
         return roof
     }
 
-    /// Под низкой полкой нет места сугробу: снег у земли выходит к ближайшему свободному краю.
-    private func routeGroundPastDock(_ position: inout SIMD2<Float>, radius: Float = 0) {
-        guard mode == .snow, !snowBelowDock else { return }
-        for frame in dockBodies.values where position.x >= Float(frame.minX) && position.x <= Float(frame.maxX) {
-            guard position.y <= ground.surface(ground.clampedIndex(at: position.x)) + radius else { continue }
-            let left = Float(frame.minX) - radius - columnWidth * 3
-            let right = Float(frame.maxX) + radius + columnWidth * 3
-            if left < columnWidth && right > width - columnWidth {
-                position.y = Float(frame.maxY) + radius + 0.01
-            } else if left < columnWidth {
-                position.x = right
-            } else if right > width - columnWidth {
-                position.x = left
-            } else {
-                position.x = position.x < Float(frame.midX) ? left : right
-            }
-        }
-    }
-
-    /// Оседание и сглаживание тоже переносят массу: возвращаем её из-под тела Dock к свободным краям.
-    private func clearGroundUnderDock() {
-        guard mode == .snow, !snowBelowDock else { return }
-        for frame in dockBodies.values {
-            let first = ground.clampedIndex(at: Float(frame.minX))
-            let last = ground.clampedIndex(at: Float(frame.maxX))
-            var left: Float = 0
-            var right: Float = 0
-            for i in first...last where ground.heights[i] > 0 {
-                let x = ground.centerX(i)
-                guard x >= Float(frame.minX), x <= Float(frame.maxX) else { continue }
-                if x < Float(frame.midX) { left += ground.heights[i] * columnWidth }
-                else { right += ground.heights[i] * columnWidth }
-                ground.set(i, 0)
-            }
-            if left + right > 0 {
-                depositReleased(left, at: SIMD2(Float(frame.minX) + 0.01, -Float.greatestFiniteMagnitude))
-                depositReleased(right, at: SIMD2(Float(frame.maxX) - 0.01, -Float.greatestFiniteMagnitude))
-                heightsChanged = true
-            }
-        }
-    }
-
-    /// При заполненном буфере частиц масса остаётся на доступной опоре, а не проваливается под Dock.
+    /// При заполнении буфера масса оседает на опоре. Нижний снег скрывается корпусом Dock при отрисовке.
     private func depositReleased(_ area: Float, at point: SIMD2<Float>) {
-        guard mode == .snow, !snowBelowDock, !dockBodies.isEmpty else {
-            ground.deposit(area, at: point.x, wide: true)
-            return
-        }
-        if let id = dockBodies.first(where: { _, frame in
+        var remaining = area
+        if mode == .snow, !snowBelowDock,
+           let id = dockBodies.first(where: { _, frame in
                point.x >= Float(frame.minX) && point.x <= Float(frame.maxX) && point.y >= Float(frame.maxY)
            })?.key, let layer = ledges[id] {
-            let missed = layer.deposit(area, at: point.x, wide: true)
-            if missed > 0.05 {
-                depositOnGroundPastDock(missed, at: point.x)
-            }
-        } else {
-            depositOnGroundPastDock(area, at: point.x)
+            remaining = layer.deposit(area, at: point.x, wide: true)
         }
-    }
-
-    private func depositOnGroundPastDock(_ area: Float, at x: Float) {
-        var outside = SIMD2(x, -Float.greatestFiniteMagnitude)
-        routeGroundPastDock(&outside)
-        if outside.y > 0,
-           let id = dockBodies.first(where: { _, frame in outside.x >= Float(frame.minX) && outside.x <= Float(frame.maxX) })?.key,
-           let layer = ledges[id] {
-            let i = layer.clampedIndex(at: outside.x)
-            layer.set(i, layer.heights[i] + area / columnWidth)
-        } else {
-            if outside.x != x,
-               let dock = dockBodies.values.first(where: { x >= Float($0.minX) && x <= Float($0.maxX) }),
-               spreadGroundSnow(area, past: dock, left: outside.x < Float(dock.minX)) { return }
-            ground.deposit(area, at: outside.x, wide: false)
+        guard remaining > 0 else { return }
+        let missed = ground.deposit(remaining, at: point.x, wide: true)
+        if missed > 0 {
+            let i = ground.clampedIndex(at: point.x)
+            ground.set(i, ground.heights[i] + missed / ground.columnWidth)
         }
-    }
-
-    /// Масса из-под Dock образует широкий округлый сугроб, а не высокий пик в трёх колонках у бока.
-    private func spreadGroundSnow(_ area: Float, past dock: CGRect, left: Bool) -> Bool {
-        guard area > 0 else { return true }
-        let anchor = left ? max(0, Float(dock.minX) - columnWidth * 3)
-            : min(width, Float(dock.maxX) + columnWidth * 3)
-        let available = left ? anchor : width - anchor
-        // Повторные малые порции учитывают уже лежащий снег, а не растят один бугор шириной 48 pt.
-        var span = min(available, max(48, area.squareRoot() * 6))
-        guard span > 0 else { return false }
-        for _ in 0..<12 {
-            let start = left ? anchor - span : anchor
-            let end = start + span
-            var accumulated = area
-            for i in ground.clampedIndex(at: start)...ground.clampedIndex(at: end) {
-                let x = ground.centerX(i)
-                if x >= start, x < end { accumulated += ground.heights[i] * columnWidth }
-            }
-            let wider = min(available, max(span, accumulated.squareRoot() * 6))
-            guard wider > span + columnWidth else { break }
-            span = wider
-        }
-        let start = left ? anchor - span : anchor
-        let end = start + span
-        var columns: [(Int, Float)] = []
-        var total: Float = 0
-        var redistributed = area
-        for i in ground.clampedIndex(at: start)...ground.clampedIndex(at: end) {
-            let x = ground.centerX(i)
-            guard x >= start, x < end,
-                  !dockBodies.values.contains(where: { x >= Float($0.minX) && x <= Float($0.maxX) }) else { continue }
-            let weight = pow(sin(.pi * (x - start) / span), 2)
-            guard weight > 0 else { continue }
-            columns.append((i, weight))
-            total += weight
-            redistributed += ground.heights[i] * columnWidth
-        }
-        guard total > 0 else { return false }
-        for (i, weight) in columns {
-            ground.set(i, redistributed * weight / (total * columnWidth))
-        }
-        return true
     }
 
     /// The highest visible snow surface crossed while falling from `from` to `to` at `x`, allowing for the surface moving meanwhile.
@@ -2363,7 +2264,6 @@ final class SnowSimulation {
             flake.position += motion(of: flake) * dt
             let dockRoof = collideWithDock(position: &flake.position, velocity: &flake.velocity,
                                            from: previousPosition, radius: flake.size / 2)
-            routeGroundPastDock(&flake.position, radius: flake.size / 2)
 
             // Декоративные хлопья не оседают: после касания полки их полёт заканчивается.
             // Иначе они бесконечно подскакивают на месте и создают размытую полосу.
@@ -2487,7 +2387,6 @@ final class SnowSimulation {
             grain.position += grain.velocity * dt
             let dockRoof = collideWithDock(position: &grain.position, velocity: &grain.velocity,
                                            from: previousPosition, radius: grain.size / 2)
-            routeGroundPastDock(&grain.position, radius: grain.size / 2)
             let dockHit = dockRoof.flatMap { layer in layer.index(at: grain.position.x).map { (layer: layer, index: $0) } }
 
             if grain.position.x < -10 || grain.position.x > width + 10 || grain.position.y < -10 {
