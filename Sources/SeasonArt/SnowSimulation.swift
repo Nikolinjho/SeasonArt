@@ -504,6 +504,23 @@ final class SnowSimulation {
         return currentDockPresentationFrame
     }
     /// AX задаёт ширину и раскладку значков, высота опоры берётся из снимка текущего кадра.
+    /// Скругление нижних углов Dock: насколько изгиб приподнят над дном на этом x.
+    private func dockBottomGap(at x: Float, in frame: CGRect) -> Float {
+        guard let corner = dockCorners.values.first, corner.radius > 0 else { return 0 }
+        let radius = min(corner.radius, Float(frame.width) / 2, Float(frame.height) / 2)
+        let distance = max(0, min(x - Float(frame.minX), Float(frame.maxX) - x))
+        let u = max(0, 1 - distance / radius)
+        return radius * (1 - pow(max(0, 1 - pow(u, corner.exponent)), 1 / corner.exponent))
+    }
+
+    /// Насколько изгиб нижнего угла отступает от бока на высоте `rise` над дном.
+    private func dockBottomInset(rise: Float, in frame: CGRect) -> Float {
+        guard let corner = dockCorners.values.first, corner.radius > 0 else { return 0 }
+        let radius = min(corner.radius, Float(frame.width) / 2, Float(frame.height) / 2)
+        let v = max(0, 1 - max(0, rise) / radius)
+        return radius * (1 - pow(max(0, 1 - pow(v, corner.exponent)), 1 / corner.exponent))
+    }
+
     private var currentDockPresentationFrame: CGRect? {
         guard let body = dockFrame else { return nil }
         guard let presentation = dockPresentationFrame else { return body }
@@ -1410,8 +1427,21 @@ final class SnowSimulation {
             }
             var occluders = layer.occluders
             if layer === ground, mode == .snow, !snowBelowDock, let body = currentDockPresentationFrame {
-                // Нижний снег уступает текущей раскладке Dock, не перемещая массу к его краям.
-                var frames = [body]
+                // Нижний снег уступает текущей раскладке Dock. Под изгибом нижних углов стекла нет, там снег виден.
+                var frames: [CGRect] = []
+                let radius = CGFloat(dockBottomGap(at: Float(body.minX), in: body))
+                if radius > 0.5 {
+                    frames.append(CGRect(x: body.minX, y: body.minY + radius, width: body.width, height: body.height - radius))
+                    let slices = 6
+                    for k in 0..<slices {
+                        let low = radius * CGFloat(k) / CGFloat(slices)
+                        let inset = CGFloat(dockBottomInset(rise: Float(low), in: body))
+                        frames.append(CGRect(x: body.minX + inset, y: body.minY + low,
+                                             width: max(0, body.width - 2 * inset), height: radius / CGFloat(slices)))
+                    }
+                } else {
+                    frames.append(body)
+                }
                 if dockMagnification.isActive {
                     for icon in dockIconFrames ?? [] {
                         if !body.contains(icon.frame) { frames.append(icon.frame) }

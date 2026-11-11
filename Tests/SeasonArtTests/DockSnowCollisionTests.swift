@@ -43,8 +43,11 @@ final class DockSnowCollisionTests: XCTestCase {
         defer { buffer.deallocate() }
         let piles = value.writeLayers(into: buffer, capacity: value.columnCount)
         for pile in piles where !pile.isDock {
-            XCTAssertTrue(pile.occluders.contains { $0.x <= 100 && $0.z >= 400 && $0.y <= 6 && $0.w >= 66 },
-                          "Нижний снег скрывается корпусом Dock", file: file, line: line)
+            // Маска повторяет скругление нижних углов, поэтому проверяются точки внутри корпуса.
+            for point in [SIMD2<Float>(250, 7), SIMD2<Float>(250, 65), SIMD2<Float>(101, 40), SIMD2<Float>(399, 40)] {
+                XCTAssertTrue(pile.occluders.contains { point.x >= $0.x && point.x <= $0.z && point.y >= $0.y && point.y <= $0.w },
+                              "Нижний снег скрывается корпусом Dock в \(point)", file: file, line: line)
+            }
         }
     }
 
