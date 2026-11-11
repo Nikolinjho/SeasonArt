@@ -2,6 +2,20 @@ import XCTest
 @testable import SeasonArt
 
 final class NightIntegrationTests: XCTestCase {
+    func testСимуляцияПереключаетПалитруБезПерезапускаЭффекта() {
+        let simulation = SnowSimulation(width: 800, height: 600, snowfall: .steady)
+        simulation.mode = .fireflies
+        _ = simulation.step(dt: 1 / 60, cursor: SIMD2(-1000, -1000))
+        let positions = sprites(simulation).map(\.position)
+        var wakes = 0
+        simulation.stirred = { wakes += 1 }
+        simulation.colorfulFireflies = true
+        let colors = sprites(simulation).map { SIMD3($0.tintRed, $0.tintGreen, $0.tintBlue) }
+        XCTAssertGreaterThan(Set(colors).count, 1)
+        XCTAssertEqual(sprites(simulation).map(\.position), positions)
+        XCTAssertEqual(wakes, 1)
+    }
+
     func testЗвездопадСоздаётИскрыТолькоНаОткрытойВерхушкеОкна() {
         for covered in [false, true] {
             let simulation = SnowSimulation(width: 800, height: 600, snowfall: .steady)

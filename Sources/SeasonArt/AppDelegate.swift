@@ -39,6 +39,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var accumulateItem: NSMenuItem!
     private var meltItem: NSMenuItem!
     private var blizzardItem: NSMenuItem!
+    private var colorfulFirefliesItem: NSMenuItem!
     private var dockAccessItem: NSMenuItem!
     private var dockPositionItem: NSMenuItem!
     private var dockPositionItems: [DockSnowPosition: NSMenuItem] = [:]
@@ -194,6 +195,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         accumulateItem = add("Накапливать", #selector(toggleAccumulate), to: menu)
         meltItem = add("Таяние снега", #selector(toggleMeltSnow), to: menu)
         blizzardItem = add("Метель", #selector(toggleBlizzard), to: menu)
+        colorfulFirefliesItem = add("Разноцветные светлячки", #selector(toggleColorfulFireflies), to: menu)
         let dockPositionMenu = NSMenu()
         dockPositionMenu.autoenablesItems = false
         for position in DockSnowPosition.allCases {
@@ -252,6 +254,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let rain = mode == .rain
         let blossom = mode == .blossom
         blizzardItem.isHidden = mode != .snow
+        colorfulFirefliesItem.isHidden = mode != .fireflies
+        colorfulFirefliesItem.state = Preferences.colorfulFireflies ? .on : .off
         dockPositionItem.isHidden = mode != .snow
         for (position, item) in dockPositionItems {
             item.state = position == Preferences.dockSnowPosition ? .on : .off
@@ -317,6 +321,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func toggleBlizzard() {
         Preferences.blizzard.toggle()
         for snow in screens { snow.simulation.blizzard = Preferences.blizzard }
+    }
+
+    @objc private func toggleColorfulFireflies() {
+        Preferences.colorfulFireflies.toggle()
+        for snow in screens { snow.simulation.colorfulFireflies = Preferences.colorfulFireflies }
     }
 
     @objc private func chooseDockSnowPosition(_ sender: NSMenuItem) {

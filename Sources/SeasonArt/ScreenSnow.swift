@@ -122,6 +122,7 @@ final class ScreenSnow {
         simulation.thaws = Preferences.meltSnow
         simulation.accumulates = Preferences.accumulate
         simulation.blizzard = Preferences.blizzard
+        simulation.colorfulFireflies = Preferences.colorfulFireflies
         simulation.dockSnowPosition = Preferences.dockSnowPosition
         let renderer: Renderer
         do {

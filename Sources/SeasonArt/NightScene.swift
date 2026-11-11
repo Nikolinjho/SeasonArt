@@ -17,6 +17,13 @@ final class NightScene {
         }
     }
     private(set) var sprites: [Sprite] = []
+    var colorfulFireflies = false {
+        didSet { writeSprites() }
+    }
+    private static let fireflyPalette: [SIMD3<Float>] = [
+        SIMD3(1, 0.87, 0.35), SIMD3(0.55, 1, 0.42), SIMD3(0.35, 1, 0.85),
+        SIMD3(0.45, 0.72, 1), SIMD3(0.78, 0.52, 1), SIMD3(1, 0.5, 0.73),
+    ]
     private var width: Float
     private var height: Float
     private var seed: UInt64
@@ -65,7 +72,9 @@ final class NightScene {
             let count = min(160, max(6, Int(min(width * height / 1_000_000, 10) * 42 * strength)))
             if flies.count > count { flies.removeLast(flies.count - count) }
             while flies.count < count {
-                flies.append(Particle(position: SIMD2(random(0, width), random(0, height)),
+                let region = flightRegion(index: flies.count, count: count)
+                let offset = SIMD2(random(-0.2, 0.2), random(-0.2, 0.2)) * region.size
+                flies.append(Particle(position: region.center + offset,
                                       phase: random(0, 2 * .pi), size: random(9, 16)))
             }
         }
@@ -83,6 +92,19 @@ final class NightScene {
         writeSprites()
     }
 
+    /// Ряды содержат почти одинаковое число областей, в том числе при нечётном количестве огоньков.
+    private func flightRegion(index: Int, count: Int) -> (center: SIMD2<Float>, size: SIMD2<Float>) {
+        let rows = min(count, max(1, Int(sqrt(Float(count) * height / width).rounded())))
+        let perRow = count / rows
+        let extra = count % rows
+        let fullRows = (perRow + 1) * extra
+        let row = index < fullRows ? index / (perRow + 1) : extra + (index - fullRows) / perRow
+        let columns = perRow + (row < extra ? 1 : 0)
+        let column = index - row * perRow - min(row, extra)
+        let size = SIMD2(width / Float(columns), height / Float(rows))
+        return (SIMD2(Float(column) + 0.5, Float(row) + 0.5) * size, size)
+    }
+
     private func moveFlies(dt: Float, cursor: SIMD2<Float>) {
         let inside = cursor.x.isFinite && cursor.y.isFinite && cursor.x >= 0 && cursor.x <= width
             && cursor.y >= 0 && cursor.y <= height
@@ -97,13 +119,27 @@ final class NightScene {
             pointerAnchor = nil
             stillTime = 0
         }
+        // Все силы читают один снимок: порядок обхода не меняет раздвигание соседей.
+        let positions = flies.map(\.position)
+        let spacing = min(85, sqrt(width * height / Float(flies.count)) * 0.45)
         for i in flies.indices {
             let phase = flies[i].phase
+            let region = flightRegion(index: i, count: flies.count)
+            let wander = SIMD2(sin(time * 0.11 + phase), cos(time * 0.09 + phase * 3)) * region.size * 0.28
             var force = SIMD2(sin(time * 0.7 + phase) * 22, cos(time * 0.53 + phase * 3) * 18)
-            let distance = simd_distance(flies[i].position, cursor)
-            if inside, stillTime >= 0.6, distance < 280 {
-                let orbit = cursor + SIMD2(cos(time * 0.6 + phase), sin(time * 0.6 + phase)) * (22 + 18 * sin(phase) * sin(phase))
-                force += (orbit - flies[i].position) * 0.85
+            force += (region.center + wander - positions[i]) * 0.18
+            let distance = simd_distance(positions[i], cursor)
+            if inside, stillTime >= 0.6, distance < 200 {
+                force += (cursor - positions[i]) * (0.035 * (1 - distance / 200))
+            }
+            for j in positions.indices where j != i {
+                let delta = positions[i] - positions[j]
+                let separation = simd_length(delta)
+                if separation < spacing {
+                    let direction = separation > 0.001 ? delta / separation
+                        : SIMD2(cos(phase), sin(phase))
+                    force += direction * ((spacing - separation) * 0.8)
+                }
             }
             // Мягкая граница удерживает огоньки на экране без скачка с края на край.
             let p = flies[i].position
@@ -164,10 +200,11 @@ final class NightScene {
 
     private func writeSprites() {
         sprites.removeAll(keepingCapacity: true)
-        for fly in flies {
+        for (index, fly) in flies.enumerated() {
             let pulse = 0.4 + 0.6 * pow(0.5 + 0.5 * sin(time * 2.1 + fly.phase), 2)
+            let tint = colorfulFireflies ? Self.fireflyPalette[index % Self.fireflyPalette.count] : SIMD3(0.86, 1, 0.32)
             sprites.append(Sprite(position: fly.position, size: fly.size, alpha: pulse, soft: 1,
-                tintAmount: 1, tintRed: 0.86, tintGreen: 1, tintBlue: 0.32, glow: 1))
+                tintAmount: 1, tintRed: tint.x, tintGreen: tint.y, tintBlue: tint.z, glow: 1))
         }
         for meteor in meteors {
             sprites.append(Sprite(position: meteor.position, velocity: meteor.velocity, size: meteor.size,

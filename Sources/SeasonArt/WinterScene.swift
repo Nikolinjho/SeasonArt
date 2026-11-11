@@ -45,6 +45,7 @@ private final class Figure {
     var pushed = false
     var joint: b2JointId?
     var velocityBeforeStep = CGVector.zero
+    var fallPeakY: CGFloat?
 
     init(key: Int, body: b2BodyId, parts: [SnowballPart], angle: CGFloat) {
         self.key = key
@@ -309,6 +310,7 @@ final class WinterScene {
         objects[index].spin = 0
         let figure = figures[index]
         figure.landing = nil
+        figure.fallPeakY = nil
         // Шар в руке — тело без гравитации на пружине: расталкивает свободных соседей и упирается в опёртых.
         b2Body_SetGravityScale(figure.body, 0)
         b2Body_SetFixedRotation(figure.body, true)
@@ -497,6 +499,7 @@ final class WinterScene {
     /// Возвращает телу гравитацию. Одиночный шар сразу катится без проскальзывания.
     private func release(_ index: Int, velocity: CGVector) {
         let figure = figures[index]
+        figure.fallPeakY = objects[index].center.y
         if let joint = figure.joint { b2DestroyJoint(joint) }
         figure.joint = nil
         objects[index].isDragged = false
@@ -716,6 +719,15 @@ final class WinterScene {
     }
 
     private func substep() {
+        for index in figures.indices where objects[index].isSnowman {
+            let figure = figures[index]
+            if objects[index].isDragged || objects[index].parked {
+                figure.fallPeakY = nil
+            } else {
+                let y = SnowballWorld.points(b2Body_GetPosition(figure.body)).y
+                figure.fallPeakY = max(figure.fallPeakY ?? y, y)
+            }
+        }
         for index in figures.indices where !objects[index].parked && b2Body_IsAwake(figures[index].body) {
             figures[index].velocityBeforeStep = SnowballWorld.velocity(b2Body_GetLinearVelocity(figures[index].body))
         }
@@ -728,6 +740,7 @@ final class WinterScene {
             figure.angle = angle
         }
         handleContactEvents()
+        handleSnowmanFalls()
     }
 
     private func handleContactEvents() {
@@ -772,7 +785,7 @@ final class WinterScene {
                                  velocity: velocity))
         }
         var reshaped: Set<Int> = []
-        for chip in chips where !objects[chip.index].isDragged && objects[chip.index].radii.indices.contains(chip.component) {
+        for chip in chips where !objects[chip.index].isDragged && !objects[chip.index].isSnowman && objects[chip.index].radii.indices.contains(chip.component) {
             if self.chip(chip.index, component: chip.component, speed: chip.speed, at: chip.point) { reshaped.insert(chip.index) }
         }
         for index in reshaped {
@@ -780,6 +793,62 @@ final class WinterScene {
             figure.parts = objects[index].physicalParts
             physics.replaceShapes(of: figure.body, with: figure.parts)
             if figure.pushed { setMasks(figure, ball: SnowballCategory.pushedMask, foot: SnowballCategory.snow) }
+        }
+    }
+
+    /// Высота считается от вершины свободного полёта. Опора снизу завершает падение один раз.
+    private func handleSnowmanFalls() {
+        var broken: [Int] = []
+        for index in objects.indices where objects[index].isSnowman && !objects[index].isDragged && !objects[index].parked {
+            let figure = figures[index]
+            let position = SnowballWorld.points(b2Body_GetPosition(figure.body))
+            figure.fallPeakY = max(figure.fallPeakY ?? position.y, position.y)
+            let supported = contacts(of: figure.body).contains { contact in
+                guard contact.manifold.pointCount > 0 else { return false }
+                let mine = same(b2Shape_GetBody(contact.shapeIdA), figure.body)
+                return (mine ? -contact.manifold.normal.y : contact.manifold.normal.y) > 0.5
+            }
+            guard supported else { continue }
+            let distance = max(0, (figure.fallPeakY ?? position.y) - position.y)
+            figure.fallPeakY = nil
+            let speed = sqrt(2 * WinterMotion.gravity * distance)
+            guard speed > 180 else { continue }
+            // Координаты Box2D хранятся во Float: не разрушаем фигуру из-за шума меньше 0,001 pt.
+            if distance - height / 3 > 0.001 { broken.append(index) }
+            var reshaped = false
+            for component in objects[index].radii.indices {
+                let center = SnowballWorld.points(b2Body_GetWorldPoint(figure.body, SnowballWorld.meters(figure.parts[component].center)))
+                let point = CGPoint(x: center.x, y: center.y - objects[index].radii[component])
+                reshaped = chip(index, component: component, speed: speed, at: point) || reshaped
+            }
+            if reshaped {
+                figure.parts = objects[index].physicalParts
+                physics.replaceShapes(of: figure.body, with: figure.parts)
+                if figure.pushed { setMasks(figure, ball: SnowballCategory.pushedMask, foot: SnowballCategory.snow) }
+            }
+        }
+        // Сначала дочитываем контакты всех фигур, затем меняем массивы и тела Box2D.
+        for index in broken.reversed() { breakSnowman(at: index) }
+    }
+
+    private func breakSnowman(at index: Int) {
+        var object = objects[index]
+        object.center = SnowballWorld.points(b2Body_GetPosition(figures[index].body))
+        let velocity = SnowballWorld.velocity(b2Body_GetLinearVelocity(figures[index].body))
+        let circles = object.ballCircles
+        let available = Self.maximumObjects - objects.count + 1
+        remove(at: index)
+        for (component, circle) in circles.enumerated() {
+            didChip(WinterBallChip(center: circle.center, radius: circle.radius, strength: 0.7))
+            // При полном лимите лишние части рассыпаются в крошку вместо создания новых тел.
+            guard component < available else { continue }
+            let piece = WinterObject(id: UUID(), radii: [circle.radius], center: circle.center,
+                velocity: .zero, support: nil, parked: false, isDragged: false,
+                ballDamage: [object.damage(for: component)])
+            append(piece)
+            release(objects.count - 1, velocity: CGVector(
+                dx: velocity.dx * 0.3 + CGFloat(component - 1) * 110,
+                dy: 55 + CGFloat(component) * 35))
         }
     }
 
@@ -1203,6 +1272,8 @@ final class WinterScene {
     }
 
     private func teleport(_ index: Int, to center: CGPoint, wake: Bool = true) {
+        // Перенос опорой, растущим снегом и рукой не относится к свободному падению.
+        if let peak = figures[index].fallPeakY { figures[index].fallPeakY = peak + center.y - objects[index].center.y }
         objects[index].center = center
         let body = figures[index].body
         b2Body_SetTransform(body, SnowballWorld.meters(center), b2Body_GetRotation(body))

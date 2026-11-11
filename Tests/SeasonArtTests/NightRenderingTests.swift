@@ -7,9 +7,10 @@ final class NightRenderingTests: XCTestCase {
     func testMetalРисуетСветлячковИМетеорыНепустымЦветнымКадром() throws {
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let queue = try XCTUnwrap(device.makeCommandQueue())
-        for mode: Mode in [.fireflies, .starfall] {
+        for (mode, colorful): (Mode, Bool) in [(.fireflies, false), (.fireflies, true), (.starfall, false)] {
             let simulation = SnowSimulation(width: 800, height: 600, snowfall: .steady)
             simulation.mode = mode
+            simulation.colorfulFireflies = colorful
             for _ in 0..<150 { _ = simulation.step(dt: 1 / 60, cursor: SIMD2(400, 300)) }
             let renderer = try Renderer(device: device, pixelFormat: .bgra8Unorm, simulation: simulation)
             let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: 800, height: 600, mipmapped: false)
@@ -30,7 +31,10 @@ final class NightRenderingTests: XCTestCase {
             texture.getBytes(&bytes, bytesPerRow: 800 * 4, from: MTLRegionMake2D(0, 0, 800, 600), mipmapLevel: 0)
             let lit = stride(from: 0, to: bytes.count, by: 4).filter { max(bytes[$0], bytes[$0 + 1], bytes[$0 + 2]) > 60 }
             XCTAssertGreaterThan(lit.count, 20, "На экране виден свет, а не только фон")
-            if mode == .fireflies {
+            if colorful {
+                XCTAssertTrue(lit.contains { Int(bytes[$0 + 2]) > Int(bytes[$0]) + 25 }, "В кадре есть тёплые огоньки")
+                XCTAssertTrue(lit.contains { Int(bytes[$0]) > Int(bytes[$0 + 2]) + 25 }, "В кадре есть холодные огоньки")
+            } else if mode == .fireflies {
                 XCTAssertTrue(lit.contains { Int(bytes[$0 + 1]) > Int(bytes[$0]) + 20 }, "Огоньки имеют жёлто-зелёный оттенок")
             } else {
                 XCTAssertTrue(lit.contains { Int(bytes[$0]) > Int(bytes[$0 + 2]) + 15 }, "Метеоры имеют холодный оттенок")
@@ -48,7 +52,7 @@ final class NightRenderingTests: XCTestCase {
                 }
                 let url = URL(fileURLWithPath: folder, isDirectory: true)
                 try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-                try XCTUnwrap(bitmap.representation(using: .png, properties: [:])).write(to: url.appendingPathComponent("\(mode).png"))
+                try XCTUnwrap(bitmap.representation(using: .png, properties: [:])).write(to: url.appendingPathComponent("\(mode)\(colorful ? "-colorful" : "").png"))
             }
         }
     }

@@ -747,6 +747,14 @@ final class SnowSimulation {
     var rain: Bool { mode == .rain }
     private var restyled = false
     private let night: NightScene
+    var colorfulFireflies: Bool {
+        get { night.colorfulFireflies }
+        set {
+            guard night.colorfulFireflies != newValue else { return }
+            night.colorfulFireflies = newValue
+            stirred()
+        }
+    }
     /// The mode waiting for the gust to clear the screen, so one kind never turns into the other in sight.
     private var nextMode: Mode?
     private var switchedAt: Double = 0

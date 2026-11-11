@@ -14,19 +14,28 @@ final class NightSceneTests: XCTestCase {
         }
     }
 
-    func testНеподвижныйУказательСобираетОгонькиАВнешнийНеПритягивает() {
+    func testНеподвижныйУказательСлабоОтклоняетОгонькиБезСкопления() {
         let attracted = NightScene(width: 800, height: 600, seed: 42)
         let free = NightScene(width: 800, height: 600, seed: 42)
         attracted.mode = .fireflies
         free.mode = .fireflies
         let cursor = SIMD2<Float>(400, 300)
-        advance(attracted, seconds: 10, cursor: cursor)
-        advance(free, seconds: 10)
+        advance(attracted, seconds: 60, cursor: cursor)
+        advance(free, seconds: 60)
         func distance(_ scene: NightScene) -> Float {
             scene.sprites.reduce(0) { $0 + simd_distance($1.position, cursor) } / Float(scene.sprites.count)
         }
         XCTAssertFalse(attracted.sprites.isEmpty)
-        XCTAssertLessThan(distance(attracted), distance(free) * 0.8)
+        XCTAssertLessThan(distance(attracted), distance(free))
+        XCTAssertGreaterThan(distance(attracted), distance(free) * 0.85)
+        XCTAssertLessThanOrEqual(attracted.sprites.filter { simd_distance($0.position, cursor) < 80 }.count, 3)
+        for x: Float in [0, 400] {
+            for y: Float in [0, 300] {
+                XCTAssertGreaterThanOrEqual(attracted.sprites.filter {
+                    $0.position.x >= x && $0.position.x < x + 400 && $0.position.y >= y && $0.position.y < y + 300
+                }.count, 3, "Каждая четверть экрана сохраняет огоньки")
+            }
+        }
         XCTAssertTrue(attracted.sprites.allSatisfy { $0.glow > 0 && $0.trail == 0 })
     }
 
@@ -40,6 +49,42 @@ final class NightSceneTests: XCTestCase {
             free.step(dt: 1 / 60, intensity: 1, cursor: away, supports: [])
         }
         XCTAssertEqual(moving.sprites.map(\.position), free.sprites.map(\.position))
+    }
+
+    func testРазноцветныеОгонькиСохраняютОттенкиИНеПрыгаютПриПереключении() {
+        let scene = NightScene(width: 800, height: 600)
+        scene.mode = .fireflies
+        advance(scene, seconds: 1)
+        let positions = scene.sprites.map(\.position)
+        let original = scene.sprites.map { SIMD3($0.tintRed, $0.tintGreen, $0.tintBlue) }
+        XCTAssertTrue(original.allSatisfy { $0 == SIMD3(0.86, 1, 0.32) })
+        scene.colorfulFireflies = true
+        let colors = scene.sprites.map { SIMD3($0.tintRed, $0.tintGreen, $0.tintBlue) }
+        XCTAssertEqual(scene.sprites.map(\.position), positions)
+        XCTAssertEqual(Set(colors).count, 6)
+        advance(scene, seconds: 5)
+        XCTAssertEqual(scene.sprites.map { SIMD3($0.tintRed, $0.tintGreen, $0.tintBlue) }, colors)
+        scene.colorfulFireflies = false
+        XCTAssertEqual(scene.sprites.map { SIMD3($0.tintRed, $0.tintGreen, $0.tintBlue) }, original)
+    }
+
+    func testПлотностьОстаётсяРавномернойПослеСменыИнтенсивностиИРазмера() {
+        let scene = NightScene(width: 800, height: 600, seed: 3)
+        scene.mode = .fireflies
+        advance(scene, seconds: 1, intensity: 0.4)
+        advance(scene, seconds: 1, intensity: 3)
+        scene.resize(width: 1200, height: 700)
+        advance(scene, seconds: 60, cursor: SIMD2(600, 350), intensity: 3)
+        for x in 0..<3 {
+            for y in 0..<2 {
+                let count = scene.sprites.filter {
+                    $0.position.x >= Float(x * 400) && $0.position.x < Float((x + 1) * 400)
+                    && $0.position.y >= Float(y * 350) && $0.position.y < Float((y + 1) * 350)
+                }.count
+                XCTAssertGreaterThanOrEqual(count, scene.sprites.count / 12)
+            }
+        }
+        XCTAssertTrue(scene.sprites.allSatisfy { $0.position.x >= 0 && $0.position.x <= 1200 && $0.position.y >= 0 && $0.position.y <= 700 })
     }
 
     func testТраекторииОдинаковыПриРазнойЧастотеКадров() {

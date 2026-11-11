@@ -215,7 +215,8 @@ final class WinterImpactTests: XCTestCase {
         }
         XCTAssertTrue(scene.objects[0].isSnowman)
         scene.beginDragging(base, at: scene.objects[0].center)
-        scene.drag(base, to: CGPoint(x: 240, y: 350), dt: 1)
+        // Падение меньше трети экрана сохраняет снеговика и проверяет один удар целой фигуры.
+        scene.drag(base, to: CGPoint(x: 240, y: 150), dt: 1)
         for _ in 0..<30 { scene.step(dt: 1 / 60) }
         XCTAssertEqual(events.count, 1, "Удерживаемый снеговик не ударяет снег")
         scene.endDragging(base)

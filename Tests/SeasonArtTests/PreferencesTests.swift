@@ -78,6 +78,18 @@ final class PreferencesTests: XCTestCase {
         XCTAssertFalse(Preferences.blizzard)
     }
 
+    func testРазноцветныеСветлячкиВыключеныПоУмолчаниюИСохраняются() {
+        let (name, defaults) = makeProfile()
+        Preferences.configure(defaults: defaults)
+        Preferences.registerDefaults()
+        XCTAssertFalse(Preferences.colorfulFireflies)
+        Preferences.colorfulFireflies = true
+        defaults.synchronize()
+        Preferences.configure(defaults: UserDefaults(suiteName: name)!)
+        Preferences.registerDefaults()
+        XCTAssertTrue(Preferences.colorfulFireflies)
+    }
+
     func testAllModesAndIntensityOptionsPersist() {
         let (_, defaults) = makeProfile()
         Preferences.configure(defaults: defaults)

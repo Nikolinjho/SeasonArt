@@ -39,6 +39,7 @@ enum Preferences {
     }
     private static let snowfallKey = "snowfall"
     private static let blizzardKey = "blizzard"
+    private static let colorfulFirefliesKey = "colorfulFireflies"
     private static let dockSnowPositionKey = "dockSnowPosition"
     private static let behindWindowsKey = "behindWindows"
     private static let showOverFullScreenKey = "showOverFullScreen"
@@ -61,6 +62,7 @@ enum Preferences {
         defaults.register(defaults: [
             snowfallKey: (calm ? Snowfall.light : .steady).rawValue,
             blizzardKey: false,
+            colorfulFirefliesKey: false,
             dockSnowPositionKey: DockSnowPosition.above.rawValue,
             behindWindowsKey: false,
             showOverFullScreenKey: false,
@@ -89,6 +91,11 @@ enum Preferences {
     static var blizzard: Bool {
         get { defaults.bool(forKey: blizzardKey) }
         set { defaults.set(newValue, forKey: blizzardKey) }
+    }
+
+    static var colorfulFireflies: Bool {
+        get { defaults.bool(forKey: colorfulFirefliesKey) }
+        set { defaults.set(newValue, forKey: colorfulFirefliesKey) }
     }
 
     static var dockSnowPosition: DockSnowPosition {
