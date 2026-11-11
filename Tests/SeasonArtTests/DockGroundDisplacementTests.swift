@@ -70,8 +70,8 @@ final class DockGroundDisplacementTests: XCTestCase {
         }
         let shaped = ground.heights
         value.dockPresentationFrame = body
-        for _ in 0..<600 { _ = value.step(dt: 1 / 60, cursor: away) }
-        // Срез у бывшей грани может стать крутым округлым краем, сам вал держит форму.
+        for _ in 0..<180 { _ = value.step(dt: 1 / 60, cursor: away) }
+        // Открытый край вала за пару секунд оплывает пологим скатом, сам вал держит форму.
         let berm = ground.heights.indices.filter { ground.centerX($0) < 50 || ground.centerX($0) > 450 }
         let worst = berm.map { abs(shaped[$0] - ground.heights[$0]) }.max() ?? 0
         XCTAssertLessThan(worst, 0.01, "Клейкий снег держит форму, которую ему придал Dock")
@@ -79,7 +79,8 @@ final class DockGroundDisplacementTests: XCTestCase {
         for i in ground.heights.indices.dropLast() where ground.centerX(i) < 98 {
             steepest = max(steepest, abs(ground.heights[i + 1] - ground.heights[i]) / ground.columnWidth)
         }
-        XCTAssertLessThan(steepest, 2.2, "Срез у борозды крутой, но не отвесный")
+        // Около 40°: пологий скат, слепленный снег держит склон до 0,7 и чуть круче у самого гребня.
+        XCTAssertLessThan(steepest, 0.9, "Край вала у борозды пологий, без отвеса")
         XCTAssertEqual(mass(ground), before, accuracy: 0.05)
     }
 
@@ -126,7 +127,8 @@ final class DockGroundDisplacementTests: XCTestCase {
         ground.refreshTop()
         for _ in 0..<600 { _ = value.step(dt: 1 / 60, cursor: away) }
         var steepest: Float = 0
-        for i in ground.heights.indices.dropLast() where ground.centerX(i) > 40 && ground.centerX(i) < 100 {
+        // Бок увеличенного Dock скрыт и держит снег: склон меряется по видимому снегу снаружи.
+        for i in ground.heights.indices.dropLast() where ground.centerX(i) > 40 && ground.centerX(i + 1) < Float(expanded.minX) {
             steepest = max(steepest, abs(ground.heights[i + 1] - ground.heights[i]) / ground.columnWidth)
         }
         XCTAssertLessThan(steepest, 1.3, "Снег у грани оплывает мягким скатом, без отвеса и шипа")
@@ -153,7 +155,8 @@ final class DockGroundDisplacementTests: XCTestCase {
             }
             previous = ground.heights
         }
-        XCTAssertLessThan(lastCycles / 5, 200, "К двадцатому наведению снег у Dock почти не двигается")
+        // После каждого сжатия открытый край вала заново плавно оплывает в борозду: это движение без рывков.
+        XCTAssertLessThan(lastCycles / 5, 400, "К двадцатому наведению снег у Dock не раскачивается")
     }
 
     func testНеподвижныйDockИСжатиеНеПересобираютБоковыеСугробы() throws {

@@ -11,9 +11,9 @@ final class SnowLayer {
     /// How much of each column's snow a wall has packed down already, so it isn't packed again.
     private(set) var packed: [Float]
     /// Самый крутой склон слепленного снега, около 50°: он пластичен и оплывает мягким скатом.
-    static let cohesiveSlope: Float = 1.2
+    static let cohesiveSlope: Float = 0.7
     /// Насколько быстро крутой слепленный снег сползает с колонки, pt/с.
-    static let cohesiveCreep: Float = 12
+    static let cohesiveCreep: Float = 40
 
     /// Слепленный снег: снег клейкий и держит форму, которую ему придали. По склону течёт только рыхлый снег поверх него.
     private(set) var cohesive: [Float]
@@ -70,6 +70,8 @@ final class SnowLayer {
     private let phases: (Float, Float)
     private var corner: (radius: Float, exponent: Float) = (0, 2)
     private var supported: [Bool]
+    /// Колонки под твёрдым корпусом: слепленный снег не сползает в них, как не сползает сквозь отвал.
+    var pressed: ClosedRange<Int>?
     private var supportedRange: ClosedRange<Int>?
     private var parity = false
 
@@ -335,8 +337,9 @@ final class SnowLayer {
                         func loose(_ i: Int) -> Float { max(0, h[i] - stuck[i]) }
                         // Слепленный снег пластичен: сползает медленно, без рывка за один кадр.
                         let creep = Self.cohesiveCreep / 60 / 6
-                        func movable(_ i: Int, over difference: Float) -> Float {
-                            guard difference > cohesiveLimit + 0.01 else { return loose(i) }
+                        let press = pressed
+                        func movable(_ i: Int, into target: Int, over difference: Float) -> Float {
+                            guard difference > cohesiveLimit + 0.01, press?.contains(target) != true else { return loose(i) }
                             return min(h[i], min((difference - cohesiveLimit) * 0.5, creep) + loose(i))
                         }
                         // Moves snow between columns, packed snow in proportion.
@@ -357,11 +360,11 @@ final class SnowLayer {
                                 let ahead = limit + min(max(fall, 0), steepest)
                                 let behind = limit + min(max(-fall, 0), steepest)
                                 if difference > ahead + 0.01 {
-                                    let transfer = min((difference - ahead) * 0.5, movable(i, over: difference))
+                                    let transfer = min((difference - ahead) * 0.5, movable(i, into: i + 1, over: difference))
                                     shift(transfer, from: i, to: i + 1)
                                     if transfer > 0 { moved = true }
                                 } else if difference < -behind - 0.01 {
-                                    let transfer = min((-difference - behind) * 0.5, movable(i + 1, over: -difference))
+                                    let transfer = min((-difference - behind) * 0.5, movable(i + 1, into: i, over: -difference))
                                     shift(transfer, from: i + 1, to: i)
                                     if transfer > 0 { moved = true }
                                 }

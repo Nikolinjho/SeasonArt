@@ -4085,6 +4085,13 @@ final class SnowSimulation {
         let falling = snowfall.flakesPerMegapoint * strength * density * (leafy ? leafShare : 1)
         let meltPace = falling > 0 ? pow(falling / thawBalance, thawExponent) : 1
         for ledge in ledgeList { ledge.outside = (outside(of: ledge, left: true), outside(of: ledge, left: false)) }
+        // Корпус Dock держит прижатый к нему вал. Открытый край оплывает пологим скатом.
+        ground.pressed = nil
+        if mode == .snow, !snowBelowDock, let frame = currentDockPresentationFrame,
+           let first = ground.heights.indices.first(where: { ground.centerX($0) >= Float(frame.minX) }),
+           let last = ground.heights.indices.last(where: { ground.centerX($0) < Float(frame.maxX) }), first <= last {
+            ground.pressed = first...last
+        }
         for layer in layers {
             if !accumulates || thaws {
                 // Withered leaves leave nothing behind.
