@@ -19,7 +19,7 @@ final class DockSnowPositionTests: XCTestCase {
         return simulation
     }
 
-    func testВыборСохраняетсяВПрофилеИСверхуПоУмолчанию() {
+    func testВыборСохраняетсяВПрофилеИПередDockПоУмолчанию() {
         let name = "SeasonArtTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: name)!
         defer {
@@ -28,7 +28,7 @@ final class DockSnowPositionTests: XCTestCase {
         }
         Preferences.configure(defaults: defaults)
         Preferences.registerDefaults()
-        XCTAssertEqual(Preferences.dockSnowPosition, .above)
+        XCTAssertEqual(Preferences.dockSnowPosition, .front)
         Preferences.dockSnowPosition = .below
         defaults.synchronize()
         Preferences.configure(defaults: UserDefaults(suiteName: name)!)
@@ -72,8 +72,14 @@ final class DockSnowPositionTests: XCTestCase {
         XCTAssertEqual(layers(simulation).reduce(Float(0)) { $0 + $1.heights.reduce(0, +) * $1.columnWidth }, before, accuracy: 0.01)
     }
 
-    func testСнегПодDockПродолжаетОседатьНаОкнах() {
-        let simulation = make(.below)
+    func testПадающийМимоDockСнегПродолжаетОседатьНаОкнах() {
+        for position in [DockSnowPosition.front, .below] {
+            let simulation = make(position)
+            assertSnowAccumulatesOnWindows(simulation)
+        }
+    }
+
+    private func assertSnowAccumulatesOnWindows(_ simulation: SnowSimulation) {
         let window = WindowSurface(id: 7, frame: CGRect(x: 160, y: 80, width: 200, height: 20),
             blockers: [], cover: [], cornerRadius: 0, cornerExponent: 2.5, isDock: false)
         simulation.updateWindows([window, dock], interval: 1 / 60)
@@ -94,6 +100,20 @@ final class DockSnowPositionTests: XCTestCase {
         let before = shelf.heights.reduce(0, +) * shelf.columnWidth
         simulation.dockSnowPosition = .below
         XCTAssertEqual(layers(simulation)[0].heights.reduce(0, +) * simulation.columnWidth, before, accuracy: 0.001)
+    }
+
+    func testПереднийРежимПереноситСнегСПолкиИСохраняетМассу() throws {
+        let simulation = make(.above)
+        let shelf = try XCTUnwrap(layers(simulation).first(where: \.isDock))
+        for i in 40..<70 { shelf.set(i, 5) }
+        shelf.refreshTop()
+        let mass = shelf.heights.reduce(0, +) * shelf.columnWidth
+        simulation.dockSnowPosition = .front
+        XCTAssertEqual(shelf.top, 0)
+        XCTAssertEqual(layers(simulation)[0].heights.reduce(0, +) * simulation.columnWidth, mass, accuracy: 0.01)
+        var buffer = [Float](repeating: 0, count: simulation.columnCount)
+        let rendered = simulation.writeLayers(into: &buffer, capacity: buffer.count)
+        XCTAssertTrue(rendered.allSatisfy { !$0.isDock })
     }
 
     func testСменаРежимаОбновляетРасположениеОверлея() throws {
@@ -119,6 +139,8 @@ final class DockSnowPositionTests: XCTestCase {
         for _ in 0..<600 { _ = snow.simulation.step(dt: 1 / 60, cursor: away) }
         XCTAssertTrue(snow.window.belowDock)
         XCTAssertLessThan(snow.window.level.rawValue, Int(CGWindowLevelForKey(.dockWindow)))
+        snow.dockSnowPosition = .front
+        XCTAssertGreaterThan(snow.window.level.rawValue, Int(CGWindowLevelForKey(.dockWindow)))
     }
 
     func testКонтурИконкиИспользуетВысотуDockТекущегоКадра() throws {

@@ -9,6 +9,7 @@ final class SnowSculptingPreviewWindow: NSPanel {
     init() {
         super.init(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         title = "SeasonArt · снежок"
+        isMovable = false
         isOpaque = false
         backgroundColor = .clear
         hasShadow = false
@@ -42,10 +43,7 @@ final class SnowSculptingPreviewWindow: NSPanel {
 
 private final class SnowSculptingPreviewView: NSView {
     override func draw(_ dirtyRect: NSRect) {
-        let ball = NSBezierPath(ovalIn: bounds.insetBy(dx: 2, dy: 2))
-        NSGradient(starting: .white, ending: NSColor(calibratedRed: 0.68, green: 0.84, blue: 0.94, alpha: 0.9))?.draw(in: ball, angle: -60)
-        NSColor.white.withAlphaComponent(0.8).setStroke()
-        ball.lineWidth = 1
-        ball.stroke()
+        let frame = bounds.insetBy(dx: 2, dy: 2)
+        WinterArtwork.drawSnow(in: NSBezierPath(ovalIn: frame), bounds: frame)
     }
 }

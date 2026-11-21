@@ -132,6 +132,7 @@ final class WinterScene {
     var dockProfile: (_ id: CGWindowID) -> WinterSurfaceProfile? = { _ in nil }
     var didLand: (WinterImpact) -> Void = { _ in }
     var didChip: (WinterBallChip) -> Void = { _ in }
+    var didBreakSnowman: (WinterObject) -> Void = { _ in }
     var isMoving: Bool {
         captured != nil || !settledStacks.isEmpty || isSnowRising || figures.indices.contains {
             !objects[$0].parked && b2Body_IsAwake(figures[$0].body)
@@ -835,6 +836,7 @@ final class WinterScene {
         var object = objects[index]
         object.center = SnowballWorld.points(b2Body_GetPosition(figures[index].body))
         let velocity = SnowballWorld.velocity(b2Body_GetLinearVelocity(figures[index].body))
+        didBreakSnowman(object)
         let circles = object.ballCircles
         let available = Self.maximumObjects - objects.count + 1
         remove(at: index)

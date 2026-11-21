@@ -11,7 +11,8 @@ let package = Package(
         // Box2D v3.1.0 (MIT), исходники без изменений: физика снежков.
         .target(name: "CBox2D", path: "Sources/CBox2D", exclude: ["LICENSE"],
                 cSettings: [.headerSearchPath("src"), .define("NDEBUG")]),
-        .executableTarget(name: "SeasonArt", dependencies: ["CBox2D"], path: "Sources/SeasonArt"),
+        .executableTarget(name: "SeasonArt", dependencies: ["CBox2D"], path: "Sources/SeasonArt",
+                          resources: [.copy("WinterArt")]),
         .testTarget(name: "SeasonArtTests", dependencies: ["SeasonArt"]),
     ],
     cLanguageStandard: .c17

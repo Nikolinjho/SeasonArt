@@ -65,10 +65,13 @@ final class DockSnowSurfaceRenderingTests: XCTestCase {
 
         simulation.dockPresentationFrame = CGRect(x: 60, y: 6, width: 400, height: 60)
         simulation.dockIconFrames = [DockSnowIcon(frame: CGRect(x: 65, y: 12, width: 100, height: 100), roof: [1, 1])]
-        simulation.dockSnowPosition = .below
-        let below = try render()
-        XCTAssertGreaterThan(alpha(below, 80, 20), 240, "Под Dock нижний слой остаётся виден")
-        XCTAssertGreaterThan(alpha(below, 80, 80), 240, "Под Dock иконки не вырезают нижний слой")
+        for position in [DockSnowPosition.front, .below] {
+            simulation.dockSnowPosition = position
+            let snow = try render()
+            XCTAssertGreaterThan(alpha(snow, 80, 20), 240, "Нижний слой виден у угла Dock")
+            XCTAssertGreaterThan(alpha(snow, 250, 20), 240, "Нижний слой непрерывен по ширине Dock")
+            XCTAssertGreaterThan(alpha(snow, 80, 80), 240, "Иконки не вырезают нижний слой")
+        }
         simulation.dockSnowPosition = .above
         simulation.updateWindows([], interval: 1 / 60)
         let hidden = try render()

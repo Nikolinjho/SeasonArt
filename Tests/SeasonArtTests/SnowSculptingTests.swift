@@ -126,6 +126,18 @@ final class SnowSculptingTests: XCTestCase {
         return gesture
     }
 
+    func testСугробВидимоПроседаетДоОтделенияИВосстанавливаетсяПриОтмене() throws {
+        let simulation = simulation()
+        let draft = try gesture(simulation)
+        let heights = draft.source.layer.heights
+        let before = values(simulation)
+        simulation.previewSculpting(draft)
+        XCTAssertLessThan(values(simulation).reduce(0, +), before.reduce(0, +))
+        XCTAssertEqual(draft.source.layer.heights, heights, "Черновик сохраняет физическую массу")
+        simulation.previewSculpting(nil)
+        XCTAssertEqual(values(simulation), before)
+    }
+
     private func grains(_ simulation: SnowSimulation) -> [(area: Float, velocity: SIMD2<Float>)] {
         let value = Mirror(reflecting: simulation).children.first { $0.label == "grains" }!.value
         return Mirror(reflecting: value).children.map {

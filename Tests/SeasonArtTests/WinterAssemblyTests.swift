@@ -13,11 +13,35 @@ final class WinterAssemblyTests: XCTestCase {
             for dot in decoration.mouth {
                 XCTAssertTrue(head.contains(dot))
                 XCTAssertLessThan(dot.maxY, head.midY)
-                XCTAssertGreaterThan(dot.minY, decoration.scarf[0].maxY)
+                XCTAssertGreaterThan(dot.minY, decoration.scarf.wrap.maxY)
             }
             XCTAssertLessThan(decoration.mouth[2].midY, decoration.mouth[0].midY)
             XCTAssertEqual(decoration.mouth[0].midX + decoration.mouth[4].midX, head.midX * 2, accuracy: 0.001)
         }
+    }
+
+    func testШарфУчитываетОбаШараАШапкаТолькоГолову() throws {
+        let id = UUID(uuidString: "01000000-0000-0000-0000-000000000000")!
+        func decoration(torso: CGFloat) throws -> WinterDecoration {
+            let object = WinterObject(id: id, radii: [36, torso, 14], center: .zero, velocity: .zero,
+                                      support: nil, parked: false, isDragged: false)
+            return try XCTUnwrap(object.decoration)
+        }
+        let narrow = try decoration(torso: 14)
+        let wide = try decoration(torso: 36)
+        XCTAssertLessThan(narrow.scarf.wrap.width, wide.scarf.wrap.width)
+        XCTAssertEqual(narrow.hat.size, wide.hat.size)
+    }
+
+    func testФасоныШапокИШарфовИмеютРазныеПропорции() throws {
+        let outfits = try (0...2).map { number in
+            let id = UUID(uuidString: "0\(number)000000-0000-0000-0000-000000000000")!
+            let object = WinterObject(id: id, radii: [28, 21, 14], center: .zero, velocity: .zero,
+                                      support: nil, parked: false, isDragged: false)
+            return try XCTUnwrap(object.decoration)
+        }
+        XCTAssertEqual(Set(outfits.map { $0.hat.height }).count, 3)
+        XCTAssertEqual(Set(outfits.map { $0.scarf.wrap.height }).count, 3)
     }
 
     private func advance(_ scene: WinterScene, seconds: Double = 3, fps: Int = 60) {
@@ -99,7 +123,7 @@ final class WinterAssemblyTests: XCTestCase {
             let object = WinterObject(id: UUID(), radii: radii, center: .zero, velocity: .zero,
                                       support: nil, parked: false, isDragged: false)
             let decoration = try XCTUnwrap(object.decoration)
-            XCTAssertLessThan(decoration.buttons[0].maxY, decoration.scarf[0].minY)
+            XCTAssertLessThan(decoration.buttons[0].maxY, decoration.scarf.wrap.minY)
         }
     }
 }

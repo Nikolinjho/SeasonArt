@@ -8,6 +8,10 @@
 	<string>SeasonArt</string>
 	<key>CFBundleExecutable</key>
 	<string>SeasonArt</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>dev.nikoko.SeasonArt</string>
 	<key>CFBundleInfoDictionaryVersion</key>

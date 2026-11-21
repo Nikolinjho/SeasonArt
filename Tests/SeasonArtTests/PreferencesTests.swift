@@ -19,6 +19,19 @@ final class PreferencesTests: XCTestCase {
         return (name, UserDefaults(suiteName: name)!)
     }
 
+    func testУкрашенияИГирляндаСохраняютсяПослеПерезапуска() {
+        let (name, defaults) = makeProfile()
+        Preferences.configure(defaults: defaults)
+        XCTAssertEqual(Preferences.treeDecorations, WinterTreeDecorations())
+        XCTAssertFalse(Preferences.finderGarland)
+        let settings = WinterTreeDecorations(height: .tall, topper: .snowflake, ornaments: [.candy, .lights])
+        Preferences.treeDecorations = settings
+        Preferences.finderGarland = true
+        Preferences.configure(defaults: UserDefaults(suiteName: name)!)
+        XCTAssertEqual(Preferences.treeDecorations, settings)
+        XCTAssertTrue(Preferences.finderGarland)
+    }
+
     func testModeAndIntensitySurviveReopeningProfile() {
         let (name, defaults) = makeProfile()
         Preferences.configure(defaults: defaults)

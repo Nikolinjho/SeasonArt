@@ -423,13 +423,19 @@ final class SnowLayer {
     }
 
     /// Writes the smoothed snow surface for each column, then the bed under it.
-    func writeSmoothed(into buffer: UnsafeMutablePointer<Float>) {
+    func writeSmoothed(into buffer: UnsafeMutablePointer<Float>, subtracting removal: [Int: Float] = [:]) {
         let count = heights.count
         for i in 0..<count {
             let left = heights[max(i - 1, 0)]
             let right = heights[min(i + 1, count - 1)]
             buffer[i] = bed[i] + 0.25 * left + 0.5 * heights[i] + 0.25 * right
             buffer[count + i] = bed[i]
+        }
+        for (index, amount) in removal where heights.indices.contains(index) {
+            let depth = min(amount, heights[index])
+            buffer[index] -= 0.5 * depth
+            buffer[max(0, index - 1)] -= 0.25 * depth
+            buffer[min(count - 1, index + 1)] -= 0.25 * depth
         }
     }
 

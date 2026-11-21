@@ -37,6 +37,7 @@ struct WindowSurface: Equatable {
     let cornerExponent: CGFloat
     /// Полка Dock: снег на ней рисуется отдельным слоем над стеклом.
     let isDock: Bool
+    var isFinder = false
 
     func shifted(by dx: CGFloat) -> WindowSurface {
         WindowSurface(
@@ -46,7 +47,8 @@ struct WindowSurface: Equatable {
             cover: cover.map { $0.offsetBy(dx: dx, dy: 0) },
             cornerRadius: cornerRadius,
             cornerExponent: cornerExponent,
-            isDock: isDock
+            isDock: isDock,
+            isFinder: isFinder
         )
     }
 }
@@ -593,7 +595,8 @@ final class WindowTracker {
                     cover: blockers.filter { $0.intersects(frame) },
                     cornerRadius: radius,
                     cornerExponent: capsule ? 2 : 2.5,
-                    isDock: shelf
+                    isDock: shelf,
+                    isFinder: owner == "Finder" && layer == 0
                 ))
             }
             blockers.append(frame)

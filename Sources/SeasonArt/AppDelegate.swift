@@ -58,6 +58,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var winterBallItems: [NSMenuItem] = []
     private var winterClearItem: NSMenuItem!
     private var winterPlowItem: NSMenuItem!
+    private var winterTreeEditorItem: NSMenuItem!
+    private var finderGarlandItem: NSMenuItem!
+    private var sleighItem: NSMenuItem!
+    private var treeEditor: WinterTreeEditor?
+    private var winterToyItems: [WinterToy: NSMenuItem] = [:]
     private var observers: [NSObjectProtocol] = []
     private var screensAsleep = false
     private let screenshots = ScreenshotWatch()
@@ -229,6 +234,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             winterBallItems.append(ball)
         }
         winterMenu.addItem(.separator())
+        for toy in WinterToy.allCases {
+            winterToyItems[toy] = add(toy.menuTitle, #selector(toggleWinterToy(_:)), to: winterMenu)
+        }
+        winterTreeEditorItem = add("Украсить ёлку…", #selector(showTreeEditor), to: winterMenu)
+        winterMenu.addItem(.separator())
+        finderGarlandItem = add("Гирлянда на окнах Finder", #selector(toggleFinderGarland), to: winterMenu)
+        sleighItem = add("Запустить сани Деда Мороза", #selector(launchSleigh), to: winterMenu)
         winterPlowItem = add("Убрать снег трактором", #selector(startWinterPlow), to: winterMenu)
         winterClearItem = add("Убрать зимние игрушки", #selector(clearWinterObjects), to: winterMenu)
         winterItem = NSMenuItem(title: "Зимние игрушки", action: nil, keyEquivalent: "")
@@ -260,7 +272,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         for (position, item) in dockPositionItems {
             item.state = position == Preferences.dockSnowPosition ? .on : .off
         }
-        dockAccessItem.isHidden = mode != .snow || Preferences.dockSnowPosition == .below || DockIconGeometry.hasAccess
+        dockAccessItem.isHidden = mode != .snow || Preferences.dockSnowPosition != .above || DockIconGeometry.hasAccess
         blizzardItem.state = Preferences.blizzard ? .on : .off
         for (choice, item) in modeItems { item.state = choice == mode ? .on : .off }
         // Дождь не накапливается, поэтому таяние и очистка ему не нужны.
@@ -293,6 +305,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             ? "Зимние игрушки: лимит \(WinterScene.maximumObjects)"
             : "Зимние игрушки"
         for item in winterBallItems { item.isEnabled = winter?.canCreate ?? false }
+        for (toy, item) in winterToyItems {
+            item.isEnabled = winter?.canUseToys == true
+            item.state = winter?.hasToy(toy) == true ? .on : .off
+        }
+        winterTreeEditorItem.isEnabled = winter?.canUseToys == true
+        sleighItem.isEnabled = winter?.canLaunchSleigh == true
+        finderGarlandItem.state = Preferences.finderGarland ? .on : .off
         winterClearItem.isEnabled = screens.contains { $0.winter.hasObjects }
         winterPlowItem.isEnabled = winter?.canPlow ?? false
         winterPlowItem.title = winter?.canPlow == true ? "Убрать снег трактором" : "Трактор: нет доступной полки Dock или идёт уборка"
@@ -415,6 +434,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         guard let mode = Mode(rawValue: sender.tag) else { return }
         guard mode != Preferences.mode else { return }
         Preferences.mode = mode
+        if mode != .snow { treeEditor?.close() }
         refreshHalloween()
         updateStatusIcon()
         let direction = screens.first?.simulation.breezeDirection ?? -1
@@ -438,7 +458,55 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         screen.winter.create(size, at: point)
     }
 
+    @objc private func toggleWinterToy(_ sender: NSMenuItem) {
+        guard let toy = winterToyItems.first(where: { $0.value === sender })?.key,
+              let screen = screenAtPointer() else { return }
+        if toy == .tree, screen.winter.hasToy(.tree) { treeEditor?.close() }
+        toggleWinterToy(toy, on: screen)
+    }
+
+    private func toggleWinterToy(_ toy: WinterToy, on screen: ScreenSnow) {
+        let frame = screen.screen.frame
+        if toy == .tree {
+            screen.winter.toggleToy(.tree, at: CGPoint(x: 28, y: 0))
+            return
+        }
+        let blade = WinterToy.shovelBlade
+        let x = min(max(0, NSEvent.mouseLocation.x - frame.minX - blade.x), max(0, frame.width - toy.size.width))
+        let floor = screen.simulation.winterSurfaceY(at: x + blade.x, on: nil) ?? 0
+        let y = max(0, floor - blade.y)
+        screen.winter.toggleToy(toy, at: CGPoint(x: x, y: y))
+    }
+
+    @objc private func showTreeEditor() {
+        guard let screen = screenAtPointer(), screen.winter.canUseToys else { return }
+        if !screen.winter.hasToy(.tree) { toggleWinterToy(.tree, on: screen) }
+        treeEditor?.close()
+        let editor = WinterTreeEditor(settings: Preferences.treeDecorations, apply: { [weak self] decorations in
+            Preferences.treeDecorations = decorations
+            for screen in self?.screens ?? [] { screen.winter.updateTree(decorations) }
+        }, remove: { [weak self, weak screen] in
+            guard let self, let screen, screen.winter.hasToy(.tree) else { return }
+            toggleWinterToy(.tree, on: screen)
+        })
+        treeEditor = editor
+        NSApp.activate()
+        editor.showWindow(nil)
+        editor.window?.makeKeyAndOrderFront(nil)
+    }
+
+    @objc private func launchSleigh() { screenAtPointer()?.winter.launchSleigh() }
+
+    @objc private func toggleFinderGarland() {
+        Preferences.finderGarland.toggle()
+        for screen in screens {
+            screen.winter.showsFinderGarlands = Preferences.finderGarland
+            screen.refreshWindowSnow()
+        }
+    }
+
     @objc private func clearWinterObjects() {
+        treeEditor?.close()
         for screen in screens { screen.winter.clear() }
     }
 
@@ -460,8 +528,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func showAbout() {
         let alert = NSAlert()
-        alert.messageText = "SeasonArt"
+        alert.messageText = "Season Art"
         alert.informativeText = "Сезонные эффекты для рабочего стола."
+        if let url = Bundle.main.url(forResource: "SeasonArtLogo", withExtension: "png", subdirectory: "Branding"),
+           let image = NSImage(contentsOf: url) {
+            let logo = NSImageView(frame: CGRect(x: 0, y: 0, width: 228, height: 76))
+            logo.image = image
+            logo.imageScaling = .scaleProportionallyDown
+            logo.wantsLayer = true
+            logo.layer?.backgroundColor = NSColor(calibratedWhite: 0.96, alpha: 1).cgColor
+            logo.layer?.cornerRadius = 8
+            alert.accessoryView = logo
+        }
         alert.addButton(withTitle: "Закрыть")
         NSApp.activate()
         alert.runModal()

@@ -280,7 +280,7 @@ final class WinterSceneTests: XCTestCase {
         let b = try XCTUnwrap(large.decoration)
         XCTAssertEqual(b.eyes[0].width / a.eyes[0].width, 6, accuracy: 0.001)
         XCTAssertEqual(b.buttons[0].width / a.buttons[0].width, 6, accuracy: 0.001)
-        XCTAssertEqual(b.scarf[0].width / a.scarf[0].width, 6, accuracy: 0.001)
+        XCTAssertEqual(b.scarf.wrap.width / a.scarf.wrap.width, 6, accuracy: 0.001)
         let mixed = WinterObject(id: UUID(), radii: [36, 6, 18], center: CGPoint(x: 100, y: 36),
                                  velocity: .zero, support: nil, parked: false, isDragged: false)
         let details = try XCTUnwrap(mixed.decoration)

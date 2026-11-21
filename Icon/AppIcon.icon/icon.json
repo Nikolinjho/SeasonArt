@@ -1,0 +1,15 @@
+{
+  "fill": {
+    "automatic-gradient": "srgb:0.07843,0.16078,0.29804,1.00000"
+  },
+  "groups": [
+    {
+      "layers": [
+        {"glass": true, "image-name": "seasons.svg", "name": "Four seasons"}
+      ],
+      "shadow": {"kind": "neutral", "opacity": 0.42},
+      "translucency": {"enabled": true, "value": 0.15}
+    }
+  ],
+  "supported-platforms": {"squares": ["macOS"]}
+}

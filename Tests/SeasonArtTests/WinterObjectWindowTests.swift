@@ -52,6 +52,7 @@ final class WinterObjectWindowTests: XCTestCase {
         XCTAssertTrue(window.styleMask.contains(.nonactivatingPanel), "Перетаскивание не активирует приложение")
         XCTAssertFalse(window.canBecomeKey, "Снежок не забирает клавиатурный фокус")
         XCTAssertFalse(window.canBecomeMain, "Снежок не становится главным окном")
+        XCTAssertFalse(window.isMovable, "Перемещение фигуры выполняет симуляция")
         XCTAssertFalse(window.ignoresMouseEvents, "Снежок принимает перетаскивание")
         XCTAssertFalse(window.hidesOnDeactivate, "Снежок остаётся при переключении приложения")
         XCTAssertEqual(window.level.rawValue, NSWindow.Level.statusBar.rawValue + 1)
@@ -79,7 +80,8 @@ final class WinterObjectWindowTests: XCTestCase {
         XCTAssertEqual(window.frame, model.frame.offsetBy(dx: screen.minX, dy: screen.minY))
         model.radii = [28, 21, 14]
         window.display(object: model, screenFrame: screen)
-        XCTAssertEqual(window.frame.height, 105, "Окно вмещает три утопленных друг в друга шара")
+        XCTAssertEqual(model.frame.height, 105, "Шапка не меняет физический размер")
+        XCTAssertGreaterThan(window.frame.height, model.frame.height, "Окно вмещает шапку")
         XCTAssertEqual(view.object.id, model.id, "Обновление сохраняет идентификатор модели")
         XCTAssertTrue(view.object.isSnowman)
     }

@@ -26,6 +26,20 @@ final class WinterPlowTests: XCTestCase {
         for _ in 0..<180 { _ = simulation.step(dt: dt, cursor: away) }
         return simulation
     }
+    func testТракторРасчищаетСугробПередDock() throws {
+        let simulation = accumulated()
+        simulation.dockSnowPosition = .front
+        let ground = try XCTUnwrap(piles(simulation).first(where: { !$0.0.isDock }))
+        let column = 250 / 2
+        XCTAssertGreaterThan(ground.1[column], 0)
+        XCTAssertGreaterThan(simulation.plowDock(id: 42, fromX: 240, toX: 260), 0)
+        let after = try XCTUnwrap(piles(simulation).first(where: { !$0.0.isDock }))
+        XCTAssertEqual(after.1[column], 0, accuracy: 0.001)
+        XCTAssertEqual(after.1[155], ground.1[155], "Снег вне прохода отвал не трогает")
+        let pass = try XCTUnwrap(WinterPlowPass(surface: surface(), clearsGround: true))
+        XCTAssertEqual(pass.frame.minY, 0)
+    }
+
     func testCoordinatesOutsideSupportCannotOverflowColumnIndex() {
         let simulation = SnowSimulation(width: 600, height: 400, snowfall: .off)
         simulation.updateWindows([surface()], interval: dt)
@@ -84,6 +98,24 @@ final class WinterPlowTests: XCTestCase {
         XCTAssertEqual(beforeArea - afterArea, mass * 0.25, accuracy: 0.5,
                        "Три четверти снятой массы сохраняются в куче перед отвалом, четверть уходит в частицы")
     }
+    func testЛопатаРасчищаетВсюПройденнуюПолосу() throws {
+        let simulation = accumulated()
+        let before = try XCTUnwrap(piles(simulation).first { $0.0.isDock })
+        XCTAssertGreaterThan(before.1[90], 1)
+        simulation.shovelSnow(from: CGPoint(x: 220, y: 62), to: CGPoint(x: 290, y: 62))
+        let after = try XCTUnwrap(piles(simulation).first { $0.0.isDock })
+        XCTAssertEqual(after.1[90], 0, accuracy: 0.001)
+        XCTAssertEqual(after.1[150], before.1[150])
+    }
+
+    func testЛопатаНадСугробомНеМеняетСнег() throws {
+        let simulation = accumulated()
+        let before = try XCTUnwrap(piles(simulation).first { $0.0.isDock })
+        simulation.shovelSnow(from: CGPoint(x: 220, y: 200), to: CGPoint(x: 290, y: 200))
+        let after = try XCTUnwrap(piles(simulation).first { $0.0.isDock })
+        XCTAssertEqual(after.1, before.1)
+    }
+
     func testPlowDoesNotClearOrdinaryWindow() {
         let simulation = SnowSimulation(width: 600, height: 400, snowfall: .off)
         simulation.updateWindows([surface(dock: false)], interval: dt)

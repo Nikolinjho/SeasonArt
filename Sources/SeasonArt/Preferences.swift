@@ -25,9 +25,17 @@ enum Snowfall: Int, CaseIterable {
 }
 
 enum DockSnowPosition: Int, CaseIterable {
-    case above, below
+    case front = 2
+    case above = 0
+    case below = 1
 
-    var title: String { self == .above ? "Над Dock" : "Под Dock" }
+    var title: String {
+        switch self {
+        case .front: "Перед Dock"
+        case .above: "Над Dock"
+        case .below: "Под Dock"
+        }
+    }
 }
 
 enum Preferences {
@@ -63,7 +71,7 @@ enum Preferences {
             snowfallKey: (calm ? Snowfall.light : .steady).rawValue,
             blizzardKey: false,
             colorfulFirefliesKey: false,
-            dockSnowPositionKey: DockSnowPosition.above.rawValue,
+            dockSnowPositionKey: DockSnowPosition.front.rawValue,
             behindWindowsKey: false,
             showOverFullScreenKey: false,
             meltSnowKey: true,
@@ -76,6 +84,22 @@ enum Preferences {
             halloweenSkippedKey: 0,
             autumnKey: false,
         ])
+    }
+
+    static var finderGarland: Bool {
+        get { defaults.bool(forKey: "finderGarland") }
+        set { defaults.set(newValue, forKey: "finderGarland") }
+    }
+
+    static var treeDecorations: WinterTreeDecorations {
+        get {
+            guard let data = defaults.data(forKey: "treeDecorations"),
+                  let settings = try? JSONDecoder().decode(WinterTreeDecorations.self, from: data) else {
+                return WinterTreeDecorations()
+            }
+            return settings
+        }
+        set { defaults.set(try? JSONEncoder().encode(newValue), forKey: "treeDecorations") }
     }
 
     static var snowfall: Snowfall {
@@ -99,7 +123,10 @@ enum Preferences {
     }
 
     static var dockSnowPosition: DockSnowPosition {
-        get { DockSnowPosition(rawValue: defaults.integer(forKey: dockSnowPositionKey)) ?? .above }
+        get {
+            guard let value = defaults.object(forKey: dockSnowPositionKey) as? Int else { return .front }
+            return DockSnowPosition(rawValue: value) ?? .front
+        }
         set { defaults.set(newValue.rawValue, forKey: dockSnowPositionKey) }
     }
 

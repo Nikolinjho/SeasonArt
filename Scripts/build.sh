@@ -24,10 +24,19 @@ swift build --configuration release --arch arm64
 seasonart_binary_dir="$(swift build --configuration release --arch arm64 --show-bin-path)"
 mkdir -p "$seasonart_staging/Contents/MacOS" "$seasonart_staging/Contents/Resources"
 cp "$seasonart_binary_dir/SeasonArt" "$seasonart_staging/Contents/MacOS/SeasonArt"
+xcrun actool "$seasonart_root/Icon/AppIcon.icon" \
+    --compile "$seasonart_staging/Contents/Resources" --platform macosx \
+    --minimum-deployment-target 14.0 --app-icon AppIcon \
+    --output-partial-info-plist "$seasonart_staging/AppIcon.plist" --errors --warnings
+test -s "$seasonart_staging/Contents/Resources/AppIcon.icns"
+test -s "$seasonart_staging/Contents/Resources/Assets.car"
+rm "$seasonart_staging/AppIcon.plist"
+cp -R "$seasonart_root/Sources/SeasonArt/WinterArt" "$seasonart_staging/Contents/Resources/"
 cp "$seasonart_root/Resources/Info.plist" "$seasonart_staging/Contents/Info.plist"
 cp "$seasonart_root/LICENSE" "$seasonart_root/THIRD_PARTY.md" "$seasonart_staging/Contents/Resources/"
 cp "$seasonart_root/Sources/CBox2D/LICENSE" "$seasonart_staging/Contents/Resources/Box2D-LICENSE"
-mkdir -p "$seasonart_staging/Contents/Resources/Wallpapers"
+mkdir -p "$seasonart_staging/Contents/Resources/Branding" "$seasonart_staging/Contents/Resources/Wallpapers"
+cp "$seasonart_root/Resources/Branding/SeasonArtLogo.png" "$seasonart_staging/Contents/Resources/Branding/"
 cp "$seasonart_root/Resources/Wallpapers/winter-lake-v1.png" "$seasonart_staging/Contents/Resources/Wallpapers/"
 bash "$seasonart_root/Scripts/sign.sh" "$seasonart_staging"
 if [[ -e "$seasonart_ready" ]]; then

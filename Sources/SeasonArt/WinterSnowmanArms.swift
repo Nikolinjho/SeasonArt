@@ -19,13 +19,17 @@ extension WinterObject {
 
     var armLineWidth: CGFloat { isSnowman ? max(0.8, radii[1] / 21 * 2.6) : 0 }
 
-    /// Окно вмещает ветки, физическая геометрия шаров остаётся прежней.
+    /// Окно вмещает ветки и одежду снеговика.
     var drawingBounds: CGRect {
         var bounds = CGRect(origin: .zero, size: frame.size)
         let margin = armLineWidth / 2 + 0.5
         for point in arms.flatMap({ $0 }) {
             bounds = bounds.union(CGRect(x: point.x - margin, y: point.y - margin,
                                          width: margin * 2, height: margin * 2))
+        }
+        if let decoration {
+            bounds = bounds.union(decoration.hat)
+            bounds = bounds.union(decoration.scarf.bounds)
         }
         return bounds
     }

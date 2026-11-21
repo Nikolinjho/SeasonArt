@@ -26,6 +26,57 @@ final class DockGroundDisplacementTests: XCTestCase {
         ground.heights.reduce(0, +) * ground.columnWidth
     }
 
+    func testПередDockСнегОбразуетСплошнойСлойПриУвеличенииИконок() throws {
+        let (simulation, ground) = try scene()
+        simulation.dockSnowPosition = .front
+        let before = ground.heights
+        for frame in [body, expanded, body, expanded] {
+            simulation.dockPresentationFrame = frame
+            simulation.updateDockSnowSurface(dt: 1 / 60, cursor: away)
+        }
+        XCTAssertEqual(ground.heights, before, "Увеличение Dock оставляет непрерывный сугроб")
+        var buffer = [Float](repeating: 0, count: simulation.columnCount)
+        let pile = try XCTUnwrap(simulation.writeLayers(into: &buffer, capacity: buffer.count).first)
+        XCTAssertTrue(pile.occluders.isEmpty, "Корпус Dock не вырезает передний снег")
+        XCTAssertNil(simulation.sculptingSource(at: CGPoint(x: 250, y: 15)),
+                     "Под Dock снежок не появляется и не подскакивает на полку")
+        let cut = ground.clampedIndex(at: 250)
+        let height = ground.heights[cut]
+        simulation.shovelSnow(from: CGPoint(x: 232, y: 15), to: CGPoint(x: 270, y: 15))
+        XCTAssertLessThan(ground.heights[cut], height, "Лопата расчищает снег прямо перед Dock")
+    }
+
+    func testСнегПередDockНеПоднимаетсяВышеСерединыКорпуса() throws {
+        let (simulation, ground) = try scene()
+        simulation.dockSnowPosition = .front
+        for i in ground.heights.indices { ground.set(i, 80) }
+        ground.refreshTop()
+        for _ in 0..<10 { _ = simulation.step(dt: 1 / 60, cursor: away) }
+        let maxAlongDock = ground.heights.indices.filter {
+            (100...400).contains(ground.centerX($0))
+        }.map { ground.heights[$0] }.max()
+        XCTAssertLessThanOrEqual(try XCTUnwrap(maxAlongDock), Float(body.midY) + 0.01)
+        XCTAssertGreaterThan(ground.heights[ground.clampedIndex(at: 515)], 60)
+        let edge = ground.clampedIndex(at: 402)
+        XCTAssertLessThan(abs(ground.heights[edge + 1] - ground.heights[edge]), 2,
+                          "По краю нет вертикальной ступеньки")
+    }
+
+    func testПереднийСнегОстаётсяПодОбычнымиОкнамиВРежимеЗаОкнами() throws {
+        let (simulation, _) = try scene()
+        simulation.dockSnowPosition = .front
+        simulation.groundBehindWindows = true
+        let otherWindow = SIMD4<Float>(220, 4, 300, 120)
+        simulation.windowFrames = [otherWindow]
+        var buffer = [Float](repeating: 0, count: simulation.columnCount)
+        let piles = simulation.writeLayers(into: &buffer, capacity: buffer.count)
+        let foreground = try XCTUnwrap(piles.first(where: \.isDock))
+        XCTAssertEqual(foreground.offset, piles.first?.offset, "Оба слоя используют одну высоту сугроба")
+        XCTAssertTrue(foreground.occluders.contains(otherWindow))
+        XCTAssertTrue(foreground.occluders.contains { $0.z == Float(body.minX) })
+        XCTAssertTrue(foreground.occluders.contains { $0.x == Float(body.maxX) })
+    }
+
     func testРасширениеDockФизическиСдвигаетТолькоЗахваченныйСнегККраям() throws {
         let (value, ground) = try scene()
         let before = mass(ground)

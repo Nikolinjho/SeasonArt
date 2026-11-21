@@ -109,6 +109,90 @@ final class WinterSceneControllerTests: XCTestCase {
         controller.clear()
         XCTAssertNil(controller.plow)
     }
+    func testЁлкаСтановитсяНаОкноСледуетЗаНимИВозвращаетсяНаЗемлю() throws {
+        let controller = controller()
+        defer { controller.close() }
+        controller.isEnabled = true
+        let old = Set(NSApp.windows.map(ObjectIdentifier.init))
+        XCTAssertTrue(controller.toggleToy(.tree, at: CGPoint(x: 150, y: 0)))
+        let tree = try XCTUnwrap(NSApp.windows.first {
+            !old.contains(ObjectIdentifier($0)) && $0.title == "SeasonArt · Ёлка"
+        })
+        let spawnHeight = tree.frame.minY
+        XCTAssertGreaterThan(spawnHeight, 80, "Ёлка появляется над землёй и падает")
+        controller.advanceTree(dt: 1 / 60)
+        XCTAssertLessThan(tree.frame.minY, spawnHeight)
+        XCTAssertGreaterThan(tree.frame.minY, 0, "Падение занимает несколько кадров")
+        func settle() {
+            for _ in 0..<120 { controller.advanceTree(dt: 1 / 60) }
+        }
+        settle()
+        XCTAssertEqual(tree.frame.minY, 0, accuracy: 0.001)
+
+        func support(x: CGFloat, y: CGFloat) -> WindowSurface {
+            WindowSurface(id: 77, frame: CGRect(x: x, y: y, width: 370, height: 140),
+                          blockers: [], cover: [], cornerRadius: 12, cornerExponent: 2.5, isDock: false)
+        }
+        func update(_ surfaces: [WindowSurface]) {
+            controller.updateWindows(WindowUpdate(surfaces: surfaces, interval: 0.1,
+                parked: [], elsewhere: [], sliding: false, slideVelocity: 0))
+        }
+        update([support(x: 140, y: 80)])
+        let view = try XCTUnwrap(tree.contentView)
+        func event(_ type: NSEvent.EventType, at y: CGFloat) throws -> NSEvent {
+            try XCTUnwrap(NSEvent.mouseEvent(with: type, location: CGPoint(x: 60, y: y), modifierFlags: [],
+                timestamp: 1, windowNumber: tree.windowNumber, context: nil,
+                eventNumber: 1, clickCount: 1, pressure: 1))
+        }
+        view.mouseDown(with: try event(.leftMouseDown, at: 20))
+        view.mouseDragged(with: try event(.leftMouseDragged, at: 320))
+        view.mouseUp(with: try event(.leftMouseUp, at: 20))
+        XCTAssertGreaterThan(tree.frame.minY, 220, "При отпускании ёлка остаётся на высоте отпускания")
+        settle()
+        XCTAssertEqual(tree.frame.minY, 220, accuracy: 0.001, "Ствол упирается в край окна")
+        let originalX = tree.frame.midX
+        update([support(x: 170, y: 120)])
+        XCTAssertEqual(tree.frame.minY, 260, accuracy: 0.001)
+        XCTAssertEqual(tree.frame.midX, originalX + 30, accuracy: 0.001)
+        controller.updateTree(WinterTreeDecorations(height: .short))
+        XCTAssertEqual(tree.frame.minY, 260, accuracy: 0.001, "Высота дерева меняется от основания")
+        update([])
+        XCTAssertEqual(tree.frame.minY, 260, accuracy: 0.001, "Исчезновение опоры начинает падение")
+        settle()
+        XCTAssertEqual(tree.frame.minY, 0, accuracy: 0.001, "Без окна ёлка возвращается на нижнюю опору")
+    }
+
+    func testСнегСВетокОседаетПослеПаденияЁлки() {
+        _ = NSApplication.shared
+        let simulation = SnowSimulation(width: 800, height: 600, snowfall: .off)
+        simulation.thaws = false
+        let controller = WinterSceneController(screenFrame: CGRect(x: 0, y: 0, width: 800, height: 600),
+            simulation: simulation, presentsWindows: false)
+        defer { controller.close() }
+        controller.isEnabled = true
+        XCTAssertTrue(controller.toggleToy(.tree, at: CGPoint(x: 340, y: 0)))
+        XCTAssertEqual(simulation.spriteCount, 0)
+        for _ in 0..<100 { controller.advanceTree(dt: 1 / 60) }
+        XCTAssertGreaterThan(simulation.spriteCount, 0, "При ударе с веток слетает снег")
+        for _ in 0..<180 { _ = simulation.step(dt: 1 / 60, cursor: SIMD2(-1_000, -1_000)) }
+        XCTAssertGreaterThan(simulation.pileTop, 0.1, "Снег с веток оставляет сугроб")
+    }
+
+    func testЁлкаИЛопатаДоступныВРежимеСнегаИУдаляютсяПриОчистке() {
+        let controller = controller()
+        defer { controller.close() }
+        XCTAssertFalse(controller.toggleToy(.tree, at: CGPoint(x: 80, y: 60)))
+        controller.isEnabled = true
+        XCTAssertTrue(controller.toggleToy(.tree, at: CGPoint(x: 80, y: 60)))
+        XCTAssertTrue(controller.toggleToy(.shovel, at: CGPoint(x: 140, y: 60)))
+        XCTAssertTrue(controller.hasToy(.tree))
+        XCTAssertTrue(controller.hasToy(.shovel))
+        controller.isEnabled = false
+        XCTAssertFalse(controller.canUseToys)
+        controller.clear()
+        XCTAssertFalse(controller.hasObjects)
+    }
+
     func testCloseReleasesTimerAndPreventsNewObjects() {
         let controller = controller()
         controller.isEnabled = true

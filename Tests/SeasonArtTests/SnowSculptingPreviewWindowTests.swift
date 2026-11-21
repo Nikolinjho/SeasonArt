@@ -7,6 +7,7 @@ final class SnowSculptingPreviewWindowTests: XCTestCase {
         _ = NSApplication.shared
         let window = SnowSculptingPreviewWindow()
         defer { window.close() }
+        XCTAssertFalse(window.isMovable, "Кадр предпросмотра задаёт контроллер лепки")
         XCTAssertTrue(window.ignoresMouseEvents)
         XCTAssertFalse(window.canBecomeKey)
         XCTAssertFalse(window.canBecomeMain)

@@ -3,6 +3,7 @@ import AppKit
 final class WinterObjectView: NSView {
     private(set) var object: WinterObject
     private var shadows: [WinterContactShadow]
+    private var gaze: CGPoint = .zero
     private var lastDragTimestamp: TimeInterval?
     private var lastDragPoint: CGPoint?
 
@@ -17,11 +18,24 @@ final class WinterObjectView: NSView {
 
     func display(object: WinterObject, shadows suppliedShadows: [WinterContactShadow]? = nil) {
         let shadows = suppliedShadows ?? WinterContactShadow.shadows(on: object, among: [])
-        let changed = self.object.radii != object.radii || self.object.rotation != object.rotation
+        let changed = self.object.id != object.id || self.object.radii != object.radii || self.object.rotation != object.rotation
             || self.object.ballDamage != object.ballDamage || self.shadows != shadows
         self.object = object
         self.shadows = shadows
         if changed { needsDisplay = true }
+    }
+
+    func lookToward(_ point: CGPoint, dt: TimeInterval) {
+        guard let head = object.isSnowman ? object.ballFrames.last : nil,
+              point.x.isFinite, point.y.isFinite, dt.isFinite, dt > 0 else { return }
+        let target = WinterSnowmanGaze.target(from: CGPoint(x: object.frame.minX + head.midX,
+                                                            y: object.frame.minY + head.midY),
+                                               toward: point, headWidth: head.width)
+        let alpha = 1 - exp(-min(dt, 0.1) * 18)
+        let next = CGPoint(x: gaze.x + (target.x - gaze.x) * alpha, y: gaze.y + (target.y - gaze.y) * alpha)
+        guard hypot(next.x - gaze.x, next.y - gaze.y) >= 0.003 else { return }
+        gaze = next
+        needsDisplay = true
     }
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
@@ -68,26 +82,30 @@ final class WinterObjectView: NSView {
         origin.concat()
         for points in object.arms {
             let twig = NSBezierPath()
-            for (index, point) in points.enumerated() {
-                if index == 0 { twig.move(to: point) } else { twig.line(to: point) }
+            guard let start = points.first, let tip = points.last else { continue }
+            twig.move(to: start)
+            if points.count == 3 {
+                let bend = points[1]
+                twig.curve(to: tip, controlPoint1: CGPoint(x: bend.x, y: start.y),
+                           controlPoint2: CGPoint(x: bend.x, y: tip.y))
+            } else {
+                twig.curve(to: tip, controlPoint1: start,
+                           controlPoint2: CGPoint(x: tip.x, y: (start.y + tip.y) / 2))
             }
             twig.lineCapStyle = .round
             twig.lineJoinStyle = .round
             NSColor(calibratedRed: 0.24, green: 0.14, blue: 0.08, alpha: 1).setStroke()
-            twig.lineWidth = object.armLineWidth
+            let width = object.armLineWidth * (points.count == 3 ? 1.15 : 0.66)
+            twig.lineWidth = width
             twig.stroke()
-            NSColor(calibratedRed: 0.49, green: 0.32, blue: 0.18, alpha: 1).setStroke()
-            twig.lineWidth = object.armLineWidth * 0.45
+            NSColor(calibratedRed: 0.54, green: 0.36, blue: 0.23, alpha: 1).setStroke()
+            twig.lineWidth = width * 0.45
             twig.stroke()
         }
-        let gradient = NSGradient(starting: .white, ending: NSColor(calibratedRed: 0.65, green: 0.79, blue: 0.87, alpha: 1))!
         let frames = object.ballFrames
         for index in frames.indices {
             let ball = object.ballPath(for: index)
-            gradient.draw(in: ball, angle: -50)
-            NSColor(calibratedWhite: 0.55, alpha: 0.4).setStroke()
-            ball.lineWidth = 0.8
-            ball.stroke()
+            WinterArtwork.drawSnow(in: ball, bounds: frames[index])
             for shadow in shadows where shadow.ballIndex == index {
                 NSGraphicsContext.saveGraphicsState()
                 ball.addClip()
@@ -118,20 +136,63 @@ final class WinterObjectView: NSView {
             NSGraphicsContext.restoreGraphicsState()
         }
         guard let decoration = object.decoration else { return }
-        NSColor(calibratedWhite: 0.14, alpha: 1).setFill()
-        for rect in decoration.eyes + decoration.mouth + decoration.buttons {
-            NSBezierPath(ovalIn: rect).fill()
+        let head = frames[2]
+        let warmth = NSColor(calibratedRed: 0.90, green: 0.43, blue: 0.38, alpha: 0.30)
+        let blush = NSGradient(starting: warmth, ending: warmth.withAlphaComponent(0))
+        for offset: CGFloat in [-0.27, 0.29] {
+            let center = CGPoint(x: head.midX + head.width * offset, y: head.midY - head.height * 0.13)
+            blush?.draw(fromCenter: center, radius: 0, toCenter: center, radius: head.width * 0.16, options: [])
         }
-        NSColor.systemOrange.setFill()
+        let coal = NSGradient(starting: NSColor(calibratedWhite: 0.34, alpha: 1),
+                              ending: NSColor(calibratedRed: 0.16, green: 0.14, blue: 0.13, alpha: 1))
+        for rect in decoration.mouth + decoration.buttons {
+            coal?.draw(in: NSBezierPath(ovalIn: rect), angle: -55)
+        }
+        decoration.outfit.drawScarf(decoration.scarf)
+        for eye in decoration.eyes {
+            let socket = NSBezierPath(ovalIn: eye.insetBy(dx: -eye.width * 0.12, dy: -eye.height * 0.07))
+            NSColor(calibratedRed: 0.16, green: 0.19, blue: 0.24, alpha: 0.15).setStroke()
+            socket.lineWidth = eye.width * 0.12
+            NSColor(calibratedWhite: 0.99, alpha: 1).setFill()
+            socket.fill()
+            socket.stroke()
+            let pupil = eye.insetBy(dx: eye.width * 0.15, dy: eye.height * 0.15)
+                .offsetBy(dx: gaze.x * eye.width * 0.30, dy: gaze.y * eye.height * 0.27)
+            coal?.draw(in: NSBezierPath(ovalIn: pupil), angle: -55)
+            NSColor(calibratedWhite: 1, alpha: 0.78).setFill()
+            NSBezierPath(ovalIn: CGRect(x: pupil.minX + pupil.width * 0.22, y: pupil.midY,
+                                        width: pupil.width * 0.26, height: pupil.height * 0.26)).fill()
+        }
         let carrot = NSBezierPath()
-        for (index, point) in decoration.nose.enumerated() {
-            if index == 0 { carrot.move(to: point) } else { carrot.line(to: point) }
-        }
+        let top = decoration.nose[0]
+        let tip = decoration.nose[1]
+        let bottom = decoration.nose[2]
+        let scale = head.width / 28
+        carrot.move(to: top)
+        carrot.curve(to: tip, controlPoint1: CGPoint(x: top.x + 5 * scale, y: top.y + 0.4 * scale),
+                     controlPoint2: CGPoint(x: tip.x - 3 * scale, y: tip.y + 1.7 * scale))
+        carrot.curve(to: bottom, controlPoint1: CGPoint(x: tip.x - 3 * scale, y: tip.y - 1.6 * scale),
+                     controlPoint2: CGPoint(x: bottom.x + 4 * scale, y: bottom.y - 0.5 * scale))
+        carrot.curve(to: top, controlPoint1: CGPoint(x: top.x - 2.2 * scale, y: bottom.y),
+                     controlPoint2: CGPoint(x: top.x - 2.5 * scale, y: top.y))
         carrot.close()
-        carrot.fill()
-        NSColor(calibratedRed: 0.76, green: 0.08, blue: 0.13, alpha: 1).setFill()
-        for rect in decoration.scarf {
-            NSBezierPath(roundedRect: rect, xRadius: rect.height * 0.1, yRadius: rect.height * 0.1).fill()
+        NSGradient(starting: NSColor(calibratedRed: 0.99, green: 0.68, blue: 0.25, alpha: 1),
+                   ending: NSColor(calibratedRed: 0.81, green: 0.27, blue: 0.10, alpha: 1))?
+            .draw(in: carrot, angle: -70)
+        NSGraphicsContext.saveGraphicsState()
+        carrot.addClip()
+        NSColor(calibratedRed: 0.63, green: 0.29, blue: 0.15, alpha: 0.38).setStroke()
+        for offset: CGFloat in [1.8, 4.0, 6.2] {
+            let ridge = NSBezierPath()
+            let x = top.x + offset * scale
+            ridge.move(to: CGPoint(x: x, y: top.y - offset * 0.13 * scale))
+            ridge.curve(to: CGPoint(x: x + 0.7 * scale, y: bottom.y + scale),
+                        controlPoint1: CGPoint(x: x - 0.5 * scale, y: top.y - 2 * scale),
+                        controlPoint2: CGPoint(x: x - 0.4 * scale, y: bottom.y + 2 * scale))
+            ridge.lineWidth = 0.55 * scale
+            ridge.stroke()
         }
+        NSGraphicsContext.restoreGraphicsState()
+        decoration.outfit.drawHat(decoration.hat)
     }
 }

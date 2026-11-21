@@ -72,7 +72,9 @@ struct WinterDecoration {
     let mouth: [CGRect]
     let buttons: [CGRect]
     let nose: [CGPoint]
-    let scarf: [CGRect]
+    let scarf: WinterScarf
+    let hat: CGRect
+    let outfit: WinterOutfit
 }
 
 extension WinterObject {
@@ -83,10 +85,11 @@ extension WinterObject {
         let base = frames[0]
         let torso = frames[1]
         let head = frames[2]
+        let outfit = WinterOutfit(snowman: id)
         let headScale = radii[2] / 14
         let torsoScale = radii[1] / 21
         let baseScale = radii[0] / 28
-        let neckScale = min(radii[1], radii[2]) / 14
+        let scarf = outfit.scarf(between: head, and: torso, below: head.midY - 10.25 * headScale)
         func dot(x: CGFloat, y: CGFloat, scale: CGFloat) -> CGRect {
             CGRect(x: x - 1.8 * scale, y: y - 1.8 * scale, width: 3.6 * scale, height: 3.6 * scale)
         }
@@ -96,16 +99,15 @@ extension WinterObject {
                 dot(x: x + dx * headScale, y: head.midY + dy * headScale, scale: headScale * 0.5)
             },
             buttons: [dot(x: x, y: min(torso.midY + 10 * torsoScale,
-                                      head.minY - 2 * neckScale - 3.8 * torsoScale), scale: torsoScale),
+                                      scarf.wrap.minY - 2.3 * torsoScale), scale: torsoScale),
                       dot(x: x, y: torso.midY - 3 * torsoScale, scale: torsoScale),
                       dot(x: x, y: base.midY + 11 * baseScale, scale: baseScale)],
             nose: [CGPoint(x: x - headScale, y: head.midY - headScale),
                    CGPoint(x: x + 12 * headScale, y: head.midY - 4 * headScale),
                    CGPoint(x: x - headScale, y: head.midY - 6 * headScale)],
-            scarf: [CGRect(x: x - 14 * neckScale, y: head.minY - 2 * neckScale,
-                           width: 28 * neckScale, height: 6 * neckScale),
-                    CGRect(x: x + 6 * neckScale, y: head.minY - 18 * torsoScale,
-                           width: 6 * neckScale, height: 20 * torsoScale)])
+            scarf: scarf,
+            hat: outfit.hat(on: head),
+            outfit: outfit)
     }
 }
 

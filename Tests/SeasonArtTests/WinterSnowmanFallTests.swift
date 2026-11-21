@@ -79,6 +79,17 @@ final class WinterSnowmanFallTests: XCTestCase {
         }
     }
 
+    func testУкрашенияСлетаютТолькоПриРазрушении() throws {
+        let scene = WinterScene(width: 800, height: 600)
+        let id = try makeSnowman(in: scene)
+        var broken: [UUID] = []
+        scene.didBreakSnowman = { broken.append($0.id) }
+        try drop(scene, id: id, distance: 150)
+        XCTAssertTrue(broken.isEmpty)
+        try drop(scene, id: id, distance: 240)
+        XCTAssertEqual(broken, [id])
+    }
+
     func testБросокВверхУчитываетВершинуАНеТочкуОтпускания() throws {
         let scene = WinterScene(width: 800, height: 600)
         let id = try makeSnowman(in: scene)

@@ -12,6 +12,7 @@ final class WinterObjectWindow: NSPanel {
     init(object: WinterObject, screenFrame: CGRect) {
         let frame = object.presentationFrame.offsetBy(dx: screenFrame.minX, dy: screenFrame.minY)
         super.init(contentRect: frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        isMovable = false
         isOpaque = false
         backgroundColor = .clear
         hasShadow = true

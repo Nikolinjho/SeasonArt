@@ -12,8 +12,8 @@ final class ScreenSnow {
     var dockSnowPosition: DockSnowPosition {
         get { simulation.dockSnowPosition }
         set {
-            winter.cancelSculpting()
             simulation.dockSnowPosition = newValue
+            winter.dockSnowPositionChanged()
             window.belowDock = simulation.mode == .snow && newValue == .below
             activityChanged()
         }
@@ -136,6 +136,7 @@ final class ScreenSnow {
         self.simulation = simulation
         winter = WinterSceneController(screenFrame: screen.frame, simulation: simulation)
         winter.showsInScreenshots = Preferences.showInScreenshots
+        winter.showsFinderGarlands = Preferences.finderGarland
         self.renderer = renderer
         window = OverlayWindow(screen: screen)
         window.belowDock = simulation.mode == .snow && simulation.dockSnowPosition == .below
@@ -152,9 +153,9 @@ final class ScreenSnow {
             return SIMD2(Float(mouse.x - window.frame.minX), Float(mouse.y - window.frame.minY))
         }
         renderer.automaticSculpting = { [unowned self] cursor, dt in
-            winter.updateAutomaticSculpting(
-                at: CGPoint(x: CGFloat(cursor.x) + window.frame.minX, y: CGFloat(cursor.y) + window.frame.minY),
-                dt: dt, mouseButtons: Int(NSEvent.pressedMouseButtons))
+            let point = CGPoint(x: CGFloat(cursor.x) + window.frame.minX, y: CGFloat(cursor.y) + window.frame.minY)
+            winter.updateSnowmanGaze(at: point, dt: dt)
+            winter.updateAutomaticSculpting(at: point, dt: dt, mouseButtons: Int(NSEvent.pressedMouseButtons))
         }
         renderer.snowSurfaceUpdated = { [unowned self] in winter.updateDockContacts() }
         renderer.windowSurfaces = { [unowned self] now in
@@ -194,6 +195,12 @@ final class ScreenSnow {
         winter.changed = { [weak self] in
             self?.tracker.reset()
             self?.wake()
+        }
+        winter.pollVisibleWindows = { [weak self] in
+            guard let self, view.isPaused else { return }
+            let now = CACurrentMediaTime()
+            if let update = tracker.poll(now: now, eager: false) { winter.updateWindows(update) }
+            watchForFullScreen(now: now, tracked: true)
         }
         renderer.keepsUpdating = { [weak winter] in winter?.needsUpdates ?? false }
         renderer.interactiveFrameRate = Self.interactiveFrameRate(of: screen)
